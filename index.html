@@ -1,0 +1,621 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AeroCode</title>
+    
+    <link rel="preload" href="./monaco-editor/vs/loader.js" as="script">
+    <link rel="stylesheet" href="./xterm/xterm.css" />
+    
+    <style>
+        /* Global UI Zoom Variables */
+        :root {
+            --ui-zoom: 1;
+            --font-ui: calc(13px * var(--ui-zoom));
+            --font-term: calc(11px * var(--ui-zoom));
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body, html { height: 100%; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background-color: #1e1e1e; color: #cccccc; overflow: hidden; }
+        
+        .ide-container { display: flex; flex-direction: column; height: 100vh; }
+        
+        .title-bar { background-color: #333333; height: 30px; display: flex; align-items: center; padding: 0 10px; font-size: var(--font-ui); border-bottom: 1px solid #1e1e1e; user-select: none; position: relative; z-index: 100;}
+        .menu-bar { display: flex; gap: 5px; }
+        .menu-item { position: relative; }
+        .menu-btn { cursor: pointer; padding: 4px 8px; border-radius: 3px; }
+        .menu-btn:hover, .menu-item.active .menu-btn { background-color: #505050; }
+        .dropdown { display: none; position: absolute; top: 100%; left: 0; background-color: #252526; border: 1px solid #454545; min-width: 180px; box-shadow: 0 4px 6px rgba(0,0,0,0.5); padding: 5px 0; border-radius: 3px; }
+        .menu-item.active .dropdown { display: block; }
+        .dropdown-item { padding: 8px 15px; cursor: pointer; display: flex; justify-content: space-between; color: #ccc; }
+        .dropdown-item:hover { background-color: #007acc; color: #fff; }
+        .shortcut { color: #aaa; font-size: calc(var(--font-ui) - 2px); }
+
+        .run-quick-btn { background: #1e7145; color: white; border: none; padding: 4px 10px; border-radius: 3px; cursor: pointer; margin-left: 20px; font-size: calc(var(--font-ui) - 1px); }
+        .run-quick-btn:hover { background: #228b55; }
+        .title-bar-brand { margin-left: auto; font-weight: 600; color: #007acc; letter-spacing: 0.5px;}
+
+        .icon { display: inline-block; width: calc(16px * var(--ui-zoom)); height: calc(16px * var(--ui-zoom)); background-size: contain; background-repeat: no-repeat; vertical-align: middle; }
+        .icon-html { background-image: url("data:image/svg+xml;utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 384 512'%3E%3Cpath fill='%23E34F26' d='M0 32l34.9 395.8L191.5 480l157.6-52.2L384 32H0zm308.2 127.9H124.4l4.1 49.4h175.6l-13.6 148.4-97.9 27v.3h-1.1l-98.7-27.3-6-75.8h47.7L138 320l53.5 14.5 53.7-14.5 6-62.2H84.3L71.5 112.2h241.1l-4.4 47.7z'/%3E%3C/svg%3E"); }
+        .icon-js { background-image: url("data:image/svg+xml;utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 448 512'%3E%3Cpath fill='%23F7DF1E' d='M0 32v448h448V32H0zm243.8 349.4c0 43.6-25.6 63.5-62.9 63.5-33.7 0-53.2-17.4-63.2-38.5l34.3-20.7c6.6 11.7 12.6 21.6 27.1 21.6 13.8 0 22.6-5.4 22.6-26.5V237.7h42.1v143.7zm99.6 63.5c-39.1 0-64.4-18.6-76.7-43l34.3-19.8c9 14.7 20.8 25.6 41.5 25.6 17.4 0 28.6-8.7 28.6-20.8 0-14.4-11.4-19.5-30.7-28l-10.5-4.5c-30.4-12.9-50.5-29.2-50.5-63.5 0-31.6 24.1-55.6 61.6-55.6 26.8 0 46 9.3 59.8 33.7L368 290c-7.2-12.9-15-18-27.1-18-12.3 0-20.1 7.8-20.1 18 0 12.6 7.8 17.7 25.9 25.6l10.5 4.5c35.8 15.3 55.9 31 55.9 66.2 0 37.8-29.8 58.6-69.7 58.6z'/%3E%3C/svg%3E"); }
+        .icon-css { background-image: url("data:image/svg+xml;utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 384 512'%3E%3Cpath fill='%231572B6' d='M0 32l34.9 395.8L191.5 480l157.6-52.2L384 32H0zm308.2 127.9H124.4l4.1 49.4h175.6l-13.6 148.4-97.9 27v.3h-1.1l-98.7-27.3-6-75.8h47.7L138 320l53.5 14.5 53.7-14.5 6-62.2H84.3L71.5 112.2h241.1l-4.4 47.7z'/%3E%3C/svg%3E"); }
+        .icon-json { background-image: url("data:image/svg+xml;utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='%23854CC7' d='M9 4v2H7v12h2v2H5V4h4zm6 0v2h2v12h-2v2h4V4h-4z'/%3E%3C/svg%3E"); }
+        .icon-default { background-image: url("data:image/svg+xml;utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='%23ccc' d='M6 2c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V8l-6-6H6zm7 7V3.5L18.5 9H13z'/%3E%3C/svg%3E"); }
+
+        .main-area { display: flex; flex: 1; height: calc(100vh - 52px); }
+        .sidebar { width: calc(220px * var(--ui-zoom)); background-color: #252526; border-right: 1px solid #454545; display: flex; flex-direction: column; flex-shrink: 0; transition: width 0.1s;}
+        .sidebar-header { padding: 10px; font-size: var(--font-term); text-transform: uppercase; font-weight: bold; color: #bbbbbb; }
+        
+        .file-tree { list-style: none; overflow-y: auto; flex: 1; }
+        .file-item { padding: 5px 10px 5px 15px; font-size: var(--font-ui); cursor: pointer; display: flex; align-items: center; gap: 8px; user-select: none; }
+        .file-item:hover { background-color: #2a2d2e; }
+        .file-item.active { background-color: #37373d; color: #ffffff; }
+
+        .editor-terminal-column { flex: 1; display: flex; flex-direction: column; min-width: 0;}
+        .editor-container { flex: 1; display: flex; flex-direction: column; min-width: 0; position: relative; }
+        
+        .editor-tabs { display: flex; background-color: #252526; height: calc(35px * var(--ui-zoom)); overflow-x: auto; flex-shrink: 0; }
+        .editor-tabs::-webkit-scrollbar { height: 4px; background: #1e1e1e; }
+        .editor-tabs::-webkit-scrollbar-thumb { background: #555; }
+        .tab { padding: 0 15px; background-color: #2d2d2d; border-right: 1px solid #252526; color: #969696; font-size: var(--font-ui); display: flex; align-items: center; gap: 6px; cursor: pointer; user-select: none; min-width: max-content; border-top: 1px solid transparent; }
+        .tab.active { background-color: #1e1e1e; color: #ffffff; border-top: 1px solid #007acc; }
+        .tab:hover:not(.active) { background-color: #2b2b2b; }
+        .tab-close { font-size: calc(var(--font-ui) - 3px); margin-left: 5px; padding: 3px 5px; border-radius: 3px; opacity: 0; color: #ccc; }
+        .tab:hover .tab-close, .tab.active .tab-close { opacity: 1; }
+        .tab-close:hover { background-color: #444; color: white; }
+
+        #editor { flex: 1; width: 100%; opacity: 0; transition: opacity 0.3s ease; }
+        
+        #loading-overlay { position: absolute; top: 35px; left: 0; right: 0; bottom: 0; background: #1e1e1e; display: flex; align-items: center; justify-content: center; z-index: 10; font-size: var(--font-ui); color: #888; flex-direction: column; gap: 10px; transition: opacity 0.3s ease; }
+        .spinner { width: 30px; height: 30px; border: 3px solid #333; border-top-color: #007acc; border-radius: 50%; animation: spin 1s linear infinite; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        .empty-state { position: absolute; top: 35px; left: 0; right: 0; bottom: 0; background: #1e1e1e; display: none; align-items: center; justify-content: center; font-size: calc(var(--font-ui) * 2); color: #444; font-weight: bold; z-index: 5; user-select: none; }
+
+        .terminal-area { display: none; height: calc(200px * var(--ui-zoom)); background-color: #1e1e1e; border-top: 1px solid #454545; flex-direction: column; flex-shrink: 0; transition: height 0.1s;}
+        .terminal-header { font-size: var(--font-term); padding: 5px 10px; text-transform: uppercase; color: #bbb; background: #252526; border-bottom: 1px solid #454545; user-select: none; display: flex; justify-content: space-between; align-items: center; }
+        .terminal-close { cursor: pointer; color: #bbb; font-size: var(--font-ui); }
+        .terminal-close:hover { color: white; }
+        #terminal { flex: 1; width: 100%; padding: 5px; }
+
+        .status-bar { background-color: #007acc; height: calc(22px * var(--ui-zoom)); display: flex; justify-content: space-between; align-items: center; padding: 0 10px; font-size: calc(var(--font-ui) - 1px); color: white; user-select: none; }
+        .status-left, .status-right { display: flex; gap: 15px; }
+        .auto-save-status { font-style: italic; opacity: 0.8; }
+    </style>
+</head>
+<body>
+
+<div class="ide-container">
+    <div class="title-bar">
+        <div class="menu-bar">
+            <div class="menu-item">
+                <div class="menu-btn">File</div>
+                <div class="dropdown">
+                    <div class="dropdown-item" onclick="createNewFile()"><span>New File</span></div>
+                    <div class="dropdown-item" onclick="openRealFile()"><span>Open File...</span><span class="shortcut">Ctrl+O</span></div>
+                    <div class="dropdown-item" onclick="forceManualSave()"><span>Save</span><span class="shortcut">Ctrl+S</span></div>
+                </div>
+            </div>
+            <div class="menu-item">
+                <div class="menu-btn">Edit</div>
+                <div class="dropdown">
+                    <div class="dropdown-item" onclick="if(editor) editor.trigger('keyboard', 'undo', null);"><span>Undo</span><span class="shortcut">Ctrl+Z</span></div>
+                    <div class="dropdown-item" onclick="if(editor) editor.trigger('keyboard', 'redo', null);"><span>Redo</span><span class="shortcut">Ctrl+Y</span></div>
+                </div>
+            </div>
+            <div class="menu-item">
+                <div class="menu-btn">View</div>
+                <div class="dropdown">
+                    <div class="dropdown-item" onclick="zoomIn()"><span>Zoom In</span><span class="shortcut">Ctrl++</span></div>
+                    <div class="dropdown-item" onclick="zoomOut()"><span>Zoom Out</span><span class="shortcut">Ctrl+-</span></div>
+                </div>
+            </div>
+            <div class="menu-item">
+                <div class="menu-btn">Terminal</div>
+                <div class="dropdown">
+                    <div class="dropdown-item" onclick="openTerminal()"><span>New Terminal</span><span class="shortcut">Ctrl+`</span></div>
+                </div>
+            </div>
+        </div>
+        
+        <button class="run-quick-btn" onclick="launchPreview()">▶ Preview HTML</button>
+        <div class="title-bar-brand">AeroCode</div>
+    </div>
+
+    <div class="main-area">
+        <div class="sidebar">
+            <div class="sidebar-header">Workspace</div>
+            <ul class="file-tree" id="file-tree"></ul>
+        </div>
+
+        <div class="editor-terminal-column">
+            <div class="editor-container">
+                <div class="editor-tabs" id="editor-tabs"></div>
+                <div id="loading-overlay">
+                    <div class="spinner"></div>
+                    <span id="loading-text">Compiling Engine...</span>
+                </div>
+                <div class="empty-state" id="empty-state">No File Selected</div>
+                <div id="editor"></div>
+            </div>
+            
+            <div class="terminal-area" id="terminal-area">
+                <div class="terminal-header">
+                    <span>Terminal Console</span>
+                    <span class="terminal-close" onclick="closeTerminal()">✖</span>
+                </div>
+                <div id="terminal"></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="status-bar">
+        <div class="status-left"><span id="file-status">Initializing Workspace...</span></div>
+        <div class="status-right">
+            <span id="cursor-position">Ln 1, Col 1</span>
+            <span id="language-status">Loading</span>
+        </div>
+    </div>
+</div>
+
+<script>
+    if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+            navigator.serviceWorker.register('./sw.js').catch(err => console.error('SW Failed:', err));
+        });
+    }
+</script>
+
+<script src="./monaco-editor/vs/loader.js" defer></script>
+<script src="./xterm/xterm.js" defer></script>
+
+<script>
+    let baseFontSize = 14;
+    let uiZoom = 1;
+
+    function applyZoom() {
+        document.documentElement.style.setProperty('--ui-zoom', uiZoom);
+        if (editor) editor.updateOptions({ fontSize: baseFontSize });
+        if (termInstance) termInstance.options.fontSize = baseFontSize;
+    }
+
+    function zoomIn() {
+        if (baseFontSize >= 30) return;
+        baseFontSize += 2;
+        uiZoom += 0.1;
+        applyZoom();
+    }
+
+    function zoomOut() {
+        if (baseFontSize <= 8) return;
+        baseFontSize -= 2;
+        uiZoom -= 0.1;
+        applyZoom();
+    }
+
+    document.querySelectorAll('.menu-btn').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            const parent = e.target.parentElement;
+            const isActive = parent.classList.contains('active');
+            document.querySelectorAll('.menu-item').forEach(item => item.classList.remove('active'));
+            if (!isActive) parent.classList.add('active');
+            e.stopPropagation();
+        });
+    });
+    document.addEventListener('click', () => {
+        document.querySelectorAll('.menu-item').forEach(item => item.classList.remove('active'));
+    });
+
+    const vfs = {
+        'index.html': { 
+            lang: 'html', 
+            content: `<!DOCTYPE html>\n<html lang="en">\n<head>\n\t<title>AeroCode Project</title>\n\t<link rel="stylesheet" href="style.css">\n</head>\n<body>\n\t<h1>VFS Injection Success!</h1>\n\t<script src="script.js"><\/script>\n</body>\n</html>`,
+            handle: null, model: null
+        },
+        'style.css': {
+            lang: 'css',
+            content: `body { background: #222; color: #4CAF50; font-family: sans-serif; text-align: center; margin-top: 50px; }`,
+            handle: null, model: null
+        },
+        'script.js': { 
+            lang: 'javascript', 
+            content: `console.log("Welcome to AeroCode Engine...");`,
+            handle: null, model: null 
+        }
+    };
+    
+    let openTabs = ['index.html']; 
+    let currentFile = 'index.html'; 
+    let editor = null;
+    let autoSaveTimer = null;
+    let previewTab = null;
+    let currentBlobUrl = null;
+    let termInstance = null;
+
+    const fileTree = document.getElementById('file-tree');
+    const tabsContainer = document.getElementById('editor-tabs');
+    const langStatus = document.getElementById('language-status');
+    const fileStatus = document.getElementById('file-status');
+    const emptyState = document.getElementById('empty-state');
+    const editorDiv = document.getElementById('editor');
+    const terminalArea = document.getElementById('terminal-area');
+
+    function getLang(filename) {
+        const ext = filename.split('.').pop().toLowerCase();
+        const map = { 'js': 'javascript', 'html': 'html', 'css': 'css', 'json': 'json' };
+        return map[ext] || 'plaintext';
+    }
+
+    function getIconClass(filename) {
+        const ext = filename.split('.').pop().toLowerCase();
+        const map = { 'js': 'icon-js', 'html': 'icon-html', 'css': 'icon-css', 'json': 'icon-json' };
+        return map[ext] || 'icon-default';
+    }
+
+    function renderFileTree() {
+        fileTree.innerHTML = '';
+        Object.keys(vfs).forEach(filename => {
+            const li = document.createElement('li');
+            li.className = `file-item ${filename === currentFile ? 'active' : ''}`;
+            li.innerHTML = `<i class="icon ${getIconClass(filename)}"></i> <span>${filename}</span>`;
+            li.onclick = () => switchFile(filename);
+            fileTree.appendChild(li);
+        });
+    }
+
+    function renderTabs() {
+        tabsContainer.innerHTML = '';
+        openTabs.forEach(filename => {
+            const tab = document.createElement('div');
+            tab.className = `tab ${filename === currentFile ? 'active' : ''}`;
+            tab.onclick = () => switchFile(filename);
+            tab.innerHTML = `
+                <i class="icon ${getIconClass(filename)}"></i> ${filename}
+                <span class="tab-close" onclick="closeTab(event, '${filename}')">✖</span>
+            `;
+            tabsContainer.appendChild(tab);
+        });
+        
+        if (openTabs.length === 0) {
+            emptyState.style.display = 'flex';
+            editorDiv.style.opacity = '0';
+            langStatus.innerText = "No File";
+        } else {
+            emptyState.style.display = 'none';
+            if(editor) editorDiv.style.opacity = '1';
+        }
+    }
+
+    function switchFile(filename) {
+        if (!vfs[filename]) return;
+        if (!openTabs.includes(filename)) openTabs.push(filename);
+        currentFile = filename;
+        const fileObj = vfs[filename];
+        
+        if (editor) editor.setModel(fileObj.model);
+        langStatus.innerText = fileObj.lang.toUpperCase();
+        renderFileTree();
+        renderTabs();
+        
+        if (previewTab && !previewTab.closed) updatePreviewTab();
+    }
+
+    function closeTab(event, filename) {
+        event.stopPropagation();
+        openTabs = openTabs.filter(t => t !== filename);
+        if (currentFile === filename) {
+            if (openTabs.length > 0) switchFile(openTabs[openTabs.length - 1]);
+            else {
+                currentFile = null;
+                if(editor) editor.setModel(null);
+                renderTabs();
+                renderFileTree();
+            }
+        } else renderTabs();
+    }
+
+    function createNewFile() {
+        const name = prompt("Enter file name (e.g., style.css):", "main.css");
+        if (!name) return;
+        if (vfs[name]) return alert("File exists!");
+        const lang = getLang(name);
+        vfs[name] = { lang: lang, content: '', handle: null, model: null };
+        if (editor) vfs[name].model = monaco.editor.createModel('', lang, monaco.Uri.file(name));
+        switchFile(name);
+    }
+
+    async function openRealFile() {
+        try {
+            const [fileHandle] = await window.showOpenFilePicker();
+            const fileData = await fileHandle.getFile();
+            const content = await fileData.text();
+            const filename = fileData.name;
+            const lang = getLang(filename);
+            
+            if (vfs[filename]) {
+                if(editor) vfs[filename].model.setValue(content);
+                else vfs[filename].content = content;
+                vfs[filename].handle = fileHandle;
+            } else {
+                vfs[filename] = { lang: lang, content: content, handle: fileHandle, model: null };
+                if (editor) vfs[filename].model = monaco.editor.createModel(content, lang, monaco.Uri.file(filename));
+            }
+            switchFile(filename);
+            fileStatus.innerText = `Opened: ${filename}`;
+        } catch (err) {
+            console.log("File open cancelled.");
+        }
+    }
+
+    async function forceManualSave() {
+        if (!editor || !currentFile || !vfs[currentFile]) return;
+        try {
+            let handle = vfs[currentFile].handle;
+            if (!handle) {
+                handle = await window.showSaveFilePicker({ suggestedName: currentFile });
+                vfs[currentFile].handle = handle; 
+            }
+            const writable = await handle.createWritable();
+            await writable.write(vfs[currentFile].model.getValue());
+            await writable.close();
+            fileStatus.innerText = `Saved to Disk`;
+            updatePreviewTab();
+        } catch (err) {
+            fileStatus.innerText = "Save Cancelled";
+        }
+        setTimeout(() => fileStatus.innerText = "Ready", 3000);
+    }
+
+    async function silentAutoSave() {
+        if (!editor || !currentFile || !vfs[currentFile]) return;
+        vfs[currentFile].content = vfs[currentFile].model.getValue();
+        updatePreviewTab();
+        if (vfs[currentFile].handle) {
+            try {
+                const writable = await vfs[currentFile].handle.createWritable();
+                await writable.write(vfs[currentFile].content);
+                await writable.close();
+                fileStatus.innerHTML = `Auto-saved to disk <span class="auto-save-status">✔</span>`;
+            } catch (err) {}
+        } else {
+            fileStatus.innerHTML = `Auto-saved to memory <span class="auto-save-status">✔</span>`;
+        }
+    }
+
+    function buildLiveHTML() {
+        let targetFile = vfs[currentFile].lang === 'html' ? currentFile : 'index.html';
+        if (!vfs[targetFile] || vfs[targetFile].lang !== 'html') return "<h2>No HTML file available to preview.</h2>";
+
+        let html = vfs[targetFile].model ? vfs[targetFile].model.getValue() : vfs[targetFile].content;
+        
+        html = html.replace(/<link\s+.*?href=["'](.*?)["'].*?>/gi, (match, filename) => {
+            if (vfs[filename] && vfs[filename].lang === 'css') {
+                const css = vfs[filename].model ? vfs[filename].model.getValue() : vfs[filename].content;
+                return `<style>\n/* Injected by AeroCode: ${filename} */\n${css}\n</style>`;
+            }
+            return match; 
+        });
+
+        html = html.replace(/<script\s+.*?src=["'](.*?)["'].*?><\/script>/gi, (match, filename) => {
+            if (vfs[filename] && vfs[filename].lang === 'javascript') {
+                const js = vfs[filename].model ? vfs[filename].model.getValue() : vfs[filename].content;
+                return `<script>\n/* Injected by AeroCode: ${filename} */\n${js}\n<\/script>`;
+            }
+            return match;
+        });
+
+        return html;
+    }
+
+    function launchPreview() {
+        if (!editor) return;
+        const finalHTML = buildLiveHTML();
+        const blob = new Blob([finalHTML], { type: 'text/html' });
+        
+        if (currentBlobUrl) URL.revokeObjectURL(currentBlobUrl);
+        currentBlobUrl = URL.createObjectURL(blob);
+
+        if (previewTab && !previewTab.closed) {
+            previewTab.location.replace(currentBlobUrl);
+        } else {
+            previewTab = window.open(currentBlobUrl, 'WebIDEPreview');
+        }
+    }
+
+    function updatePreviewTab() {
+        if (previewTab && !previewTab.closed) {
+            const finalHTML = buildLiveHTML();
+            const blob = new Blob([finalHTML], { type: 'text/html' });
+            
+            if (currentBlobUrl) URL.revokeObjectURL(currentBlobUrl);
+            currentBlobUrl = URL.createObjectURL(blob);
+            
+            previewTab.location.replace(currentBlobUrl);
+        }
+    }
+
+    function openTerminal() {
+        terminalArea.style.display = 'flex';
+        if (!termInstance) initTerminalEngine();
+        if(editor) editor.layout(); 
+    }
+
+    function closeTerminal() {
+        terminalArea.style.display = 'none';
+        if(editor) editor.layout();
+    }
+
+    function initTerminalEngine() {
+        if(typeof Terminal === 'undefined') return setTimeout(initTerminalEngine, 100);
+
+        termInstance = new Terminal({
+            theme: { background: '#1e1e1e', foreground: '#cccccc', cursor: '#ffffff' },
+            fontFamily: 'monospace', fontSize: baseFontSize, cursorBlink: true, convertEol: true
+        });
+        termInstance.open(document.getElementById('terminal'));
+
+        const originalLog = console.log;
+        const originalError = console.error;
+
+        console.log = function(...args) {
+            if(args[0] === 'SW Cache Engine Active') return originalLog.apply(console, args);
+            const msg = args.map(a => typeof a === 'object' ? JSON.stringify(a) : String(a)).join(' ');
+            if (termInstance) termInstance.writeln(msg);
+            originalLog.apply(console, args);
+        };
+
+        console.error = function(...args) {
+            if(args[0] && args[0].includes('SW Failed')) return originalError.apply(console, args);
+            const msg = args.map(a => typeof a === 'object' ? JSON.stringify(a) : String(a)).join(' ');
+            if (termInstance) termInstance.writeln('\x1b[31m' + msg + '\x1b[0m');
+            originalError.apply(console, args);
+        };
+
+        const prompt = () => termInstance.write('\r\n$ ');
+        termInstance.writeln('AeroCode Terminal Engine Active.');
+        prompt();
+
+        let cmdBuffer = '';
+        termInstance.onKey(e => {
+            const ev = e.domEvent;
+            const printable = !ev.altKey && !ev.ctrlKey && !ev.metaKey;
+            if (ev.keyCode === 13) {
+                termInstance.write('\r\n');
+                executeTerminalCommand(cmdBuffer.trim());
+                cmdBuffer = '';
+                prompt();
+            } else if (ev.keyCode === 8) {
+                if (cmdBuffer.length > 0) { cmdBuffer = cmdBuffer.slice(0, -1); termInstance.write('\b \b'); }
+            } else if (printable) {
+                cmdBuffer += e.key; termInstance.write(e.key);
+            }
+        });
+    }
+
+    function executeTerminalCommand(input) {
+        if (!input) return;
+        const args = input.split(' ');
+        const base = args[0].toLowerCase();
+        const target = args[1];
+
+        switch(base) {
+            case 'ls': termInstance.writeln(Object.keys(vfs).join('  ')); break;
+            case 'cat':
+                if (!target) return termInstance.writeln('Usage: cat <filename>');
+                if (vfs[target]) termInstance.writeln(vfs[target].model ? vfs[target].model.getValue() : vfs[target].content);
+                else termInstance.writeln(`cat: ${target}: No such file`);
+                break;
+            case 'clear': termInstance.clear(); break;
+            case 'node':
+                if (!target) return termInstance.writeln('Usage: node <filename>');
+                if (!vfs[target]) return termInstance.writeln(`\x1b[31mError: Cannot find file '${target}'\x1b[0m`);
+                if (vfs[target].lang !== 'javascript') return termInstance.writeln(`\x1b[31mError: Can only execute JavaScript files.\x1b[0m`);
+                try {
+                    const jsContent = vfs[target].model ? vfs[target].model.getValue() : vfs[target].content;
+                    const executeJS = new Function(jsContent);
+                    executeJS(); 
+                } catch (err) {
+                    console.error(err.toString());
+                }
+                break;
+            default: termInstance.writeln(`bash: ${base}: command not found`);
+        }
+    }
+
+    renderFileTree();
+    renderTabs();
+
+    window.addEventListener('load', () => {
+        setTimeout(initMonaco, 100); 
+    });
+
+    function initMonaco() {
+        if(typeof require === 'undefined') return setTimeout(initMonaco, 100);
+        
+        require.config({ paths: { 'vs': './monaco-editor/vs' }});
+        require(['vs/editor/editor.main'], function () {
+            
+            monaco.languages.setLanguageConfiguration('html', {
+                onEnterRules: [{
+                    beforeText: new RegExp(`<([_:\\w][_:\\w-.\\d]*)([^/>]*(?!/)>)[^<]*$`, 'i'),
+                    afterText: /^<\/([_:\w][_:\w-.\d]*)\s*>/i,
+                    action: { indentAction: monaco.languages.IndentAction.IndentOutdent }
+                }]
+            });
+
+            Object.keys(vfs).forEach(filename => {
+                const fileObj = vfs[filename];
+                fileObj.model = monaco.editor.createModel(fileObj.content, fileObj.lang, monaco.Uri.file(filename));
+            });
+
+            editor = monaco.editor.create(document.getElementById('editor'), {
+                theme: 'vs-dark', automaticLayout: true, fontSize: baseFontSize, minimap: { enabled: true },
+                autoIndent: "full", formatOnType: true, formatOnPaste: true,
+                suggestOnTriggerCharacters: true, acceptSuggestionOnEnter: "on"
+            });
+
+            editor.setModel(vfs['index.html'].model);
+            
+            const overlay = document.getElementById('loading-overlay');
+            overlay.style.opacity = '0';
+            setTimeout(() => { overlay.style.display = 'none'; }, 300);
+            document.getElementById('editor').style.opacity = '1';
+            
+            fileStatus.innerText = "Ready";
+            langStatus.innerText = "HTML";
+
+            editor.onDidType((text) => {
+                if (!currentFile || vfs[currentFile].lang !== 'html') return;
+                if (text === '>') {
+                    const position = editor.getPosition();
+                    const model = editor.getModel();
+                    const textBeforeCursor = model.getLineContent(position.lineNumber).substring(0, position.column - 1);
+                    const match = textBeforeCursor.match(/<([a-zA-Z0-9\-]+)[^>]*>$/);
+                    
+                    if (match) {
+                        const tagName = match[1].toLowerCase();
+                        const selfClosingTags = ['area', 'base', 'br', 'col', 'embed', 'hr', 'img', 'input', 'link', 'meta', 'param', 'source', 'track', 'wbr'];
+                        if (!selfClosingTags.includes(tagName) && !textBeforeCursor.endsWith('/>')) {
+                            editor.executeEdits("auto-close", [{
+                                range: new monaco.Range(position.lineNumber, position.column, position.lineNumber, position.column),
+                                text: `</${tagName}>`, forceMoveMarkers: true
+                            }]);
+                            editor.setPosition(position);
+                        }
+                    }
+                }
+            });
+
+            editor.onDidChangeCursorPosition((e) => {
+                document.getElementById('cursor-position').innerText = `Ln ${e.position.lineNumber}, Col ${e.position.column}`;
+            });
+
+            editor.onDidChangeModelContent(() => {
+                clearTimeout(autoSaveTimer);
+                fileStatus.innerText = "Typing...";
+                autoSaveTimer = setTimeout(silentAutoSave, 1000); 
+            });
+
+            editor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.KeyS, forceManualSave);
+            editor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.KeyO, openRealFile);
+            editor.addCommand(monaco.KeyMod.Alt | monaco.KeyCode.KeyP, launchPreview);
+            editor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyMod.Shift | monaco.KeyCode.Backquote, () => {
+                if (terminalArea.style.display === 'none' || terminalArea.style.display === '') openTerminal();
+                else closeTerminal();
+            });
+
+            document.addEventListener('keydown', e => { 
+                if (e.ctrlKey || e.metaKey) {
+                    if (e.key === 's') { e.preventDefault(); forceManualSave(); }
+                    if (e.key === 'o') { e.preventDefault(); openRealFile(); }
+                    if (e.key === '=' || e.key === '+') { e.preventDefault(); zoomIn(); }
+                    if (e.key === '-') { e.preventDefault(); zoomOut(); }
+                }
+                if (e.altKey && e.key === 'p') { e.preventDefault(); launchPreview(); }
+            });
+        });
+    }
+</script>
+</body>
+</html>
