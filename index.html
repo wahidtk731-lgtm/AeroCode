@@ -9,99 +9,223 @@
     <link rel="stylesheet" href="./xterm/xterm.css" />
     
     <style>
-        /* Global UI Zoom Variables */
+        /* Global UI Variables */
         :root {
             --ui-zoom: 1;
             --font-ui: calc(13px * var(--ui-zoom));
             --font-term: calc(11px * var(--ui-zoom));
+            --sidebar-width: 240px;
         }
 
         * { box-sizing: border-box; margin: 0; padding: 0; }
-        body, html { height: 100%; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background-color: #1e1e1e; color: #cccccc; overflow: hidden; }
+        body, html { 
+            height: 100%; 
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; 
+            background-color: #1e1e1e; 
+            color: #cccccc; 
+            overflow: hidden; 
+        }
         
         .ide-container { display: flex; flex-direction: column; height: 100vh; }
         
-        .title-bar { background-color: #333333; height: 30px; display: flex; align-items: center; padding: 0 10px; font-size: var(--font-ui); border-bottom: 1px solid #1e1e1e; user-select: none; position: relative; z-index: 100;}
-        .menu-bar { display: flex; gap: 5px; }
+        /* Top Navigation Bar */
+        .title-bar { 
+            background-color: #333333; height: 30px; display: flex; align-items: center; 
+            padding: 0 10px; font-size: var(--font-ui); border-bottom: 1px solid #1e1e1e; 
+            user-select: none; position: relative; z-index: 100;
+        }
+        .menu-bar { display: flex; gap: 5px; flex: 1; }
         .menu-item { position: relative; }
         .menu-btn { cursor: pointer; padding: 4px 8px; border-radius: 3px; }
         .menu-btn:hover, .menu-item.active .menu-btn { background-color: #505050; }
-        .dropdown { display: none; position: absolute; top: 100%; left: 0; background-color: #252526; border: 1px solid #454545; min-width: 180px; box-shadow: 0 4px 6px rgba(0,0,0,0.5); padding: 5px 0; border-radius: 3px; }
+        
+        .dropdown { 
+            display: none; position: absolute; top: 100%; left: 0; background-color: #252526; 
+            border: 1px solid #454545; min-width: 180px; box-shadow: 0 4px 6px rgba(0,0,0,0.5); 
+            padding: 5px 0; border-radius: 3px; 
+        }
         .menu-item.active .dropdown { display: block; }
         .dropdown-item { padding: 8px 15px; cursor: pointer; display: flex; justify-content: space-between; color: #ccc; }
         .dropdown-item:hover { background-color: #007acc; color: #fff; }
         .shortcut { color: #aaa; font-size: calc(var(--font-ui) - 2px); }
 
-        .run-quick-btn { background: #1e7145; color: white; border: none; padding: 4px 10px; border-radius: 3px; cursor: pointer; margin-left: 20px; font-size: calc(var(--font-ui) - 1px); }
+        .run-quick-btn { 
+            background: #1e7145; color: white; border: none; padding: 4px 10px; 
+            border-radius: 3px; cursor: pointer; margin-right: 15px; font-size: calc(var(--font-ui) - 1px); 
+        }
         .run-quick-btn:hover { background: #228b55; }
-        .title-bar-brand { margin-left: auto; font-weight: 600; color: #007acc; letter-spacing: 0.5px;}
+        
+        .sidebar-toggle-btn {
+            cursor: pointer; padding: 4px 8px; border-radius: 3px; margin-right: 10px;
+        }
+        .sidebar-toggle-btn:hover { background-color: #505050; }
+        
+        .title-bar-brand { font-weight: 600; color: #007acc; letter-spacing: 0.5px;}
 
+        /* Offline SVG Icons */
         .icon { display: inline-block; width: calc(16px * var(--ui-zoom)); height: calc(16px * var(--ui-zoom)); background-size: contain; background-repeat: no-repeat; vertical-align: middle; }
         .icon-html { background-image: url("data:image/svg+xml;utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 384 512'%3E%3Cpath fill='%23E34F26' d='M0 32l34.9 395.8L191.5 480l157.6-52.2L384 32H0zm308.2 127.9H124.4l4.1 49.4h175.6l-13.6 148.4-97.9 27v.3h-1.1l-98.7-27.3-6-75.8h47.7L138 320l53.5 14.5 53.7-14.5 6-62.2H84.3L71.5 112.2h241.1l-4.4 47.7z'/%3E%3C/svg%3E"); }
         .icon-js { background-image: url("data:image/svg+xml;utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 448 512'%3E%3Cpath fill='%23F7DF1E' d='M0 32v448h448V32H0zm243.8 349.4c0 43.6-25.6 63.5-62.9 63.5-33.7 0-53.2-17.4-63.2-38.5l34.3-20.7c6.6 11.7 12.6 21.6 27.1 21.6 13.8 0 22.6-5.4 22.6-26.5V237.7h42.1v143.7zm99.6 63.5c-39.1 0-64.4-18.6-76.7-43l34.3-19.8c9 14.7 20.8 25.6 41.5 25.6 17.4 0 28.6-8.7 28.6-20.8 0-14.4-11.4-19.5-30.7-28l-10.5-4.5c-30.4-12.9-50.5-29.2-50.5-63.5 0-31.6 24.1-55.6 61.6-55.6 26.8 0 46 9.3 59.8 33.7L368 290c-7.2-12.9-15-18-27.1-18-12.3 0-20.1 7.8-20.1 18 0 12.6 7.8 17.7 25.9 25.6l10.5 4.5c35.8 15.3 55.9 31 55.9 66.2 0 37.8-29.8 58.6-69.7 58.6z'/%3E%3C/svg%3E"); }
         .icon-css { background-image: url("data:image/svg+xml;utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 384 512'%3E%3Cpath fill='%231572B6' d='M0 32l34.9 395.8L191.5 480l157.6-52.2L384 32H0zm308.2 127.9H124.4l4.1 49.4h175.6l-13.6 148.4-97.9 27v.3h-1.1l-98.7-27.3-6-75.8h47.7L138 320l53.5 14.5 53.7-14.5 6-62.2H84.3L71.5 112.2h241.1l-4.4 47.7z'/%3E%3C/svg%3E"); }
         .icon-json { background-image: url("data:image/svg+xml;utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='%23854CC7' d='M9 4v2H7v12h2v2H5V4h4zm6 0v2h2v12h-2v2h4V4h-4z'/%3E%3C/svg%3E"); }
+        .icon-py { background-image: url("data:image/svg+xml;utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 448 512'%3E%3Cpath fill='%233776AB' d='M439.8 200.5c-7.7-30.9-22.3-54.2-53.4-54.2h-40.1v47.4c0 36.8-31.2 67.8-66.8 67.8H172.7c-29.2 0-53.4 25-53.4 54.3v101.8c0 29 25.2 46 53.4 54.3 33.8 9.9 66.3 11.7 106.8 0 26.9-7.8 53.4-23.5 53.4-54.3v-40.7H226.2v-13.6h160.2c31.1 0 42.6-21.7 53.4-54.2 11.2-33.5 10.7-65.7 0-108.6zM286.2 404c11.1 0 20.1 9.1 20.1 20.3 0 11.3-9 20.4-20.1 20.4-11 0-20.1-9.2-20.1-20.4.1-11.3 9.1-20.3 20.1-20.3zM167.8 248.1h106.8c29.7 0 53.4-24.5 53.4-54.3V91.9c0-29-24.4-50.7-53.4-55.6-35.8-5.9-74.7-5.6-106.8.1-45.2 8-53.4 24.7-53.4 55.6v40.7h106.9v13.6h-147c-31.1 0-58.3 18.7-66.8 54.2-9.8 40.7-10.2 66.1 0 108.6 7.6 31.6 25.7 54.2 56.8 54.2H101v-48.8c0-35.3 30.5-66.4 66.8-66.4zm-6.7-142.6c-11.1 0-20.1-9.1-20.1-20.3.1-11.3 9-20.4 20.1-20.4 11 0 20.1 9.2 20.1 20.4s-9 20.3-20.1 20.3z'/%3E%3C/svg%3E"); }
+        .icon-java { background-image: url("data:image/svg+xml;utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 384 512'%3E%3Cpath fill='%23b07219' d='M277.7 207c-2.3-15-5.5-23-5.5-23-14.7 13.5-35.5 13.4-35.5 13.4 27.6-21.7 13.8-55.2 13.8-55.2-12.7 16-36.6 23.9-36.6 23.9 6.2-14.2 1.3-33-1.3-43-3-11.2-13.3-22-26-28.7-15.3-8.2-31.5-12.2-46.7-11.8C103.1 84.2 78.4 115 78.4 115c24.6-11 50-8.9 69.3 2.1 19 10.7 32 28.5 35 45.4 3 17-6 34.6-18.7 49.3-12.4 14.5-28.8 26.5-44.5 35.8-15.6 9.1-30.8 14.7-39.7 16.5-9 .1-16 0-16 0 25.8 4.2 55.4 4.5 86.8.6 30.8-3.7 61-12.4 86.8-24.8 24.3-11.7 44.8-27.1 55.6-43.2 4-6.4 6-13.4 5.7-19.9zm-86.8 62.1c-22.3 4.5-47.5 7.1-73.4 7.6-25 .5-48.4-.7-68.5-3.3-18.4-2.5-33.1-6.1-43-10.4-8.8-3.8-13.6-8.2-14.3-12.3-.7-3.9 2.5-8.4 8.7-13.2 6.5-4.8 15.6-9.8 27.1-14.7-3.1 3-5.6 5.8-7.3 8.3-2 3.1-2.9 6.1-2.6 8.7.4 2.8 2.5 5.5 6 8.2 3.7 2.8 9.3 5.4 16.7 7.7 14.9 4.8 35.5 8.2 59 10.1 23.8 1.9 49.9 2.1 76.5 1 25.2-1 49-2.9 70.2-5.9 19.3-2.7 35.1-6.1 46.1-10.3 9.4-3.5 14.9-7.5 15.7-11.4.8-3.9-2.4-8-8.2-12.2-5.7-4.1-13.8-8.3-23.7-12.5 3 2.9 5.5 5.6 7.4 8.1 2.2 2.8 3.3 5.6 3.1 8-.3 2.5-2.2 4.9-5.4 7.2-3.4 2.4-8.4 4.7-15 6.7-13.2 4-31.5 6.7-52.6 8.4zm42.7 34c-19.8 4.2-43.6 7-68.9 8.2-24.3 1.1-48.5.8-70.5-.7-20.7-1.4-38.3-3.8-51.5-6.9-11.7-2.8-20.2-6.2-24-9.8-3.5-3.4-4-7.2-1.3-11.3 2.4-3.6 6.5-7.3 12.3-11 5.9-3.8 13.5-7.5 22.8-11.3-2.6 2.5-4.7 4.9-6.2 7.1-1.7 2.4-2.5 4.8-2.2 7 .3 2.3 2 4.6 4.9 6.8 3.1 2.4 7.7 4.7 13.8 6.7 12.5 4.1 29.8 7.3 50.1 9.4 20.6 2.1 43.4 3 67 2.6 23.3-.4 46-1.9 66.4-4.5 19.2-2.4 35.2-5.5 46.6-9.1 10.3-3.2 17.2-6.8 19.6-10.6 2-3.2 1.6-6.7-.9-10.1-2.4-3.3-6.5-6.6-12-9.9-5.5-3.3-12.5-6.5-21-9.6 2.4 2.3 4.4 4.6 5.9 6.8 1.8 2.6 2.5 5.1 2.1 7.4-.4 2.3-2.2 4.5-5.2 6.5-3.2 2.2-8 4.2-14.3 6.1-12.4 3.7-29.3 6.5-48.4 8.6zm23.6 34.6c-17.7 3.5-38.8 6-61.6 7.4-21.9 1.3-44.5 1.5-65.7.5-19.9-1-37.4-2.8-51.2-5.5-12.2-2.4-21.6-5.4-26.6-8.8-4.5-3-5.5-6.4-3-10.2 2.2-3.3 6.1-6.7 11.6-10.1 5.6-3.4 12.9-6.9 21.9-10.3-2.4 2.2-4.4 4.4-5.8 6.4-1.6 2.3-2.3 4.5-1.9 6.6.4 2.1 1.9 4.3 4.6 6.3 2.9 2.2 7.3 4.2 13 6.1 11.7 3.8 28.2 6.8 47.7 8.9 19.7 2.1 41.7 3.1 64.6 2.9 22.5-.2 44.5-1.6 64.4-4.1 18.7-2.3 34.5-5.3 45.8-8.9 10.2-3.2 17.2-6.7 19.8-10.4 2.1-3 1.8-6.3-1-9.6-2.5-3-6.7-6-12.2-9-5.6-3.1-12.8-6.2-21.4-9.1 2.3 2.1 4.2 4.2 5.7 6.3 1.7 2.4 2.4 4.8 2 7-.4 2.1-2.1 4.2-4.9 6.2-3.1 2.1-7.7 4.1-13.8 5.9-12 3.6-28.5 6.4-47 8.5zm-55.5 34c-13.6 2.4-29.5 4.3-46.7 5.5-16.8 1.2-34.6 1.6-52.1 1.2-16.4-.3-31.5-1.4-44.2-3.2-11.2-1.6-20.2-3.7-25.5-6.2-4.8-2.3-6.2-5-4.2-8.1 1.7-2.7 4.9-5.4 9.5-8.1 4.7-2.8 10.8-5.6 18.5-8.5-2 1.8-3.7 3.5-4.9 5.2-1.4 2-1.9 3.9-1.5 5.7.4 1.8 1.7 3.6 4 5.3 2.5 1.8 6.3 3.5 11.4 5 10.1 3.1 24.3 5.6 41.3 7.4 17.2 1.8 36.6 2.8 57 2.8 20-.1 39.7-1.3 57.6-3.4 16.9-2 31.3-4.6 41.9-7.7 9.5-2.8 16.2-5.8 18.9-9.1 2.1-2.5 1.9-5.3-.8-8.1-2.4-2.5-6.2-4.9-11.5-7.4-5.3-2.5-12.1-5-20.2-7.5 1.9 1.7 3.6 3.4 4.8 5 1.4 2 2 3.9 1.7 5.7-.3 1.8-1.8 3.5-4.2 5.2-2.7 1.9-6.7 3.6-12 5.1-10.4 3-24.8 5.4-40.8 7.3z'/%3E%3C/svg%3E"); }
+        .icon-c { background-image: url("data:image/svg+xml;utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 384 512'%3E%3Cpath fill='%2300599C' d='M329.4 164.5c-37.4-38.4-88.3-61.5-137.4-61.5-115.5 0-209.5 94.1-209.5 209.6s94.1 209.6 209.5 209.6c49.2 0 100-23.1 137.4-61.5l-45.7-44.5c-24.6 24.1-55.8 37.9-91.7 37.9-78.5 0-141.5-63-141.5-141.5s63-141.5 141.5-141.5c35.8 0 67 13.9 91.7 37.9l45.7-44.5z'/%3E%3C/svg%3E"); }
+        .icon-cpp { background-image: url("data:image/svg+xml;utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 384 512'%3E%3Cpath fill='%2300599C' d='M329.4 164.5c-37.4-38.4-88.3-61.5-137.4-61.5-115.5 0-209.5 94.1-209.5 209.6s94.1 209.6 209.5 209.6c49.2 0 100-23.1 137.4-61.5l-45.7-44.5c-24.6 24.1-55.8 37.9-91.7 37.9-78.5 0-141.5-63-141.5-141.5s63-141.5 141.5-141.5c35.8 0 67 13.9 91.7 37.9l45.7-44.5zM384 274.6h-42.5v42.5h-28.4v-42.5h-42.5v-28.4h42.5v-42.5h28.4v42.5H384v28.4z'/%3E%3C/svg%3E"); }
+        .icon-cs { background-image: url("data:image/svg+xml;utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 384 512'%3E%3Cpath fill='%23178600' d='M329.4 164.5c-37.4-38.4-88.3-61.5-137.4-61.5-115.5 0-209.5 94.1-209.5 209.6s94.1 209.6 209.5 209.6c49.2 0 100-23.1 137.4-61.5l-45.7-44.5c-24.6 24.1-55.8 37.9-91.7 37.9-78.5 0-141.5-63-141.5-141.5s63-141.5 141.5-141.5c35.8 0 67 13.9 91.7 37.9l45.7-44.5zM378 288.6h-21v21h-12v-21h-21v-12h21v-21h12v21h21v12zM324 234.6h-21v21h-12v-21h-21v-12h21v-21h12v21h21v12z'/%3E%3C/svg%3E"); }
+        .icon-folder { background-image: url("data:image/svg+xml;utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='%23dcb67a' d='M10 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2h-8l-2-2z'/%3E%3C/svg%3E"); }
+        .icon-folder-open { background-image: url("data:image/svg+xml;utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='%23dcb67a' d='M19 20H4C2.89 20 2 19.1 2 18V6C2 4.89 2.89 4 4 4H10L12 6H19C20.1 6 21 6.89 21 8V18C21 19.1 20.1 20 19 20ZM4 8V18H19V8H4Z'/%3E%3C/svg%3E"); }
         .icon-default { background-image: url("data:image/svg+xml;utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='%23ccc' d='M6 2c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V8l-6-6H6zm7 7V3.5L18.5 9H13z'/%3E%3C/svg%3E"); }
 
+        /* Context Menu */
+        .context-menu { 
+            position: fixed; background: #252526; border: 1px solid #454545; 
+            z-index: 1000; box-shadow: 0 4px 6px rgba(0,0,0,0.5); border-radius: 3px; 
+            padding: 5px 0; display: none; 
+        }
+        .context-menu-item { padding: 5px 15px; cursor: pointer; font-size: 12px; color: #ccc; }
+        .context-menu-item:hover { background: #007acc; color: white; }
+
+        /* Activity Bar (VS Code Style Left Bar) */
+        .activity-bar {
+            width: 50px;
+            background-color: #333333;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding-top: 10px;
+            flex-shrink: 0;
+            z-index: 10;
+        }
+        .activity-icon {
+            width: 50px;
+            height: 48px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            color: #858585;
+            border-left: 2px solid transparent;
+            box-sizing: border-box;
+        }
+        .activity-icon:hover { color: #ffffff; }
+        .activity-icon.active { color: #ffffff; border-left: 2px solid #007acc; }
+        .activity-spacer { flex: 1; }
+
+        /* Main Workspace Area (Left Sidebar) */
         .main-area { display: flex; flex: 1; height: calc(100vh - 52px); }
-        .sidebar { width: calc(220px * var(--ui-zoom)); background-color: #252526; border-right: 1px solid #454545; display: flex; flex-direction: column; flex-shrink: 0; transition: width 0.1s;}
-        .sidebar-header { padding: 10px; font-size: var(--font-term); text-transform: uppercase; font-weight: bold; color: #bbbbbb; }
         
-        .file-tree { list-style: none; overflow-y: auto; flex: 1; }
-        .file-item { padding: 5px 10px 5px 15px; font-size: var(--font-ui); cursor: pointer; display: flex; align-items: center; gap: 8px; user-select: none; }
-        .file-item:hover { background-color: #2a2d2e; }
-        .file-item.active { background-color: #37373d; color: #ffffff; }
+        .sidebar { 
+            width: var(--sidebar-width); background-color: #252526; display: flex; 
+            flex-direction: column; flex-shrink: 0; transition: width 0.1s;
+        }
+        .sidebar.hidden { display: none; }
+
+        /* Drag-to-Resize Handle */
+        .resizer {
+            width: 4px; background-color: #252526; cursor: col-resize; 
+            border-left: 1px solid #454545; border-right: 1px solid #454545; z-index: 10;
+        }
+        .resizer:hover, .resizer.resizing { background-color: #007acc; }
 
         .editor-terminal-column { flex: 1; display: flex; flex-direction: column; min-width: 0;}
         .editor-container { flex: 1; display: flex; flex-direction: column; min-width: 0; position: relative; }
+
+        .sidebar-header { 
+            padding: 10px; font-size: var(--font-term); text-transform: uppercase; 
+            font-weight: bold; color: #bbbbbb; display: flex; justify-content: space-between; 
+            cursor: pointer; user-select: none; 
+        }
+        .sidebar-header:hover { color: #fff; }
         
-        .editor-tabs { display: flex; background-color: #252526; height: calc(35px * var(--ui-zoom)); overflow-x: auto; flex-shrink: 0; }
+        /* Directory Tree UI */
+        .workspace-tree { flex: 1; overflow-y: auto; display: block; }
+        .tree-ul { list-style: none; padding-left: 10px; display: none; }
+        .tree-ul.open { display: block; }
+        .tree-root { padding-left: 0; display: block; }
+        
+        .tree-item { 
+            font-size: var(--font-ui); cursor: pointer; display: flex; align-items: center; 
+            gap: 6px; user-select: none; padding: 4px 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+        }
+        .tree-item-wrap { display: flex; align-items: center; width: 100%; padding-left: 5px; }
+        .tree-item-wrap:hover { background-color: #2a2d2e; }
+        .tree-item-wrap.active { background-color: #37373d; color: #ffffff; }
+        .chevron { width: 12px; font-size: 10px; display: inline-block; text-align: center; color: #888; transition: transform 0.1s; }
+        .chevron.open { transform: rotate(90deg); }
+        
+        /* Editor Tabs */
+        .editor-tabs { 
+            display: flex; background-color: #252526; height: calc(35px * var(--ui-zoom)); 
+            overflow-x: auto; flex-shrink: 0; 
+        }
         .editor-tabs::-webkit-scrollbar { height: 4px; background: #1e1e1e; }
         .editor-tabs::-webkit-scrollbar-thumb { background: #555; }
-        .tab { padding: 0 15px; background-color: #2d2d2d; border-right: 1px solid #252526; color: #969696; font-size: var(--font-ui); display: flex; align-items: center; gap: 6px; cursor: pointer; user-select: none; min-width: max-content; border-top: 1px solid transparent; }
+        .tab { 
+            padding: 0 15px; background-color: #2d2d2d; border-right: 1px solid #252526; 
+            color: #969696; font-size: var(--font-ui); display: flex; align-items: center; 
+            gap: 6px; cursor: pointer; user-select: none; min-width: max-content; border-top: 1px solid transparent; 
+        }
         .tab.active { background-color: #1e1e1e; color: #ffffff; border-top: 1px solid #007acc; }
         .tab:hover:not(.active) { background-color: #2b2b2b; }
         .tab-close { font-size: calc(var(--font-ui) - 3px); margin-left: 5px; padding: 3px 5px; border-radius: 3px; opacity: 0; color: #ccc; }
         .tab:hover .tab-close, .tab.active .tab-close { opacity: 1; }
         .tab-close:hover { background-color: #444; color: white; }
 
-        #editor { flex: 1; width: 100%; opacity: 0; transition: opacity 0.3s ease; }
+        /* Loading & Editor Elements */
+        #editor { flex: 1; width: 100%; opacity: 0; transition: opacity 0.2s ease; display: none; }
         
-        #loading-overlay { position: absolute; top: 35px; left: 0; right: 0; bottom: 0; background: #1e1e1e; display: flex; align-items: center; justify-content: center; z-index: 10; font-size: var(--font-ui); color: #888; flex-direction: column; gap: 10px; transition: opacity 0.3s ease; }
+        .welcome-screen { 
+            display: flex; flex-direction: column; justify-content: center; padding: 40px; 
+            background: #1e1e1e; flex: 1; overflow-y: auto; user-select: none; 
+        }
+        .welcome-title { font-size: calc(36px * var(--ui-zoom)); color: #fff; margin-bottom: 5px; }
+        .welcome-subtitle { font-size: calc(16px * var(--ui-zoom)); color: #888; margin-bottom: 30px; }
+        .welcome-section { margin-bottom: 25px; }
+        .welcome-section h3 { font-size: calc(14px * var(--ui-zoom)); color: #ccc; margin-bottom: 15px; text-transform: uppercase; }
+        .welcome-action { color: #007acc; font-size: calc(14px * var(--ui-zoom)); cursor: pointer; margin-bottom: 10px; display: flex; align-items: center; gap: 8px; }
+        .welcome-action:hover { color: #0098ff; text-decoration: underline; }
+        #recent-folder-btn { display: none; color: #dcb67a; }
+
+        #loading-overlay { 
+            position: absolute; top: 35px; left: 0; right: 0; bottom: 0; background: #1e1e1e; 
+            display: flex; align-items: center; justify-content: center; z-index: 10; 
+            font-size: var(--font-ui); color: #888; flex-direction: column; gap: 10px; transition: opacity 0.2s ease; 
+        }
         .spinner { width: 30px; height: 30px; border: 3px solid #333; border-top-color: #007acc; border-radius: 50%; animation: spin 1s linear infinite; }
         @keyframes spin { to { transform: rotate(360deg); } }
 
-        .empty-state { position: absolute; top: 35px; left: 0; right: 0; bottom: 0; background: #1e1e1e; display: none; align-items: center; justify-content: center; font-size: calc(var(--font-ui) * 2); color: #444; font-weight: bold; z-index: 5; user-select: none; }
-
-        .terminal-area { display: none; height: calc(200px * var(--ui-zoom)); background-color: #1e1e1e; border-top: 1px solid #454545; flex-direction: column; flex-shrink: 0; transition: height 0.1s;}
+        /* Terminal Panel */
+        .terminal-area { display: none; height: calc(200px * var(--ui-zoom)); background-color: #1e1e1e; border-top: 1px solid #454545; flex-direction: column; flex-shrink: 0; }
         .terminal-header { font-size: var(--font-term); padding: 5px 10px; text-transform: uppercase; color: #bbb; background: #252526; border-bottom: 1px solid #454545; user-select: none; display: flex; justify-content: space-between; align-items: center; }
         .terminal-close { cursor: pointer; color: #bbb; font-size: var(--font-ui); }
         .terminal-close:hover { color: white; }
         #terminal { flex: 1; width: 100%; padding: 5px; }
 
+        /* Status Bar */
         .status-bar { background-color: #007acc; height: calc(22px * var(--ui-zoom)); display: flex; justify-content: space-between; align-items: center; padding: 0 10px; font-size: calc(var(--font-ui) - 1px); color: white; user-select: none; }
         .status-left, .status-right { display: flex; gap: 15px; }
-        .auto-save-status { font-style: italic; opacity: 0.8; }
     </style>
 </head>
 <body>
 
 <div class="ide-container">
+    <!-- Main Menu -->
     <div class="title-bar">
         <div class="menu-bar">
             <div class="menu-item">
                 <div class="menu-btn">File</div>
                 <div class="dropdown">
-                    <div class="dropdown-item" onclick="createNewFile()"><span>New File</span></div>
-                    <div class="dropdown-item" onclick="openRealFile()"><span>Open File...</span><span class="shortcut">Ctrl+O</span></div>
+                    <div class="dropdown-item" onclick="createNewFile()"><span>New File</span><span class="shortcut">Ctrl+N</span></div>
+                    <div class="dropdown-item" onclick="openFolder()"><span>Open Folder...</span><span class="shortcut">Ctrl+O</span></div>
                     <div class="dropdown-item" onclick="forceManualSave()"><span>Save</span><span class="shortcut">Ctrl+S</span></div>
                 </div>
             </div>
             <div class="menu-item">
                 <div class="menu-btn">Edit</div>
                 <div class="dropdown">
-                    <div class="dropdown-item" onclick="if(editor) editor.trigger('keyboard', 'undo', null);"><span>Undo</span><span class="shortcut">Ctrl+Z</span></div>
-                    <div class="dropdown-item" onclick="if(editor) editor.trigger('keyboard', 'redo', null);"><span>Redo</span><span class="shortcut">Ctrl+Y</span></div>
+                    <div class="dropdown-item" onclick="if(editor && currentFile !== 'Welcome') editor.trigger('keyboard', 'undo', null);"><span>Undo</span></div>
+                    <div class="dropdown-item" onclick="if(editor && currentFile !== 'Welcome') editor.trigger('keyboard', 'redo', null);"><span>Redo</span></div>
                 </div>
             </div>
             <div class="menu-item">
@@ -119,30 +243,100 @@
             </div>
         </div>
         
-        <button class="run-quick-btn" onclick="launchPreview()">▶ Preview HTML</button>
+        <button class="run-quick-btn" onclick="launchPreview()">▶ Preview Display</button>
         <div class="title-bar-brand">AeroCode</div>
     </div>
 
+    <!-- Main Content Area -->
     <div class="main-area">
-        <div class="sidebar">
-            <div class="sidebar-header">Workspace</div>
-            <ul class="file-tree" id="file-tree"></ul>
+        
+        <!-- Activity Bar (VS Code Extension Bar Style) -->
+        <div class="activity-bar">
+            <!-- Explorer Icon -->
+            <div class="activity-icon active" id="activity-explorer" onclick="toggleSidebar()" title="Explorer">
+                <svg viewBox="0 0 24 24" fill="currentColor" width="24" height="24">
+                    <path d="M4 4h7l2 2h7v13H4V4zm2 2v11h12V8h-6l-2-2H6z"/>
+                </svg>
+            </div>
+            <!-- Search Icon -->
+            <div class="activity-icon" title="Search">
+                <svg viewBox="0 0 24 24" fill="currentColor" width="24" height="24">
+                    <path d="M15.5 14h-.79l-.28-.27A6.471 6.471 0 0 0 16 9.5 6.5 6.5 0 1 0 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/>
+                </svg>
+            </div>
+            <!-- Extensions Icon -->
+            <div class="activity-icon" title="Extensions">
+                <svg viewBox="0 0 24 24" fill="currentColor" width="24" height="24">
+                    <path d="M20.5 11H19V7c0-1.1-.9-2-2-2h-4V3.5C13 2.12 11.88 1 10.5 1S8 2.12 8 3.5V5H4c-1.1 0-1.99.9-1.99 2v3.8H.5v3.4h1.5V18c0 1.1.9 2 2 2h4v1.5c0 1.38 1.12 2.5 2.5 2.5s2.5-1.12 2.5-2.5V20h4c1.1 0 2-.9 2-2v-4.5h1.5v-2.5zM17 18H4V7h13v11z"/>
+                </svg>
+            </div>
+            
+            <div class="activity-spacer"></div>
+            
+            <!-- Settings Icon -->
+            <div class="activity-icon" title="Settings">
+                <svg viewBox="0 0 24 24" fill="currentColor" width="24" height="24">
+                    <path d="M19.4 13c.0-.3.0-.6.0-1s0-.7-.0-1l2.1-1.6c.2-.2.3-.4.2-.6l-2-3.5c-.1-.2-.3-.3-.5-.2l-2.5 1c-.5-.4-1.1-.7-1.7-1l-.4-2.6c-.0-.2-.2-.4-.5-.4h-4c-.3 0-.5.2-.5.4l-.4 2.6c-.6.3-1.2.6-1.7 1l-2.5-1c-.2-.1-.5 0-.6.2l-2 3.5c-.1.2-.1.5.1.6L4.6 11c-.0.3-.0.6-.0 1s0 .7.0 1l-2.1 1.6c-.2.2-.3.4-.2.6l2 3.5c.1.2.3.3.5.2l2.5-1c.5.4 1.1.7 1.7 1l.4 2.6c.0.2.2.4.5.4h4c.3 0 .5-.2.5-.4l.4-2.6c.6-.3 1.2-.6 1.7-1l2.5 1c.2.1.5 0 .6-.2l2-3.5c.1-.2.1-.5-.1-.6L19.4 13zM12 15.5c-1.9 0-3.5-1.6-3.5-3.5s1.6-3.5 3.5-3.5 3.5 1.6 3.5 3.5-1.6 3.5-3.5 3.5z"/>
+                </svg>
+            </div>
         </div>
 
+        <!-- Sidebar on the Left -->
+        <div class="sidebar" id="sidebar">
+            <div class="sidebar-header" onclick="toggleWorkspace()">
+                <span id="workspace-title">NO FOLDER OPENED</span>
+                <span id="workspace-chevron" class="chevron open">▶</span>
+            </div>
+            <div class="workspace-tree" id="workspace-tree">
+                <ul class="tree-ul tree-root open" id="file-tree-root"></ul>
+            </div>
+        </div>
+        
+        <!-- Draggable Resizer -->
+        <div class="resizer" id="sidebar-resizer"></div>
+
+        <!-- Editor and Terminal Column -->
         <div class="editor-terminal-column">
             <div class="editor-container">
                 <div class="editor-tabs" id="editor-tabs"></div>
+                
                 <div id="loading-overlay">
                     <div class="spinner"></div>
-                    <span id="loading-text">Compiling Engine...</span>
+                    <span id="loading-text">Starting Engine...</span>
                 </div>
-                <div class="empty-state" id="empty-state">No File Selected</div>
+
+                <!-- Welcome Screen -->
+                <div class="welcome-screen" id="welcome-screen">
+                    <h1 class="welcome-title">AeroCode</h1>
+                    <p class="welcome-subtitle">Lightweight Offline Editor</p>
+                    
+                    <div class="welcome-section">
+                        <h3>Start</h3>
+                        <div class="welcome-action" onclick="createNewFile()">
+                            <i class="icon icon-default"></i> New File...
+                        </div>
+                        <div class="welcome-action" onclick="openFolder()">
+                            <i class="icon icon-folder"></i> Open Folder Workspace...
+                        </div>
+                    </div>
+
+                    <div class="welcome-section">
+                        <h3>Recent Workspace</h3>
+                        <div class="welcome-action" id="recent-folder-btn" onclick="reopenLastFolder()">
+                            <i class="icon icon-folder-open"></i> Reopen <span id="recent-folder-name" style="margin-left: 5px; font-weight:bold;"></span>
+                        </div>
+                        <p style="color:#666; font-size:12px; max-width:400px; margin-top:5px;">
+                            Note: Browsers clear file permissions on reload. Click to restore your workspace.
+                        </p>
+                    </div>
+                </div>
+
                 <div id="editor"></div>
             </div>
             
             <div class="terminal-area" id="terminal-area">
                 <div class="terminal-header">
-                    <span>Terminal Console</span>
+                    <span>Terminal</span>
                     <span class="terminal-close" onclick="closeTerminal()">✖</span>
                 </div>
                 <div id="terminal"></div>
@@ -151,12 +345,19 @@
     </div>
 
     <div class="status-bar">
-        <div class="status-left"><span id="file-status">Initializing Workspace...</span></div>
+        <div class="status-left"><span id="file-status">Ready</span></div>
         <div class="status-right">
             <span id="cursor-position">Ln 1, Col 1</span>
-            <span id="language-status">Loading</span>
+            <span id="language-status">Ready</span>
         </div>
     </div>
+</div>
+
+<!-- Custom Context Menu -->
+<div class="context-menu" id="context-menu">
+    <div class="context-menu-item" onclick="cmdNewFile()">New File</div>
+    <div class="context-menu-item" onclick="cmdNewFolder()">New Folder</div>
+    <div class="context-menu-item" onclick="cmdDelete()">Delete</div>
 </div>
 
 <script>
@@ -171,6 +372,7 @@
 <script src="./xterm/xterm.js" defer></script>
 
 <script>
+    // --- Global Zoom Settings ---
     let baseFontSize = 14;
     let uiZoom = 1;
 
@@ -180,20 +382,54 @@
         if (termInstance) termInstance.options.fontSize = baseFontSize;
     }
 
-    function zoomIn() {
-        if (baseFontSize >= 30) return;
-        baseFontSize += 2;
-        uiZoom += 0.1;
-        applyZoom();
+    function zoomIn() { if (baseFontSize >= 30) return; baseFontSize += 2; uiZoom += 0.1; applyZoom(); }
+    function zoomOut() { if (baseFontSize <= 8) return; baseFontSize -= 2; uiZoom -= 0.1; applyZoom(); }
+
+    function toggleSidebar() {
+        const sb = document.getElementById('sidebar');
+        const rs = document.getElementById('sidebar-resizer');
+        const expIcon = document.getElementById('activity-explorer');
+        if (sb.classList.contains('hidden')) {
+            sb.classList.remove('hidden');
+            rs.style.display = 'block';
+            expIcon.classList.add('active');
+        } else {
+            sb.classList.add('hidden');
+            rs.style.display = 'none';
+            expIcon.classList.remove('active');
+        }
+        if (editor) setTimeout(() => editor.layout(), 100);
     }
 
-    function zoomOut() {
-        if (baseFontSize <= 8) return;
-        baseFontSize -= 2;
-        uiZoom -= 0.1;
-        applyZoom();
-    }
+    // --- Resizer Logic ---
+    const resizer = document.getElementById('sidebar-resizer');
+    let isResizing = false;
 
+    resizer.addEventListener('mousedown', (e) => {
+        isResizing = true;
+        resizer.classList.add('resizing');
+        document.body.style.cursor = 'col-resize';
+    });
+
+    document.addEventListener('mousemove', (e) => {
+        if (!isResizing) return;
+        // Sidebar is on left, offset by 50px Activity Bar
+        let newWidth = e.clientX - 50;
+        if (newWidth < 150) newWidth = 150;
+        if (newWidth > 600) newWidth = 600;
+        document.documentElement.style.setProperty('--sidebar-width', newWidth + 'px');
+        if (editor) editor.layout(); 
+    });
+
+    document.addEventListener('mouseup', () => {
+        if (isResizing) {
+            isResizing = false;
+            resizer.classList.remove('resizing');
+            document.body.style.cursor = 'default';
+        }
+    });
+
+    // --- Menu & Context Logic ---
     document.querySelectorAll('.menu-btn').forEach(btn => {
         btn.addEventListener('click', (e) => {
             const parent = e.target.parentElement;
@@ -203,238 +439,556 @@
             e.stopPropagation();
         });
     });
+    
     document.addEventListener('click', () => {
         document.querySelectorAll('.menu-item').forEach(item => item.classList.remove('active'));
+        document.getElementById('context-menu').style.display = 'none';
     });
 
-    const vfs = {
-        'index.html': { 
-            lang: 'html', 
-            content: `<!DOCTYPE html>\n<html lang="en">\n<head>\n\t<title>AeroCode Project</title>\n\t<link rel="stylesheet" href="style.css">\n</head>\n<body>\n\t<h1>VFS Injection Success!</h1>\n\t<script src="script.js"><\/script>\n</body>\n</html>`,
-            handle: null, model: null
-        },
-        'style.css': {
-            lang: 'css',
-            content: `body { background: #222; color: #4CAF50; font-family: sans-serif; text-align: center; margin-top: 50px; }`,
-            handle: null, model: null
-        },
-        'script.js': { 
-            lang: 'javascript', 
-            content: `console.log("Welcome to AeroCode Engine...");`,
-            handle: null, model: null 
+    let contextTargetHandle = null;
+    let contextTargetPath = null;
+
+    document.getElementById('sidebar').addEventListener('contextmenu', (e) => {
+        e.preventDefault();
+        const fileNode = e.target.closest('.file-node');
+        const dirNode = e.target.closest('.dir-node');
+        
+        if (fileNode) {
+            contextTargetPath = fileNode.getAttribute('data-path');
+            contextTargetHandle = vfs[contextTargetPath] ? vfs[contextTargetPath].handle : null;
+        } else if (dirNode) {
+            contextTargetPath = dirNode.getAttribute('data-path');
+            contextTargetHandle = rootDirectoryHandle; 
+        } else {
+            contextTargetPath = '';
+            contextTargetHandle = rootDirectoryHandle;
         }
-    };
-    
-    let openTabs = ['index.html']; 
-    let currentFile = 'index.html'; 
+
+        const ctx = document.getElementById('context-menu');
+        ctx.style.display = 'block';
+        ctx.style.left = e.pageX + 'px';
+        ctx.style.top = e.pageY + 'px';
+    });
+
+    async function cmdNewFile() {
+        if (!contextTargetHandle) return alert("Open a workspace folder first.");
+        createNewFile();
+    }
+    async function cmdNewFolder() {
+        if (!rootDirectoryHandle) return alert("Open a workspace folder first.");
+        const name = prompt("Enter folder name:");
+        if (!name) return;
+        try {
+            await rootDirectoryHandle.getDirectoryHandle(name, { create: true });
+            await buildWorkspace(rootDirectoryHandle);
+        } catch (err) {
+            alert("Failed to create folder.");
+        }
+    }
+    async function cmdDelete() {
+        if (!contextTargetHandle || !contextTargetPath) return;
+        const confirmDel = confirm(`Are you sure you want to delete ${contextTargetPath}?`);
+        if (!confirmDel) return;
+        try {
+            const name = contextTargetPath.split('/').pop();
+            await rootDirectoryHandle.removeEntry(name, { recursive: true });
+            if (openTabs.includes(contextTargetPath)) closeTab(new Event('click'), contextTargetPath);
+            await buildWorkspace(rootDirectoryHandle);
+        } catch (err) {
+            alert("Failed to delete. Ensure file is not in use.");
+        }
+    }
+
+    // --- State & VFS ---
+    let vfs = {}; 
+    let rootDirectoryHandle = null;
+    let openTabs = ['Welcome']; 
+    let currentFile = 'Welcome'; 
     let editor = null;
     let autoSaveTimer = null;
     let previewTab = null;
     let currentBlobUrl = null;
     let termInstance = null;
 
-    const fileTree = document.getElementById('file-tree');
+    const fileTreeRoot = document.getElementById('file-tree-root');
     const tabsContainer = document.getElementById('editor-tabs');
     const langStatus = document.getElementById('language-status');
     const fileStatus = document.getElementById('file-status');
-    const emptyState = document.getElementById('empty-state');
     const editorDiv = document.getElementById('editor');
-    const terminalArea = document.getElementById('terminal-area');
+    const welcomeScreen = document.getElementById('welcome-screen');
+    const workspaceTitle = document.getElementById('workspace-title');
+    const workspaceChevron = document.getElementById('workspace-chevron');
 
-    function getLang(filename) {
-        const ext = filename.split('.').pop().toLowerCase();
-        const map = { 'js': 'javascript', 'html': 'html', 'css': 'css', 'json': 'json' };
-        return map[ext] || 'plaintext';
+    // --- IndexedDB ---
+    const DB_NAME = 'AeroCodeDB';
+    let db;
+    const request = indexedDB.open(DB_NAME, 1);
+    
+    request.onupgradeneeded = (e) => {
+        db = e.target.result;
+        db.createObjectStore('workspace');
+    };
+    request.onsuccess = (e) => {
+        db = e.target.result;
+        checkRecentWorkspace();
+    };
+
+    function saveWorkspaceToDB(handle) {
+        if (!db) return;
+        const tx = db.transaction('workspace', 'readwrite');
+        tx.objectStore('workspace').put(handle, 'lastFolder');
     }
 
+    function checkRecentWorkspace() {
+        if (!db) return;
+        const tx = db.transaction('workspace', 'readonly');
+        const req = tx.objectStore('workspace').get('lastFolder');
+        req.onsuccess = () => {
+            if (req.result) {
+                document.getElementById('recent-folder-btn').style.display = 'flex';
+                document.getElementById('recent-folder-name').innerText = req.result.name;
+            }
+        };
+    }
+
+    async function verifyPermission(fileHandle) {
+        const options = { mode: 'readwrite' };
+        if ((await fileHandle.queryPermission(options)) === 'granted') return true;
+        if ((await fileHandle.requestPermission(options)) === 'granted') return true;
+        return false;
+    }
+
+    async function reopenLastFolder() {
+        const tx = db.transaction('workspace', 'readonly');
+        const req = tx.objectStore('workspace').get('lastFolder');
+        req.onsuccess = async () => {
+            if (req.result) {
+                try {
+                    const handle = req.result;
+                    const hasPerm = await verifyPermission(handle);
+                    if (hasPerm) {
+                        rootDirectoryHandle = handle;
+                        await buildWorkspace(handle);
+                    } else {
+                        alert("Permission denied. You must open the folder manually.");
+                    }
+                } catch (e) {
+                    console.error("Failed to reopen:", e);
+                }
+            }
+        };
+    }
+
+    // --- File System Helpers ---
+    function getLang(filename) {
+        const ext = filename.split('.').pop().toLowerCase();
+        const map = { 'js': 'javascript', 'html': 'html', 'css': 'css', 'json': 'json', 'c': 'c', 'cpp': 'cpp', 'cs': 'csharp', 'py': 'python', 'java': 'java' };
+        return map[ext] || 'plaintext';
+    }
+    
     function getIconClass(filename) {
         const ext = filename.split('.').pop().toLowerCase();
-        const map = { 'js': 'icon-js', 'html': 'icon-html', 'css': 'icon-css', 'json': 'icon-json' };
+        const map = { 'js': 'icon-js', 'html': 'icon-html', 'css': 'icon-css', 'json': 'icon-json', 'c': 'icon-c', 'cpp': 'icon-cpp', 'cs': 'icon-cs', 'py': 'icon-py', 'java': 'icon-java' };
         return map[ext] || 'icon-default';
     }
 
-    function renderFileTree() {
-        fileTree.innerHTML = '';
-        Object.keys(vfs).forEach(filename => {
-            const li = document.createElement('li');
-            li.className = `file-item ${filename === currentFile ? 'active' : ''}`;
-            li.innerHTML = `<i class="icon ${getIconClass(filename)}"></i> <span>${filename}</span>`;
-            li.onclick = () => switchFile(filename);
-            fileTree.appendChild(li);
+    async function openFolder() {
+        try {
+            rootDirectoryHandle = await window.showDirectoryPicker({ mode: 'readwrite' });
+            saveWorkspaceToDB(rootDirectoryHandle);
+            await buildWorkspace(rootDirectoryHandle);
+        } catch (err) {
+            console.log("Folder select cancelled.", err);
+        }
+    }
+
+    async function buildWorkspace(dirHandle) {
+        fileTreeRoot.innerHTML = '';
+        workspaceTitle.innerText = dirHandle.name.toUpperCase();
+        fileStatus.innerText = "Scanning Directory...";
+        await buildTreeUI(dirHandle, fileTreeRoot, "");
+        fileStatus.innerText = "Workspace Loaded";
+    }
+
+    // Core Tree Building Logic
+    async function buildTreeUI(dirHandle, parentUL, pathPrefix) {
+        let entries = [];
+        for await (const entry of dirHandle.values()) entries.push(entry);
+        
+        entries.sort((a, b) => {
+            if(a.kind === b.kind) return a.name.localeCompare(b.name);
+            return a.kind === 'directory' ? -1 : 1;
         });
+
+        for (const entry of entries) {
+            const currentPath = pathPrefix + entry.name;
+            const li = document.createElement('li');
+            
+            if (entry.kind === 'directory') {
+                if (entry.name === 'node_modules' || entry.name === '.git') continue;
+
+                const wrap = document.createElement('div');
+                wrap.className = 'tree-item-wrap dir-node';
+                wrap.setAttribute('data-path', currentPath);
+                
+                const chev = document.createElement('span');
+                chev.className = 'chevron';
+                chev.innerText = '▶';
+                
+                const label = document.createElement('div');
+                label.className = 'tree-item';
+                label.innerHTML = `<i class="icon icon-folder"></i> ${entry.name}`;
+                
+                wrap.appendChild(chev);
+                wrap.appendChild(label);
+                li.appendChild(wrap);
+                
+                const childUL = document.createElement('ul');
+                childUL.className = 'tree-ul';
+                li.appendChild(childUL);
+                parentUL.appendChild(li);
+
+                let loaded = false;
+                
+                wrap.addEventListener('click', async (e) => {
+                    e.stopPropagation();
+                    const isOpen = childUL.classList.contains('open');
+                    if (isOpen) {
+                        childUL.classList.remove('open');
+                        chev.classList.remove('open');
+                        label.querySelector('.icon').classList.replace('icon-folder-open', 'icon-folder');
+                    } else {
+                        if (!loaded) {
+                            await buildTreeUI(entry, childUL, currentPath + '/');
+                            loaded = true;
+                        }
+                        childUL.classList.add('open');
+                        chev.classList.add('open');
+                        label.querySelector('.icon').classList.replace('icon-folder', 'icon-folder-open');
+                    }
+                });
+
+                wrap.addEventListener('dblclick', async (e) => {
+                    e.stopPropagation();
+                    await renameHandle(entry, rootDirectoryHandle);
+                });
+
+            } else {
+                if (!vfs[currentPath]) {
+                    vfs[currentPath] = { handle: entry, model: null, lang: getLang(entry.name) };
+                } else {
+                    vfs[currentPath].handle = entry; 
+                }
+                
+                const wrap = document.createElement('div');
+                wrap.className = `tree-item-wrap file-node`;
+                wrap.setAttribute('data-path', currentPath);
+                wrap.style.paddingLeft = '12px';
+                
+                const label = document.createElement('div');
+                label.className = 'tree-item';
+                label.innerHTML = `<i class="icon ${getIconClass(entry.name)}"></i> ${entry.name}`;
+                
+                wrap.appendChild(label);
+                li.appendChild(wrap);
+                parentUL.appendChild(li);
+
+                wrap.addEventListener('click', async (e) => {
+                    e.stopPropagation();
+                    await openFileFromVFS(currentPath, entry.name);
+                });
+
+                wrap.addEventListener('dblclick', async (e) => {
+                    e.stopPropagation();
+                    await renameHandle(entry, rootDirectoryHandle);
+                });
+            }
+        }
+    }
+
+    async function renameHandle(handle, parentHandle) {
+        const newName = prompt(`Rename ${handle.name} to:`, handle.name);
+        if (!newName || newName === handle.name) return;
+
+        try {
+            if (handle.move) {
+                await handle.move(newName);
+                if (rootDirectoryHandle) await buildWorkspace(rootDirectoryHandle);
+            } else {
+                alert("Native renaming is not supported in this Chrome version. Create a new file and delete the old one.");
+            }
+        } catch (err) {
+            console.error(err);
+            alert("Rename blocked by browser. Make sure the file/folder is not open in a tab.");
+        }
+    }
+
+    function toggleWorkspace() {
+        const root = document.getElementById('file-tree-root');
+        if (workspaceChevron.classList.contains('open')) {
+            workspaceChevron.classList.remove('open');
+            root.classList.remove('open');
+        } else {
+            workspaceChevron.classList.add('open');
+            root.classList.add('open');
+        }
+    }
+
+    // --- Tab & Editor Control ---
+    async function openFileFromVFS(path, filename) {
+        if (!vfs[path]) return;
+        
+        fileStatus.innerText = "Reading File...";
+        
+        if (!vfs[path].model) {
+            try {
+                const fileData = await vfs[path].handle.getFile();
+                const content = await fileData.text();
+                vfs[path].model = monaco.editor.createModel(content, vfs[path].lang, monaco.Uri.file(path));
+            } catch (err) {
+                fileStatus.innerText = "Error reading file";
+                return;
+            }
+        }
+
+        if (openTabs.includes('Welcome')) openTabs = openTabs.filter(t => t !== 'Welcome');
+        if (!openTabs.includes(path)) openTabs.push(path);
+        
+        switchFile(path);
+    }
+
+    function switchFile(path) {
+        if (path === 'Welcome') {
+            if (!openTabs.includes('Welcome')) openTabs.push('Welcome');
+            currentFile = 'Welcome';
+            welcomeScreen.style.display = 'flex';
+            editorDiv.style.display = 'none';
+            langStatus.innerText = "Ready";
+            renderTabs();
+            updateActiveSidebar();
+            return;
+        }
+
+        if (!vfs[path] || !editor) return;
+        
+        if (!openTabs.includes(path)) openTabs.push(path);
+        currentFile = path;
+        
+        editor.setModel(vfs[path].model);
+        
+        welcomeScreen.style.display = 'none';
+        editorDiv.style.display = 'block';
+        editorDiv.style.opacity = '1';
+        
+        langStatus.innerText = vfs[path].lang.toUpperCase();
+        fileStatus.innerText = "Ready";
+        
+        renderTabs();
+        updateActiveSidebar();
+        
+        if (previewTab && !previewTab.closed) updatePreviewTab();
     }
 
     function renderTabs() {
         tabsContainer.innerHTML = '';
-        openTabs.forEach(filename => {
+        openTabs.forEach(path => {
+            if (path === 'Welcome') {
+                const tab = document.createElement('div');
+                tab.className = `tab ${currentFile === 'Welcome' ? 'active' : ''}`;
+                tab.onclick = () => switchFile('Welcome');
+                tab.innerHTML = `Welcome <span class="tab-close" onclick="closeTab(event, 'Welcome')">✖</span>`;
+                tabsContainer.appendChild(tab);
+                return;
+            }
+
+            const filename = path.split('/').pop();
             const tab = document.createElement('div');
-            tab.className = `tab ${filename === currentFile ? 'active' : ''}`;
-            tab.onclick = () => switchFile(filename);
+            tab.className = `tab ${currentFile === path ? 'active' : ''}`;
+            tab.onclick = () => switchFile(path);
             tab.innerHTML = `
                 <i class="icon ${getIconClass(filename)}"></i> ${filename}
-                <span class="tab-close" onclick="closeTab(event, '${filename}')">✖</span>
+                <span class="tab-close" onclick="closeTab(event, '${path}')">✖</span>
             `;
             tabsContainer.appendChild(tab);
         });
         
         if (openTabs.length === 0) {
-            emptyState.style.display = 'flex';
+            welcomeScreen.style.display = 'flex';
             editorDiv.style.opacity = '0';
             langStatus.innerText = "No File";
+            currentFile = null;
         } else {
-            emptyState.style.display = 'none';
+            welcomeScreen.style.display = 'none';
             if(editor) editorDiv.style.opacity = '1';
         }
     }
 
-    function switchFile(filename) {
-        if (!vfs[filename]) return;
-        if (!openTabs.includes(filename)) openTabs.push(filename);
-        currentFile = filename;
-        const fileObj = vfs[filename];
-        
-        if (editor) editor.setModel(fileObj.model);
-        langStatus.innerText = fileObj.lang.toUpperCase();
-        renderFileTree();
-        renderTabs();
-        
-        if (previewTab && !previewTab.closed) updatePreviewTab();
-    }
-
-    function closeTab(event, filename) {
+    function closeTab(event, path) {
         event.stopPropagation();
-        openTabs = openTabs.filter(t => t !== filename);
-        if (currentFile === filename) {
-            if (openTabs.length > 0) switchFile(openTabs[openTabs.length - 1]);
-            else {
-                currentFile = null;
-                if(editor) editor.setModel(null);
-                renderTabs();
-                renderFileTree();
-            }
-        } else renderTabs();
-    }
-
-    function createNewFile() {
-        const name = prompt("Enter file name (e.g., style.css):", "main.css");
-        if (!name) return;
-        if (vfs[name]) return alert("File exists!");
-        const lang = getLang(name);
-        vfs[name] = { lang: lang, content: '', handle: null, model: null };
-        if (editor) vfs[name].model = monaco.editor.createModel('', lang, monaco.Uri.file(name));
-        switchFile(name);
-    }
-
-    async function openRealFile() {
-        try {
-            const [fileHandle] = await window.showOpenFilePicker();
-            const fileData = await fileHandle.getFile();
-            const content = await fileData.text();
-            const filename = fileData.name;
-            const lang = getLang(filename);
-            
-            if (vfs[filename]) {
-                if(editor) vfs[filename].model.setValue(content);
-                else vfs[filename].content = content;
-                vfs[filename].handle = fileHandle;
+        openTabs = openTabs.filter(t => t !== path);
+        
+        if (currentFile === path) {
+            if (openTabs.length > 0) {
+                switchFile(openTabs[openTabs.length - 1]);
             } else {
-                vfs[filename] = { lang: lang, content: content, handle: fileHandle, model: null };
-                if (editor) vfs[filename].model = monaco.editor.createModel(content, lang, monaco.Uri.file(filename));
+                switchFile('Welcome'); 
             }
-            switchFile(filename);
-            fileStatus.innerText = `Opened: ${filename}`;
-        } catch (err) {
-            console.log("File open cancelled.");
+        } else {
+            renderTabs();
         }
     }
 
+    function updateActiveSidebar() {
+        document.querySelectorAll('.file-node').forEach(node => {
+            if (node.getAttribute('data-path') === currentFile) node.classList.add('active');
+            else node.classList.remove('active');
+        });
+    }
+
+    // --- File Creation & Saving ---
+    async function createNewFile() {
+        const name = prompt("Enter new file name (e.g., script.js):", "newfile.html");
+        if (!name) return;
+        
+        const cleanName = name.replace(/\//g, '-');
+        let handle = null;
+        let path = cleanName;
+
+        if (rootDirectoryHandle) {
+            try {
+                handle = await rootDirectoryHandle.getFileHandle(cleanName, { create: true });
+            } catch (err) {
+                console.error(err);
+                return alert(`Failed to create file on disk. Ensure you have given write permission to the folder.`);
+            }
+        }
+        
+        if (vfs[path]) return alert("File already exists!");
+        
+        const lang = getLang(cleanName);
+        vfs[path] = { lang: lang, content: '', handle: handle, model: null };
+        if (editor) vfs[path].model = monaco.editor.createModel('', lang, monaco.Uri.file(path));
+        
+        if (rootDirectoryHandle) await buildWorkspace(rootDirectoryHandle);
+
+        if (openTabs.includes('Welcome')) openTabs = openTabs.filter(t => t !== 'Welcome');
+        if (!openTabs.includes(path)) openTabs.push(path);
+        
+        switchFile(path);
+    }
+
     async function forceManualSave() {
-        if (!editor || !currentFile || !vfs[currentFile]) return;
+        if (!editor || currentFile === 'Welcome' || !vfs[currentFile]) return;
         try {
             let handle = vfs[currentFile].handle;
             if (!handle) {
                 handle = await window.showSaveFilePicker({ suggestedName: currentFile });
-                vfs[currentFile].handle = handle; 
+                vfs[currentFile].handle = handle;
             }
             const writable = await handle.createWritable();
             await writable.write(vfs[currentFile].model.getValue());
             await writable.close();
-            fileStatus.innerText = `Saved to Disk`;
+            fileStatus.innerText = `Saved successfully`;
             updatePreviewTab();
         } catch (err) {
-            fileStatus.innerText = "Save Cancelled";
+            fileStatus.innerText = "Save Failed or Cancelled";
         }
         setTimeout(() => fileStatus.innerText = "Ready", 3000);
     }
 
     async function silentAutoSave() {
-        if (!editor || !currentFile || !vfs[currentFile]) return;
-        vfs[currentFile].content = vfs[currentFile].model.getValue();
-        updatePreviewTab();
+        if (!editor || currentFile === 'Welcome' || !vfs[currentFile]) return;
+        updatePreviewTab(); 
+        
         if (vfs[currentFile].handle) {
             try {
                 const writable = await vfs[currentFile].handle.createWritable();
-                await writable.write(vfs[currentFile].content);
+                await writable.write(vfs[currentFile].model.getValue());
                 await writable.close();
                 fileStatus.innerHTML = `Auto-saved to disk <span class="auto-save-status">✔</span>`;
             } catch (err) {}
-        } else {
-            fileStatus.innerHTML = `Auto-saved to memory <span class="auto-save-status">✔</span>`;
         }
     }
 
-    function buildLiveHTML() {
-        let targetFile = vfs[currentFile].lang === 'html' ? currentFile : 'index.html';
-        if (!vfs[targetFile] || vfs[targetFile].lang !== 'html') return "<h2>No HTML file available to preview.</h2>";
+    // --- Asynchronous VFS Preview Compiler ---
+    async function buildLiveHTML() {
+        let htmlPath = null;
+        if (currentFile !== 'Welcome' && vfs[currentFile] && vfs[currentFile].lang === 'html') {
+            htmlPath = currentFile;
+        } else {
+            htmlPath = Object.keys(vfs).find(k => vfs[k].lang === 'html' && (vfs[k].model || vfs[k].handle));
+        }
 
-        let html = vfs[targetFile].model ? vfs[targetFile].model.getValue() : vfs[targetFile].content;
-        
-        html = html.replace(/<link\s+.*?href=["'](.*?)["'].*?>/gi, (match, filename) => {
-            if (vfs[filename] && vfs[filename].lang === 'css') {
-                const css = vfs[filename].model ? vfs[filename].model.getValue() : vfs[filename].content;
-                return `<style>\n/* Injected by AeroCode: ${filename} */\n${css}\n</style>`;
-            }
-            return match; 
-        });
+        if (!htmlPath) return "<h2>No HTML file opened or found in workspace.</h2>";
 
-        html = html.replace(/<script\s+.*?src=["'](.*?)["'].*?><\/script>/gi, (match, filename) => {
-            if (vfs[filename] && vfs[filename].lang === 'javascript') {
-                const js = vfs[filename].model ? vfs[filename].model.getValue() : vfs[filename].content;
-                return `<script>\n/* Injected by AeroCode: ${filename} */\n${js}\n<\/script>`;
+        if (!vfs[htmlPath].model && vfs[htmlPath].handle) {
+             const fileData = await vfs[htmlPath].handle.getFile();
+             vfs[htmlPath].content = await fileData.text();
+        }
+
+        let html = vfs[htmlPath].model ? vfs[htmlPath].model.getValue() : vfs[htmlPath].content;
+        const pathSegments = htmlPath.split('/');
+        pathSegments.pop();
+        const basePath = pathSegments.length > 0 ? pathSegments.join('/') + '/' : '';
+
+        const linkRegex = /<link\s+.*?href=["'](.*?)["'].*?>/gi;
+        const links = [...html.matchAll(linkRegex)];
+        for (const match of links) {
+            const filename = match[1];
+            const fullPath = basePath + filename;
+            if (vfs[fullPath]) {
+                if (!vfs[fullPath].model && vfs[fullPath].handle) {
+                    const fd = await vfs[fullPath].handle.getFile();
+                    vfs[fullPath].content = await fd.text();
+                }
+                const css = vfs[fullPath].model ? vfs[fullPath].model.getValue() : vfs[fullPath].content;
+                html = html.replace(match[0], `<style>\n/* Injected: ${filename} */\n${css}\n</style>`);
             }
-            return match;
-        });
+        }
+
+        const scriptRegex = /<script\s+.*?src=["'](.*?)["'].*?><\/script>/gi;
+        const scripts = [...html.matchAll(scriptRegex)];
+        for (const match of scripts) {
+            const filename = match[1];
+            const fullPath = basePath + filename;
+            if (vfs[fullPath]) {
+                if (!vfs[fullPath].model && vfs[fullPath].handle) {
+                    const fd = await vfs[fullPath].handle.getFile();
+                    vfs[fullPath].content = await fd.text();
+                }
+                const js = vfs[fullPath].model ? vfs[fullPath].model.getValue() : vfs[fullPath].content;
+                html = html.replace(match[0], `<script>\n/* Injected: ${filename} */\n${js}\n<\/script>`);
+            }
+        }
 
         return html;
     }
 
-    function launchPreview() {
-        if (!editor) return;
-        const finalHTML = buildLiveHTML();
+    async function launchPreview() {
+        if (!editor && currentFile === 'Welcome') return;
+        const finalHTML = await buildLiveHTML();
         const blob = new Blob([finalHTML], { type: 'text/html' });
         
         if (currentBlobUrl) URL.revokeObjectURL(currentBlobUrl);
         currentBlobUrl = URL.createObjectURL(blob);
 
-        if (previewTab && !previewTab.closed) {
-            previewTab.location.replace(currentBlobUrl);
-        } else {
-            previewTab = window.open(currentBlobUrl, 'WebIDEPreview');
-        }
+        if (previewTab && !previewTab.closed) previewTab.location.replace(currentBlobUrl);
+        else previewTab = window.open(currentBlobUrl, 'WebIDEPreview');
     }
 
-    function updatePreviewTab() {
+    async function updatePreviewTab() {
         if (previewTab && !previewTab.closed) {
-            const finalHTML = buildLiveHTML();
+            const finalHTML = await buildLiveHTML();
             const blob = new Blob([finalHTML], { type: 'text/html' });
-            
             if (currentBlobUrl) URL.revokeObjectURL(currentBlobUrl);
             currentBlobUrl = URL.createObjectURL(blob);
-            
             previewTab.location.replace(currentBlobUrl);
         }
     }
 
+    // --- Terminal Engine ---
+    const terminalArea = document.getElementById('terminal-area');
+    
     function openTerminal() {
         terminalArea.style.display = 'flex';
         if (!termInstance) initTerminalEngine();
@@ -447,26 +1001,33 @@
     }
 
     function initTerminalEngine() {
-        if(typeof Terminal === 'undefined') return setTimeout(initTerminalEngine, 100);
+        if (typeof Terminal === 'undefined') {
+            setTimeout(initTerminalEngine, 100);
+            return;
+        }
 
         termInstance = new Terminal({
             theme: { background: '#1e1e1e', foreground: '#cccccc', cursor: '#ffffff' },
-            fontFamily: 'monospace', fontSize: baseFontSize, cursorBlink: true, convertEol: true
+            fontFamily: 'monospace', 
+            fontSize: baseFontSize, 
+            cursorBlink: true, 
+            convertEol: true
         });
+        
         termInstance.open(document.getElementById('terminal'));
 
         const originalLog = console.log;
         const originalError = console.error;
 
         console.log = function(...args) {
-            if(args[0] === 'SW Cache Engine Active') return originalLog.apply(console, args);
+            if(args[0] && typeof args[0] === 'string' && args[0].includes('SW Cache')) return originalLog.apply(console, args);
             const msg = args.map(a => typeof a === 'object' ? JSON.stringify(a) : String(a)).join(' ');
             if (termInstance) termInstance.writeln(msg);
             originalLog.apply(console, args);
         };
 
         console.error = function(...args) {
-            if(args[0] && args[0].includes('SW Failed')) return originalError.apply(console, args);
+            if(args[0] && typeof args[0] === 'string' && args[0].includes('SW Failed')) return originalError.apply(console, args);
             const msg = args.map(a => typeof a === 'object' ? JSON.stringify(a) : String(a)).join(' ');
             if (termInstance) termInstance.writeln('\x1b[31m' + msg + '\x1b[0m');
             originalError.apply(console, args);
@@ -480,58 +1041,76 @@
         termInstance.onKey(e => {
             const ev = e.domEvent;
             const printable = !ev.altKey && !ev.ctrlKey && !ev.metaKey;
+            
             if (ev.keyCode === 13) {
                 termInstance.write('\r\n');
                 executeTerminalCommand(cmdBuffer.trim());
                 cmdBuffer = '';
                 prompt();
             } else if (ev.keyCode === 8) {
-                if (cmdBuffer.length > 0) { cmdBuffer = cmdBuffer.slice(0, -1); termInstance.write('\b \b'); }
+                if (cmdBuffer.length > 0) { 
+                    cmdBuffer = cmdBuffer.slice(0, -1); 
+                    termInstance.write('\b \b'); 
+                }
             } else if (printable) {
-                cmdBuffer += e.key; termInstance.write(e.key);
+                cmdBuffer += e.key; 
+                termInstance.write(e.key);
             }
         });
     }
 
-    function executeTerminalCommand(input) {
+    async function executeTerminalCommand(input) {
         if (!input) return;
         const args = input.split(' ');
         const base = args[0].toLowerCase();
         const target = args[1];
 
         switch(base) {
-            case 'ls': termInstance.writeln(Object.keys(vfs).join('  ')); break;
-            case 'cat':
-                if (!target) return termInstance.writeln('Usage: cat <filename>');
-                if (vfs[target]) termInstance.writeln(vfs[target].model ? vfs[target].model.getValue() : vfs[target].content);
-                else termInstance.writeln(`cat: ${target}: No such file`);
+            case 'ls': 
+                termInstance.writeln(Object.keys(vfs).map(p => p.split('/').pop()).join('  ')); 
                 break;
-            case 'clear': termInstance.clear(); break;
+            case 'clear': 
+                termInstance.clear(); 
+                break;
             case 'node':
                 if (!target) return termInstance.writeln('Usage: node <filename>');
-                if (!vfs[target]) return termInstance.writeln(`\x1b[31mError: Cannot find file '${target}'\x1b[0m`);
-                if (vfs[target].lang !== 'javascript') return termInstance.writeln(`\x1b[31mError: Can only execute JavaScript files.\x1b[0m`);
+                
+                const targetKey = Object.keys(vfs).find(k => k.endsWith(target));
+                if (!targetKey) return termInstance.writeln(`\x1b[31mError: Cannot find file '${target}'.\x1b[0m`);
+                if (vfs[targetKey].lang !== 'javascript') return termInstance.writeln(`\x1b[31mError: Can only execute JavaScript files.\x1b[0m`);
+                
                 try {
-                    const jsContent = vfs[target].model ? vfs[target].model.getValue() : vfs[target].content;
+                    let jsContent = '';
+                    if (vfs[targetKey].model) {
+                        jsContent = vfs[targetKey].model.getValue();
+                    } else if (vfs[targetKey].handle) {
+                        const fd = await vfs[targetKey].handle.getFile();
+                        jsContent = await fd.text();
+                    } else {
+                        jsContent = vfs[targetKey].content;
+                    }
                     const executeJS = new Function(jsContent);
                     executeJS(); 
                 } catch (err) {
                     console.error(err.toString());
                 }
                 break;
-            default: termInstance.writeln(`bash: ${base}: command not found`);
+            default: 
+                termInstance.writeln(`bash: ${base}: command not found`);
         }
     }
 
-    renderFileTree();
-    renderTabs();
-
+    // --- MONACO INITIALIZATION ---
     window.addEventListener('load', () => {
+        renderTabs();
         setTimeout(initMonaco, 100); 
     });
 
     function initMonaco() {
-        if(typeof require === 'undefined') return setTimeout(initMonaco, 100);
+        if(typeof require === 'undefined') {
+            setTimeout(initMonaco, 100);
+            return;
+        }
         
         require.config({ paths: { 'vs': './monaco-editor/vs' }});
         require(['vs/editor/editor.main'], function () {
@@ -544,29 +1123,27 @@
                 }]
             });
 
-            Object.keys(vfs).forEach(filename => {
-                const fileObj = vfs[filename];
-                fileObj.model = monaco.editor.createModel(fileObj.content, fileObj.lang, monaco.Uri.file(filename));
-            });
-
             editor = monaco.editor.create(document.getElementById('editor'), {
-                theme: 'vs-dark', automaticLayout: true, fontSize: baseFontSize, minimap: { enabled: true },
-                autoIndent: "full", formatOnType: true, formatOnPaste: true,
-                suggestOnTriggerCharacters: true, acceptSuggestionOnEnter: "on"
+                theme: 'vs-dark', 
+                automaticLayout: true, 
+                fontSize: baseFontSize, 
+                minimap: { enabled: true },
+                autoIndent: "full", 
+                formatOnType: true, 
+                formatOnPaste: true,
+                suggestOnTriggerCharacters: true, 
+                acceptSuggestionOnEnter: "on"
             });
 
-            editor.setModel(vfs['index.html'].model);
-            
             const overlay = document.getElementById('loading-overlay');
             overlay.style.opacity = '0';
             setTimeout(() => { overlay.style.display = 'none'; }, 300);
-            document.getElementById('editor').style.opacity = '1';
             
             fileStatus.innerText = "Ready";
-            langStatus.innerText = "HTML";
 
             editor.onDidType((text) => {
-                if (!currentFile || vfs[currentFile].lang !== 'html') return;
+                if (currentFile === 'Welcome' || !vfs[currentFile] || vfs[currentFile].lang !== 'html') return;
+                
                 if (text === '>') {
                     const position = editor.getPosition();
                     const model = editor.getModel();
@@ -576,10 +1153,12 @@
                     if (match) {
                         const tagName = match[1].toLowerCase();
                         const selfClosingTags = ['area', 'base', 'br', 'col', 'embed', 'hr', 'img', 'input', 'link', 'meta', 'param', 'source', 'track', 'wbr'];
+                        
                         if (!selfClosingTags.includes(tagName) && !textBeforeCursor.endsWith('/>')) {
                             editor.executeEdits("auto-close", [{
                                 range: new monaco.Range(position.lineNumber, position.column, position.lineNumber, position.column),
-                                text: `</${tagName}>`, forceMoveMarkers: true
+                                text: `</${tagName}>`, 
+                                forceMoveMarkers: true
                             }]);
                             editor.setPosition(position);
                         }
@@ -588,29 +1167,30 @@
             });
 
             editor.onDidChangeCursorPosition((e) => {
-                document.getElementById('cursor-position').innerText = `Ln ${e.position.lineNumber}, Col ${e.position.column}`;
+                document.getElementById('cursor-position').innerText = `Ln ${e.position.lineNumber}, Col${e.position.column}`;
             });
 
             editor.onDidChangeModelContent(() => {
+                if (currentFile === 'Welcome') return;
                 clearTimeout(autoSaveTimer);
                 fileStatus.innerText = "Typing...";
                 autoSaveTimer = setTimeout(silentAutoSave, 1000); 
             });
 
+            // Keybindings
             editor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.KeyS, forceManualSave);
-            editor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.KeyO, openRealFile);
             editor.addCommand(monaco.KeyMod.Alt | monaco.KeyCode.KeyP, launchPreview);
-            editor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyMod.Shift | monaco.KeyCode.Backquote, () => {
-                if (terminalArea.style.display === 'none' || terminalArea.style.display === '') openTerminal();
-                else closeTerminal();
-            });
-
+            
             document.addEventListener('keydown', e => { 
                 if (e.ctrlKey || e.metaKey) {
                     if (e.key === 's') { e.preventDefault(); forceManualSave(); }
-                    if (e.key === 'o') { e.preventDefault(); openRealFile(); }
                     if (e.key === '=' || e.key === '+') { e.preventDefault(); zoomIn(); }
                     if (e.key === '-') { e.preventDefault(); zoomOut(); }
+                    if (e.key === '`') {
+                        e.preventDefault();
+                        if (terminalArea.style.display === 'none') openTerminal();
+                        else closeTerminal();
+                    }
                 }
                 if (e.altKey && e.key === 'p') { e.preventDefault(); launchPreview(); }
             });
