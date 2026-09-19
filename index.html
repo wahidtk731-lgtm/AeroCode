@@ -5,59 +5,77 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>AeroCode</title>
     
-    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='20' fill='%23007acc'/%3E%3Cpath d='M40 30 L20 50 L40 70 M60 30 L80 50 L60 70' stroke='white' stroke-width='8' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E">
-    
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='20' fill='%23007fd4'/%3E%3Cpath d='M40 30 L20 50 L40 70 M60 30 L80 50 L60 70' stroke='white' stroke-width='8' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E">
     <link rel="preload" href="./monaco-editor/vs/loader.js" as="script">
     <link rel="stylesheet" href="./xterm/xterm.css" />
     
     <style>
-        /* Global UI Variables */
         :root {
             --ui-zoom: 1;
             --font-ui: calc(13px * var(--ui-zoom));
-            --font-term: calc(11px * var(--ui-zoom));
-            --sidebar-width: 240px;
+            --font-term: calc(12px * var(--ui-zoom));
+            --sidebar-width: 250px;
+            
+            /* VS Code Dark+ Colors */
+            --bg-base: #1e1e1e;
+            --bg-sidebar: #252526;
+            --bg-activity: #333333;
+            --bg-title: #323233;
+            --border-color: #454545;
+            --focus-border: #007fd4;
+            --hover-bg: #2a2d2e;
+            --active-bg: #37373d;
+            --text-main: #cccccc;
+            --text-muted: #858585;
         }
 
         * { box-sizing: border-box; margin: 0; padding: 0; }
+        
         body, html { 
             height: 100%; 
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; 
-            background-color: #1e1e1e; 
-            color: #cccccc; 
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans", Helvetica, Arial, sans-serif; 
+            background-color: var(--bg-base); 
+            color: var(--text-main); 
             overflow: hidden; 
         }
         
+        /* Custom VS Code Scrollbars */
+        ::-webkit-scrollbar { width: 10px; height: 10px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.1); border: 2px solid transparent; background-clip: padding-box; border-radius: 5px; }
+        ::-webkit-scrollbar-thumb:hover { background: rgba(255, 255, 255, 0.2); border: 2px solid transparent; background-clip: padding-box; }
+        ::-webkit-scrollbar-corner { background: transparent; }
+
         .ide-container { display: flex; flex-direction: column; height: 100vh; }
         
         /* Top Navigation Bar */
         .title-bar { 
-            background-color: #333333; height: 30px; display: flex; align-items: center; 
-            padding: 0 10px; font-size: var(--font-ui); border-bottom: 1px solid #1e1e1e; 
+            background-color: var(--bg-title); height: 30px; display: flex; align-items: center; 
+            padding: 0 10px; font-size: var(--font-ui); border-bottom: 1px solid var(--bg-base); 
             user-select: none; position: relative; z-index: 100;
         }
         .menu-bar { display: flex; gap: 5px; flex: 1; }
         .menu-item { position: relative; }
-        .menu-btn { cursor: pointer; padding: 4px 8px; border-radius: 3px; }
-        .menu-btn:hover, .menu-item.active .menu-btn { background-color: #505050; }
+        .menu-btn { cursor: pointer; padding: 4px 8px; border-radius: 4px; }
+        .menu-btn:hover, .menu-item.active .menu-btn { background-color: rgba(255,255,255,0.1); }
         
         .dropdown { 
-            display: none; position: absolute; top: 100%; left: 0; background-color: #252526; 
-            border: 1px solid #454545; min-width: 180px; box-shadow: 0 4px 6px rgba(0,0,0,0.5); 
-            padding: 5px 0; border-radius: 3px; 
+            display: none; position: absolute; top: 100%; left: 0; background-color: var(--bg-sidebar); 
+            border: 1px solid var(--border-color); min-width: 200px; box-shadow: 0 4px 6px rgba(0,0,0,0.5); 
+            padding: 5px 0; border-radius: 4px; 
         }
         .menu-item.active .dropdown { display: block; }
-        .dropdown-item { padding: 8px 15px; cursor: pointer; display: flex; justify-content: space-between; color: #ccc; }
-        .dropdown-item:hover { background-color: #007acc; color: #fff; }
-        .shortcut { color: #aaa; font-size: calc(var(--font-ui) - 2px); }
+        .dropdown-item { padding: 6px 15px; cursor: pointer; display: flex; justify-content: space-between; align-items: center; color: var(--text-main); }
+        .dropdown-item:hover { background-color: var(--focus-border); color: #fff; }
+        .shortcut { color: var(--text-muted); font-size: calc(var(--font-ui) - 2px); }
+        .dropdown-item:hover .shortcut { color: rgba(255,255,255,0.8); }
 
         .run-quick-btn { 
             background: #1e7145; color: white; border: none; padding: 4px 10px; 
-            border-radius: 3px; cursor: pointer; margin-right: 15px; font-size: calc(var(--font-ui) - 1px); 
+            border-radius: 4px; cursor: pointer; margin-right: 15px; font-size: calc(var(--font-ui) - 1px); 
         }
         .run-quick-btn:hover { background: #228b55; }
-        
-        .title-bar-brand { font-weight: 600; color: #007acc; letter-spacing: 0.5px;}
+        .title-bar-brand { font-weight: 600; color: var(--focus-border); letter-spacing: 0.5px;}
 
         /* Modern Material-Style Icons */
         .icon { display: inline-block; width: calc(16px * var(--ui-zoom)); height: calc(16px * var(--ui-zoom)); background-size: contain; background-repeat: no-repeat; vertical-align: middle; }
@@ -72,143 +90,149 @@
         .icon-java { background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><rect width='24' height='24' rx='4' fill='%23E76F00'/><text x='12' y='16' fill='white' font-size='10' font-family='sans-serif' font-weight='bold' text-anchor='middle'>Java</text></svg>"); }
         .icon-folder { background-image: url("data:image/svg+xml;utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='%23dcb67a' d='M10 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2h-8l-2-2z'/%3E%3C/svg%3E"); }
         .icon-folder-open { background-image: url("data:image/svg+xml;utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='%23dcb67a' d='M19 20H4C2.89 20 2 19.1 2 18V6C2 4.89 2.89 4 4 4H10L12 6H19C20.1 6 21 6.89 21 8V18C21 19.1 20.1 20 19 20ZM4 8V18H19V8H4Z'/%3E%3C/svg%3E"); }
-        .icon-default { background-image: url("data:image/svg+xml;utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='%23ccc' d='M6 2c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V8l-6-6H6zm7 7V3.5L18.5 9H13z'/%3E%3C/svg%3E"); }
+        .icon-default { background-image: url("data:image/svg+xml;utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='%23cccccc' d='M6 2c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V8l-6-6H6zm7 7V3.5L18.5 9H13z'/%3E%3C/svg%3E"); }
 
         /* Context Menu */
         .context-menu { 
-            position: fixed; background: #252526; border: 1px solid #454545; 
-            z-index: 1000; box-shadow: 0 4px 6px rgba(0,0,0,0.5); border-radius: 3px; 
+            position: fixed; background: var(--bg-sidebar); border: 1px solid var(--border-color); 
+            z-index: 1000; box-shadow: 0 4px 6px rgba(0,0,0,0.5); border-radius: 4px; 
             padding: 5px 0; display: none; 
         }
-        .context-menu-item { padding: 5px 15px; cursor: pointer; font-size: 12px; color: #ccc; }
-        .context-menu-item:hover { background: #007acc; color: white; }
+        .context-menu-item { padding: 6px 15px; cursor: pointer; font-size: var(--font-ui); color: var(--text-main); }
+        .context-menu-item:hover { background: var(--focus-border); color: white; }
 
-        /* Activity Bar (Left Vertical Bar) */
+        /* Activity Bar (VS Code Codicons) */
         .activity-bar {
-            width: 50px; background-color: #333333; display: flex; flex-direction: column;
+            width: 50px; background-color: var(--bg-activity); display: flex; flex-direction: column;
             align-items: center; padding-top: 10px; flex-shrink: 0; z-index: 10;
         }
         .activity-icon {
             width: 50px; height: 48px; display: flex; justify-content: center; align-items: center;
-            cursor: pointer; color: #858585; border-left: 2px solid transparent; box-sizing: border-box;
+            cursor: pointer; color: var(--text-muted); border-left: 2px solid transparent; box-sizing: border-box;
         }
         .activity-icon:hover { color: #ffffff; }
-        .activity-icon.active { color: #ffffff; border-left: 2px solid #007acc; }
+        .activity-icon.active { color: #ffffff; border-left: 2px solid var(--focus-border); }
         .activity-spacer { flex: 1; }
 
         /* Main Workspace Area */
         .main-area { display: flex; flex: 1; height: calc(100vh - 52px); }
         
         .sidebar { 
-            width: var(--sidebar-width); background-color: #252526; display: flex; 
+            width: var(--sidebar-width); background-color: var(--bg-sidebar); display: flex; 
             flex-direction: column; flex-shrink: 0; transition: width 0.1s;
         }
         .sidebar.hidden { display: none; }
 
         /* Drag-to-Resize Handle */
         .resizer {
-            width: 4px; background-color: #252526; cursor: col-resize; 
-            border-left: 1px solid #454545; border-right: 1px solid #454545; z-index: 10;
+            width: 4px; background-color: var(--bg-sidebar); cursor: col-resize; 
+            border-left: 1px solid var(--border-color); border-right: 1px solid var(--border-color); z-index: 10;
         }
-        .resizer:hover, .resizer.resizing { background-color: #007acc; }
+        .resizer:hover, .resizer.resizing { background-color: var(--focus-border); }
 
         .editor-terminal-column { flex: 1; display: flex; flex-direction: column; min-width: 0;}
+        
+        /* Drag & Drop Overlay Area */
         .editor-container { flex: 1; display: flex; flex-direction: column; min-width: 0; position: relative; }
+        .editor-container.drag-over::after {
+            content: ''; position: absolute; top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0, 127, 212, 0.1); border: 2px dashed var(--focus-border);
+            z-index: 100; pointer-events: none;
+        }
 
-        /* Sidebar Headers & Panels */
+        /* Sidebar Headers */
         .sidebar-header { 
-            padding: 10px; font-size: var(--font-term); text-transform: uppercase; 
-            font-weight: bold; color: #bbbbbb; display: flex; justify-content: space-between; 
-            cursor: pointer; user-select: none; 
+            padding: 10px 15px; font-size: 11px; text-transform: uppercase; 
+            font-weight: bold; color: var(--text-main); display: flex; justify-content: space-between; 
+            cursor: pointer; user-select: none; letter-spacing: 0.5px;
         }
         .sidebar-header:hover { color: #fff; }
         
-        /* Directory Tree UI */
-        .workspace-tree { flex: 1; overflow-y: auto; display: block; }
-        .tree-ul { list-style: none; padding-left: 10px; display: none; }
-        .tree-ul.open { display: block; }
-        .tree-root { padding-left: 0; display: block; }
+        /* Directory Tree UI (VS Code Indentation Engine) */
+        .workspace-tree { flex: 1; overflow-y: auto; display: block; overflow-x: hidden; }
+        .tree-children { display: none; flex-direction: column; width: 100%; }
+        .tree-children.open { display: flex; }
         
-        .tree-item { 
-            font-size: var(--font-ui); cursor: pointer; display: flex; align-items: center; 
-            gap: 6px; user-select: none; padding: 4px 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; flex: 1;
+        .tree-item-wrap { 
+            display: flex; align-items: center; width: 100%; padding: 4px 0;
+            cursor: pointer; user-select: none; color: var(--text-main);
         }
-        .item-name { flex: 1; overflow: hidden; text-overflow: ellipsis; }
-        .tree-item-wrap { display: flex; align-items: center; width: 100%; padding-left: 5px; }
-        .tree-item-wrap:hover { background-color: #2a2d2e; }
-        .tree-item-wrap.active { background-color: #37373d; color: #ffffff; }
-        .chevron { width: 12px; font-size: 10px; display: inline-block; text-align: center; color: #888; transition: transform 0.1s; }
+        .tree-item-wrap:hover { background-color: var(--hover-bg); }
+        .tree-item-wrap.active { background-color: var(--active-bg); color: #ffffff; }
+        
+        .chevron { width: 16px; height: 16px; display: inline-flex; align-items: center; justify-content: center; font-size: 10px; color: var(--text-muted); transition: transform 0.1s; }
         .chevron.open { transform: rotate(90deg); }
+        .item-name { margin-left: 6px; flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: var(--font-ui); }
 
         /* Inline Rename Input */
         .inline-rename-input {
-            background: #000; color: #fff; border: 1px solid #007acc; outline: none;
-            padding: 2px 4px; font-family: inherit; font-size: inherit; width: 90%; 
-            margin-left: 4px; border-radius: 2px;
+            background: var(--bg-sidebar); color: #fff; border: 1px solid var(--focus-border); outline: none;
+            padding: 2px 4px; font-family: inherit; font-size: inherit; width: 80%; 
+            margin-left: 6px; border-radius: 4px;
         }
 
         /* Search Panel Input */
         #search-input {
-            width: 100%; padding: 6px; background: #3c3c3c; border: 1px solid #007acc; 
-            color: #fff; border-radius: 3px; outline: none; margin-bottom: 10px; font-family: inherit;
+            width: 100%; padding: 6px 8px; background: #3c3c3c; border: 1px solid transparent; 
+            color: #fff; border-radius: 4px; outline: none; margin-bottom: 10px; font-family: inherit;
         }
+        #search-input:focus { border: 1px solid var(--focus-border); }
         
         /* Editor Tabs */
         .editor-tabs { 
-            display: flex; background-color: #252526; height: calc(35px * var(--ui-zoom)); 
+            display: flex; background-color: var(--bg-sidebar); height: calc(35px * var(--ui-zoom)); 
             overflow-x: auto; flex-shrink: 0; 
         }
-        .editor-tabs::-webkit-scrollbar { height: 4px; background: #1e1e1e; }
-        .editor-tabs::-webkit-scrollbar-thumb { background: #555; }
         .tab { 
-            padding: 0 15px; background-color: #2d2d2d; border-right: 1px solid #252526; 
-            color: #969696; font-size: var(--font-ui); display: flex; align-items: center; 
+            padding: 0 15px; background-color: #2d2d2d; border-right: 1px solid var(--bg-sidebar); 
+            color: var(--text-muted); font-size: var(--font-ui); display: flex; align-items: center; 
             gap: 6px; cursor: pointer; user-select: none; min-width: max-content; border-top: 1px solid transparent; 
         }
-        .tab.active { background-color: #1e1e1e; color: #ffffff; border-top: 1px solid #007acc; }
-        .tab:hover:not(.active) { background-color: #2b2b2b; }
-        .tab-close { font-size: calc(var(--font-ui) - 3px); margin-left: 5px; padding: 3px 5px; border-radius: 3px; opacity: 0; color: #ccc; }
+        .tab.active { background-color: var(--bg-base); color: #ffffff; border-top: 1px solid var(--focus-border); }
+        .tab:hover:not(.active) { background-color: var(--bg-sidebar); }
+        .tab-close { font-size: calc(var(--font-ui) - 3px); margin-left: 5px; padding: 3px 5px; border-radius: 4px; opacity: 0; color: var(--text-muted); }
         .tab:hover .tab-close, .tab.active .tab-close { opacity: 1; }
-        .tab-close:hover { background-color: #444; color: white; }
+        .tab-close:hover { background-color: rgba(255,255,255,0.1); color: white; }
 
-        /* Loading & Editor Elements */
         #editor { flex: 1; width: 100%; opacity: 0; transition: opacity 0.2s ease; display: none; }
         
+        /* Welcome Screen */
         .welcome-screen { 
             display: flex; flex-direction: column; justify-content: center; padding: 40px; 
-            background: #1e1e1e; flex: 1; overflow-y: auto; user-select: none; 
+            background: var(--bg-base); flex: 1; overflow-y: auto; user-select: none; 
         }
-        .welcome-title { font-size: calc(36px * var(--ui-zoom)); color: #fff; margin-bottom: 5px; }
-        .welcome-subtitle { font-size: calc(16px * var(--ui-zoom)); color: #888; margin-bottom: 30px; }
+        .welcome-title { font-size: calc(36px * var(--ui-zoom)); color: #fff; margin-bottom: 5px; font-weight: normal; }
+        .welcome-subtitle { font-size: calc(16px * var(--ui-zoom)); color: var(--text-muted); margin-bottom: 30px; }
         .welcome-section { margin-bottom: 25px; }
-        .welcome-section h3 { font-size: calc(14px * var(--ui-zoom)); color: #ccc; margin-bottom: 15px; text-transform: uppercase; }
-        .welcome-action { color: #007acc; font-size: calc(14px * var(--ui-zoom)); cursor: pointer; margin-bottom: 10px; display: flex; align-items: center; gap: 8px; }
+        .welcome-section h3 { font-size: calc(14px * var(--ui-zoom)); color: var(--text-main); margin-bottom: 15px; font-weight: normal; }
+        .welcome-action { color: var(--focus-border); font-size: calc(14px * var(--ui-zoom)); cursor: pointer; margin-bottom: 10px; display: flex; align-items: center; gap: 8px; }
         .welcome-action:hover { color: #0098ff; text-decoration: underline; }
         #recent-folder-btn { display: none; color: #dcb67a; }
 
+        /* Empty State */
         .empty-state { 
-            position: absolute; top: 35px; left: 0; right: 0; bottom: 0; background: #1e1e1e; 
+            position: absolute; top: 35px; left: 0; right: 0; bottom: 0; background: var(--bg-base); 
             display: none; align-items: center; justify-content: center; flex-direction: column; 
             z-index: 5; user-select: none; 
         }
 
         #loading-overlay { 
-            position: absolute; top: 35px; left: 0; right: 0; bottom: 0; background: #1e1e1e; 
+            position: absolute; top: 35px; left: 0; right: 0; bottom: 0; background: var(--bg-base); 
             display: flex; align-items: center; justify-content: center; z-index: 10; 
-            font-size: var(--font-ui); color: #888; flex-direction: column; gap: 10px; transition: opacity 0.2s ease; 
+            font-size: var(--font-ui); color: var(--text-muted); flex-direction: column; gap: 10px; transition: opacity 0.2s ease; 
         }
-        .spinner { width: 30px; height: 30px; border: 3px solid #333; border-top-color: #007acc; border-radius: 50%; animation: spin 1s linear infinite; }
+        .spinner { width: 30px; height: 30px; border: 3px solid var(--bg-activity); border-top-color: var(--focus-border); border-radius: 50%; animation: spin 1s linear infinite; }
         @keyframes spin { to { transform: rotate(360deg); } }
 
         /* Terminal Panel */
-        .terminal-area { display: none; height: calc(200px * var(--ui-zoom)); background-color: #1e1e1e; border-top: 1px solid #454545; flex-direction: column; flex-shrink: 0; }
-        .terminal-header { font-size: var(--font-term); padding: 5px 10px; text-transform: uppercase; color: #bbb; background: #252526; border-bottom: 1px solid #454545; user-select: none; display: flex; justify-content: space-between; align-items: center; }
-        .terminal-close { cursor: pointer; color: #bbb; font-size: var(--font-ui); }
+        .terminal-area { display: none; height: calc(200px * var(--ui-zoom)); background-color: var(--bg-base); border-top: 1px solid var(--border-color); flex-direction: column; flex-shrink: 0; }
+        .terminal-header { font-size: 11px; padding: 5px 15px; text-transform: uppercase; color: var(--text-main); background: var(--bg-sidebar); border-bottom: 1px solid var(--border-color); user-select: none; display: flex; justify-content: space-between; align-items: center; letter-spacing: 0.5px; }
+        .terminal-close { cursor: pointer; color: var(--text-muted); font-size: var(--font-ui); }
         .terminal-close:hover { color: white; }
         #terminal { flex: 1; width: 100%; padding: 5px; }
 
         /* Status Bar */
-        .status-bar { background-color: #007acc; height: calc(22px * var(--ui-zoom)); display: flex; justify-content: space-between; align-items: center; padding: 0 10px; font-size: calc(var(--font-ui) - 1px); color: white; user-select: none; }
+        .status-bar { background-color: var(--focus-border); height: calc(22px * var(--ui-zoom)); display: flex; justify-content: space-between; align-items: center; padding: 0 10px; font-size: calc(var(--font-ui) - 1px); color: white; user-select: none; }
         .status-left, .status-right { display: flex; gap: 15px; }
     </style>
 </head>
@@ -250,40 +274,44 @@
             </div>
         </div>
         
-        <button class="run-quick-btn" onclick="launchPreview()">▶ Preview Display</button>
+        <button class="run-quick-btn" onclick="launchPreview()">▶ Preview HTML</button>
         <div class="title-bar-brand">AeroCode</div>
     </div>
 
     <!-- Main Content Area -->
     <div class="main-area">
         
-        <!-- Activity Bar -->
+        <!-- VS Code Activity Bar -->
         <div class="activity-bar">
+            <!-- Explorer Icon -->
             <div class="activity-icon active" id="activity-explorer" onclick="toggleActivityBar('explorer')" title="Explorer">
                 <svg viewBox="0 0 24 24" fill="currentColor" width="24" height="24">
-                    <path d="M4 4h7l2 2h7v13H4V4zm2 2v11h12V8h-6l-2-2H6z"/>
+                    <path d="M14.5 1h-11l-1 1v12l1 1h11l1-1V2l-1-1zM4.5 13V2h9v11h-9zM16.5 4h1v11h-11v-1h10V4z"/>
                 </svg>
             </div>
-            <div class="activity-icon" id="activity-search" onclick="toggleActivityBar('search')" title="Search Files (Ctrl+Shift+F)">
+            <!-- Search Icon -->
+            <div class="activity-icon" id="activity-search" onclick="toggleActivityBar('search')" title="Search (Ctrl+Shift+F)">
                 <svg viewBox="0 0 24 24" fill="currentColor" width="24" height="24">
-                    <path d="M15.5 14h-.79l-.28-.27A6.471 6.471 0 0 0 16 9.5 6.5 6.5 0 1 0 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/>
+                    <path d="M15.25 13.84l4.24 4.24-1.41 1.41-4.24-4.24a6.5 6.5 0 1 1 1.41-1.41zM6.5 11.5a5 5 0 1 0 0-10 5 5 0 0 0 0 10z"/>
                 </svg>
             </div>
+            <!-- Extensions Icon -->
             <div class="activity-icon" title="Extensions">
                 <svg viewBox="0 0 24 24" fill="currentColor" width="24" height="24">
-                    <path d="M20.5 11H19V7c0-1.1-.9-2-2-2h-4V3.5C13 2.12 11.88 1 10.5 1S8 2.12 8 3.5V5H4c-1.1 0-1.99.9-1.99 2v3.8H.5v3.4h1.5V18c0 1.1.9 2 2 2h4v1.5c0 1.38 1.12 2.5 2.5 2.5s2.5-1.12 2.5-2.5V20h4c1.1 0 2-.9 2-2v-4.5h1.5v-2.5zM17 18H4V7h13v11z"/>
+                    <path d="M14.5 1H9.5v5h5V1zm-1 4h-3V2h3v3zm6-4h-5v5h5V1zm-1 4h-3V2h3v3zM14.5 8H9.5v5h5V8zm-1 4h-3V9h3v3zm-5-4H3.5v5h5V8zm-1 4h-3V9h3v3z"/>
                 </svg>
             </div>
             
             <div class="activity-spacer"></div>
             
             <!-- Terminal Toggle Icon -->
-            <div class="activity-icon" id="activity-terminal" onclick="toggleTerminal()" title="Toggle Terminal (Ctrl+`)">
+            <div class="activity-icon" id="activity-terminal" onclick="toggleTerminal()" title="Terminal (Ctrl+`)">
                 <svg viewBox="0 0 24 24" fill="currentColor" width="24" height="24">
-                    <path d="M20 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm-8.5 12H19v2h-7.5v-2zM5.5 14.83L4.09 13.41 8.5 9l-4.41-4.41L5.5 3.17 11.33 9l-5.83 5.83z"/>
+                    <path d="M3.5 4l-1 1v10l1 1h11l1-1V5l-1-1h-11zm10 10h-9V6h9v8zM4.5 7.5l2 2-2 2 .71.71L7.91 9.5l-2.7-2.71-.71.71zm4 4h4v1h-4v-1z"/>
                 </svg>
             </div>
 
+            <!-- Settings Icon -->
             <div class="activity-icon" title="Settings">
                 <svg viewBox="0 0 24 24" fill="currentColor" width="24" height="24">
                     <path d="M19.4 13c.0-.3.0-.6.0-1s0-.7-.0-1l2.1-1.6c.2-.2.3-.4.2-.6l-2-3.5c-.1-.2-.3-.3-.5-.2l-2.5 1c-.5-.4-1.1-.7-1.7-1l-.4-2.6c-.0-.2-.2-.4-.5-.4h-4c-.3 0-.5.2-.5.4l-.4 2.6c-.6.3-1.2.6-1.7 1l-2.5-1c-.2-.1-.5 0-.6.2l-2 3.5c-.1.2-.1.5-.1-.6L4.6 11c-.0.3-.0.6-.0 1s0 .7.0 1l-2.1 1.6c-.2.2-.3.4-.2.6l2 3.5c.1.2.3.3.5.2l2.5-1c.5.4 1.1.7 1.7 1l.4 2.6c.0.2.2.4.5.4h4c.3 0 .5-.2.5-.4l.4-2.6c.6-.3 1.2-.6 1.7-1l2.5 1c.2.1.5 0 .6-.2l2-3.5c.1-.2.1-.5-.1-.6L19.4 13zM12 15.5c-1.9 0-3.5-1.6-3.5-3.5s1.6-3.5 3.5-3.5 3.5 1.6 3.5 3.5-1.6 3.5-3.5 3.5z"/>
@@ -293,32 +321,30 @@
 
         <!-- Dynamic Sidebar Panels -->
         <div class="sidebar" id="sidebar">
-            
             <!-- Explorer View -->
             <div id="sidebar-explorer" style="display: flex; flex-direction: column; height: 100%;">
                 <div class="sidebar-header" onclick="toggleWorkspace()">
                     <span id="workspace-title">NO FOLDER OPENED</span>
-                    <span id="workspace-chevron" class="chevron open">▶</span>
+                    <span id="workspace-chevron" class="chevron open" style="margin-left: 5px;">▶</span>
                 </div>
                 <div class="workspace-tree" id="workspace-tree">
-                    <ul class="tree-ul tree-root open" id="file-tree-root"></ul>
+                    <div class="tree-children open" id="file-tree-root"></div>
                 </div>
             </div>
 
             <!-- Search View -->
             <div id="sidebar-search" style="display: none; flex-direction: column; height: 100%; padding: 10px;">
-                <div style="font-size: var(--font-term); text-transform: uppercase; font-weight: bold; color: #bbb; margin-bottom: 10px;">Global Search</div>
+                <div style="font-size: 11px; text-transform: uppercase; font-weight: bold; color: var(--text-main); margin-bottom: 10px;">Search</div>
                 <input type="text" id="search-input" placeholder="Search files and content..." autocomplete="off">
                 <div id="search-results" style="flex: 1; overflow-y: auto;"></div>
             </div>
-
         </div>
         
         <!-- Draggable Resizer -->
         <div class="resizer" id="sidebar-resizer"></div>
 
         <!-- Editor and Terminal Column -->
-        <div class="editor-terminal-column">
+        <div class="editor-terminal-column" id="drop-zone">
             <div class="editor-container">
                 <div class="editor-tabs" id="editor-tabs"></div>
                 
@@ -327,17 +353,17 @@
                     <span id="loading-text">Starting Engine...</span>
                 </div>
 
-                <!-- Generic Empty State -->
+                <!-- Generic Empty State (Watermark) -->
                 <div class="empty-state" id="empty-state">
-                    <svg viewBox="0 0 100 100" width="120" height="120" style="opacity: 0.1;">
+                    <svg viewBox="0 0 100 100" width="120" height="120" style="opacity: 0.05;">
                         <rect width="100" height="100" rx="20" fill="#ffffff"/>
                         <path d="M40 30 L20 50 L40 70 M60 30 L80 50 L60 70" stroke="#1e1e1e" stroke-width="8" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
                     </svg>
-                    <div style="font-size: 24px; color: #333; font-weight: bold; margin-top: 20px; letter-spacing: 1px;">AeroCode</div>
-                    <div style="font-size: 13px; color: #444; margin-top: 10px;">Ctrl + O to Open Folder &nbsp;&nbsp;|&nbsp;&nbsp; Ctrl + N for New File</div>
+                    <div style="font-size: 24px; color: var(--text-muted); font-weight: bold; margin-top: 20px; letter-spacing: 1px;">AeroCode</div>
+                    <div style="font-size: 13px; color: var(--border-color); margin-top: 10px;">Ctrl+O to Open Workspace &nbsp;&nbsp;|&nbsp;&nbsp; Ctrl+N for New File</div>
                 </div>
 
-                <!-- Welcome Screen Tab -->
+                <!-- Welcome Screen Tab Content -->
                 <div class="welcome-screen" id="welcome-screen">
                     <h1 class="welcome-title">AeroCode</h1>
                     <p class="welcome-subtitle">Lightweight Offline Editor</p>
@@ -357,7 +383,7 @@
                         <div class="welcome-action" id="recent-folder-btn" onclick="reopenLastFolder()">
                             <i class="icon icon-folder-open"></i> Reopen <span id="recent-folder-name" style="margin-left: 5px; font-weight:bold;"></span>
                         </div>
-                        <p style="color:#666; font-size:12px; max-width:400px; margin-top:5px;">
+                        <p style="color:var(--text-muted); font-size:12px; max-width:400px; margin-top:5px;">
                             Note: Browsers clear file permissions on reload. Click to restore your workspace.
                         </p>
                     </div>
@@ -453,6 +479,29 @@
         if (editor) setTimeout(() => editor.layout(), 100);
     }
 
+    // --- Drag & Drop Tab Engine ---
+    const dropZone = document.getElementById('drop-zone');
+    
+    dropZone.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        e.dataTransfer.dropEffect = 'copy';
+        document.querySelector('.editor-container').classList.add('drag-over');
+    });
+
+    dropZone.addEventListener('dragleave', (e) => {
+        document.querySelector('.editor-container').classList.remove('drag-over');
+    });
+
+    dropZone.addEventListener('drop', (e) => {
+        e.preventDefault();
+        document.querySelector('.editor-container').classList.remove('drag-over');
+        const path = e.dataTransfer.getData('text/plain');
+        if (path && vfs[path]) {
+            const filename = path.split('/').pop();
+            openFileFromVFS(path, filename);
+        }
+    });
+
     // --- Search Panel Logic (Full Text Scan) ---
     const searchInput = document.getElementById('search-input');
     const searchResults = document.getElementById('search-results');
@@ -491,13 +540,14 @@
                     div.style.padding = '4px 8px';
                     div.style.flexDirection = 'column';
                     div.style.alignItems = 'flex-start';
+                    div.style.borderRadius = '4px';
                     
                     div.innerHTML = `
                         <div style="display:flex; align-items:center; gap:6px; width:100%;">
                             <i class="icon ${getIconClass(filename)}"></i> 
                             <span style="white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${filename}</span>
                         </div>
-                        <div style="font-size: 10px; color: #666; padding-left: 22px; width: 100%; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${path}</div>${matchContent ? `<div style="font-size: 10px; color: #aaa; margin-top: 4px; background: #2a2a2a; border: 1px solid #444; border-radius: 3px; padding: 2px 4px; width: 100%; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">...${snippet}...</div>` : ''}
+                        <div style="font-size: 10px; color: var(--text-muted); padding-left: 22px; width: 100%; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${path}</div>${matchContent ? `<div style="font-size: 10px; color: var(--text-main); margin-top: 4px; background: var(--hover-bg); border: 1px solid var(--border-color); border-radius: 3px; padding: 2px 4px; width: 100%; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">...${snippet}...</div>` : ''}
                     `;
                     div.onclick = () => openFileFromVFS(path, filename);
                     searchResults.appendChild(div);
@@ -620,6 +670,7 @@
     const fileStatus = document.getElementById('file-status');
     const editorDiv = document.getElementById('editor');
     const welcomeScreen = document.getElementById('welcome-screen');
+    const emptyState = document.getElementById('empty-state');
     const workspaceTitle = document.getElementById('workspace-title');
     const workspaceChevron = document.getElementById('workspace-chevron');
 
@@ -710,12 +761,12 @@
         fileTreeRoot.innerHTML = '';
         workspaceTitle.innerText = dirHandle.name.toUpperCase();
         fileStatus.innerText = "Scanning Directory...";
-        await buildTreeUI(dirHandle, fileTreeRoot, "");
+        await buildTreeUI(dirHandle, fileTreeRoot, "", 0);
         fileStatus.innerText = "Workspace Loaded";
     }
 
-    // Core Tree Building Logic
-    async function buildTreeUI(dirHandle, parentUL, pathPrefix) {
+    // Core Tree Building Logic (VS Code Indentation Engine)
+    async function buildTreeUI(dirHandle, parentContainer, pathPrefix, depth) {
         let entries = [];
         for await (const entry of dirHandle.values()) entries.push(entry);
         
@@ -726,7 +777,8 @@
 
         for (const entry of entries) {
             const currentPath = pathPrefix + entry.name;
-            const li = document.createElement('li');
+            const nodeContainer = document.createElement('div');
+            nodeContainer.style.width = '100%';
             
             if (entry.kind === 'directory') {
                 if (entry.name === 'node_modules' || entry.name === '.git') continue;
@@ -734,6 +786,7 @@
                 const wrap = document.createElement('div');
                 wrap.className = 'tree-item-wrap dir-node';
                 wrap.setAttribute('data-path', currentPath);
+                wrap.style.paddingLeft = `${10 + (depth * 14)}px`;
                 
                 const chev = document.createElement('span');
                 chev.className = 'chevron';
@@ -745,28 +798,28 @@
                 
                 wrap.appendChild(chev);
                 wrap.appendChild(label);
-                li.appendChild(wrap);
+                nodeContainer.appendChild(wrap);
                 
-                const childUL = document.createElement('ul');
-                childUL.className = 'tree-ul';
-                li.appendChild(childUL);
-                parentUL.appendChild(li);
+                const childContainer = document.createElement('div');
+                childContainer.className = 'tree-children';
+                nodeContainer.appendChild(childContainer);
+                parentContainer.appendChild(nodeContainer);
 
                 let loaded = false;
                 
                 wrap.addEventListener('click', async (e) => {
                     e.stopPropagation();
-                    const isOpen = childUL.classList.contains('open');
+                    const isOpen = childContainer.classList.contains('open');
                     if (isOpen) {
-                        childUL.classList.remove('open');
+                        childContainer.classList.remove('open');
                         chev.classList.remove('open');
                         label.querySelector('.icon').classList.replace('icon-folder-open', 'icon-folder');
                     } else {
                         if (!loaded) {
-                            await buildTreeUI(entry, childUL, currentPath + '/');
+                            await buildTreeUI(entry, childContainer, currentPath + '/', depth + 1);
                             loaded = true;
                         }
-                        childUL.classList.add('open');
+                        childContainer.classList.add('open');
                         chev.classList.add('open');
                         label.querySelector('.icon').classList.replace('icon-folder', 'icon-folder-open');
                     }
@@ -784,19 +837,26 @@
                 const wrap = document.createElement('div');
                 wrap.className = `tree-item-wrap file-node`;
                 wrap.setAttribute('data-path', currentPath);
-                wrap.style.paddingLeft = '12px';
+                wrap.setAttribute('draggable', 'true');
+                
+                // Align files slightly right of the folder chevron
+                wrap.style.paddingLeft = `${10 + (depth * 14) + 18}px`;
                 
                 const label = document.createElement('div');
                 label.className = 'tree-item';
                 label.innerHTML = `<i class="icon ${getIconClass(entry.name)}"></i> <span class="item-name">${entry.name}</span>`;
                 
                 wrap.appendChild(label);
-                li.appendChild(wrap);
-                parentUL.appendChild(li);
+                nodeContainer.appendChild(wrap);
+                parentContainer.appendChild(nodeContainer);
 
                 wrap.addEventListener('click', async (e) => {
                     e.stopPropagation();
                     await openFileFromVFS(currentPath, entry.name);
+                });
+                
+                wrap.addEventListener('dragstart', (e) => {
+                    e.dataTransfer.setData('text/plain', currentPath);
                 });
 
                 attachInlineRename(wrap, label, entry);
@@ -908,7 +968,7 @@
             currentFile = 'Welcome';
             welcomeScreen.style.display = 'flex';
             editorDiv.style.display = 'none';
-            document.getElementById('empty-state').style.display = 'none';
+            emptyState.style.display = 'none';
             langStatus.innerText = "Ready";
             renderTabs();
             updateActiveSidebar();
@@ -923,7 +983,7 @@
         editor.setModel(vfs[path].model);
         
         welcomeScreen.style.display = 'none';
-        document.getElementById('empty-state').style.display = 'none';
+        emptyState.style.display = 'none';
         editorDiv.style.display = 'block';
         setTimeout(() => editorDiv.style.opacity = '1', 50);
         
@@ -961,12 +1021,13 @@
         
         if (openTabs.length === 0) {
             welcomeScreen.style.display = 'none';
+            editorDiv.style.opacity = '0';
             editorDiv.style.display = 'none';
-            document.getElementById('empty-state').style.display = 'flex';
+            emptyState.style.display = 'flex';
             langStatus.innerText = "No File";
             currentFile = null;
         } else {
-            document.getElementById('empty-state').style.display = 'none';
+            emptyState.style.display = 'none';
         }
     }
 
@@ -978,7 +1039,7 @@
             if (openTabs.length > 0) {
                 switchFile(openTabs[openTabs.length - 1]);
             } else {
-                renderTabs(); // This will trigger empty state
+                renderTabs(); 
             }
         } else {
             renderTabs();
@@ -1139,12 +1200,17 @@
         if (terminalArea.style.display === 'none' || terminalArea.style.display === '') {
             terminalArea.style.display = 'flex';
             termIcon.classList.add('active');
-            if (!termInstance) initTerminalEngine();
+            
+            // Defer init slightly to ensure container has dimensions
+            setTimeout(() => {
+                if (!termInstance) initTerminalEngine();
+                if (editor) editor.layout(); 
+            }, 10);
         } else {
             terminalArea.style.display = 'none';
             termIcon.classList.remove('active');
+            if (editor) editor.layout(); 
         }
-        if(editor) editor.layout(); 
     }
 
     function closeTerminal() {
