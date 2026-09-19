@@ -7,6 +7,7 @@
     
     <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='20' fill='%23007acc'/%3E%3Cpath d='M40 30 L20 50 L40 70 M60 30 L80 50 L60 70' stroke='white' stroke-width='8' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E">
     
+    <link rel="preload" href="./monaco-editor/vs/loader.js" as="script">
     <link rel="stylesheet" href="./xterm/xterm.css" />
     
     <style>
@@ -148,10 +149,9 @@
 
         /* Search Panel Input */
         #search-input {
-            width: 100%; padding: 6px; background: #3c3c3c; border: 1px solid #3c3c3c; 
+            width: 100%; padding: 6px; background: #3c3c3c; border: 1px solid #007acc; 
             color: #fff; border-radius: 3px; outline: none; margin-bottom: 10px; font-family: inherit;
         }
-        #search-input:focus { border: 1px solid #007acc; }
         
         /* Editor Tabs */
         .editor-tabs { 
@@ -185,6 +185,12 @@
         .welcome-action { color: #007acc; font-size: calc(14px * var(--ui-zoom)); cursor: pointer; margin-bottom: 10px; display: flex; align-items: center; gap: 8px; }
         .welcome-action:hover { color: #0098ff; text-decoration: underline; }
         #recent-folder-btn { display: none; color: #dcb67a; }
+
+        .empty-state { 
+            position: absolute; top: 35px; left: 0; right: 0; bottom: 0; background: #1e1e1e; 
+            display: none; align-items: center; justify-content: center; flex-direction: column; 
+            z-index: 5; user-select: none; 
+        }
 
         #loading-overlay { 
             position: absolute; top: 35px; left: 0; right: 0; bottom: 0; background: #1e1e1e; 
@@ -225,6 +231,8 @@
                 <div class="dropdown">
                     <div class="dropdown-item" onclick="if(editor && currentFile !== 'Welcome') editor.trigger('keyboard', 'undo', null);"><span>Undo</span></div>
                     <div class="dropdown-item" onclick="if(editor && currentFile !== 'Welcome') editor.trigger('keyboard', 'redo', null);"><span>Redo</span></div>
+                    <div class="dropdown-item" onclick="forceEditorFind()"><span>Find</span><span class="shortcut">Ctrl+F</span></div>
+                    <div class="dropdown-item" onclick="toggleActivityBar('search')"><span>Search Workspace</span><span class="shortcut">Ctrl+Shift+F</span></div>
                 </div>
             </div>
             <div class="menu-item">
@@ -256,7 +264,7 @@
                     <path d="M4 4h7l2 2h7v13H4V4zm2 2v11h12V8h-6l-2-2H6z"/>
                 </svg>
             </div>
-            <div class="activity-icon" id="activity-search" onclick="toggleActivityBar('search')" title="Search Files">
+            <div class="activity-icon" id="activity-search" onclick="toggleActivityBar('search')" title="Search Files (Ctrl+Shift+F)">
                 <svg viewBox="0 0 24 24" fill="currentColor" width="24" height="24">
                     <path d="M15.5 14h-.79l-.28-.27A6.471 6.471 0 0 0 16 9.5 6.5 6.5 0 1 0 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/>
                 </svg>
@@ -270,7 +278,7 @@
             <div class="activity-spacer"></div>
             
             <!-- Terminal Toggle Icon -->
-            <div class="activity-icon" id="activity-terminal" onclick="toggleTerminal()" title="Toggle Terminal">
+            <div class="activity-icon" id="activity-terminal" onclick="toggleTerminal()" title="Toggle Terminal (Ctrl+`)">
                 <svg viewBox="0 0 24 24" fill="currentColor" width="24" height="24">
                     <path d="M20 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm-8.5 12H19v2h-7.5v-2zM5.5 14.83L4.09 13.41 8.5 9l-4.41-4.41L5.5 3.17 11.33 9l-5.83 5.83z"/>
                 </svg>
@@ -278,7 +286,7 @@
 
             <div class="activity-icon" title="Settings">
                 <svg viewBox="0 0 24 24" fill="currentColor" width="24" height="24">
-                    <path d="M19.4 13c.0-.3.0-.6.0-1s0-.7-.0-1l2.1-1.6c.2-.2.3-.4.2-.6l-2-3.5c-.1-.2-.3-.3-.5-.2l-2.5 1c-.5-.4-1.1-.7-1.7-1l-.4-2.6c-.0-.2-.2-.4-.5-.4h-4c-.3 0-.5.2-.5.4l-.4 2.6c-.6.3-1.2.6-1.7 1l-2.5-1c-.2-.1-.5 0-.6.2l-2 3.5c-.1.2-.1.5-.1-.6L19.4 13zM12 15.5c-1.9 0-3.5-1.6-3.5-3.5s1.6-3.5 3.5-3.5 3.5 1.6 3.5 3.5-1.6 3.5-3.5 3.5z"/>
+                    <path d="M19.4 13c.0-.3.0-.6.0-1s0-.7-.0-1l2.1-1.6c.2-.2.3-.4.2-.6l-2-3.5c-.1-.2-.3-.3-.5-.2l-2.5 1c-.5-.4-1.1-.7-1.7-1l-.4-2.6c-.0-.2-.2-.4-.5-.4h-4c-.3 0-.5.2-.5.4l-.4 2.6c-.6.3-1.2.6-1.7 1l-2.5-1c-.2-.1-.5 0-.6.2l-2 3.5c-.1.2-.1.5-.1-.6L4.6 11c-.0.3-.0.6-.0 1s0 .7.0 1l-2.1 1.6c-.2.2-.3.4-.2.6l2 3.5c.1.2.3.3.5.2l2.5-1c.5.4 1.1.7 1.7 1l.4 2.6c.0.2.2.4.5.4h4c.3 0 .5-.2.5-.4l.4-2.6c.6-.3 1.2-.6 1.7-1l2.5 1c.2.1.5 0 .6-.2l2-3.5c.1-.2.1-.5-.1-.6L19.4 13zM12 15.5c-1.9 0-3.5-1.6-3.5-3.5s1.6-3.5 3.5-3.5 3.5 1.6 3.5 3.5-1.6 3.5-3.5 3.5z"/>
                 </svg>
             </div>
         </div>
@@ -299,8 +307,8 @@
 
             <!-- Search View -->
             <div id="sidebar-search" style="display: none; flex-direction: column; height: 100%; padding: 10px;">
-                <div style="font-size: var(--font-term); text-transform: uppercase; font-weight: bold; color: #bbb; margin-bottom: 10px;">Search Files</div>
-                <input type="text" id="search-input" placeholder="Search workspace files..." autocomplete="off">
+                <div style="font-size: var(--font-term); text-transform: uppercase; font-weight: bold; color: #bbb; margin-bottom: 10px;">Global Search</div>
+                <input type="text" id="search-input" placeholder="Search files and content..." autocomplete="off">
                 <div id="search-results" style="flex: 1; overflow-y: auto;"></div>
             </div>
 
@@ -319,7 +327,17 @@
                     <span id="loading-text">Starting Engine...</span>
                 </div>
 
-                <!-- Welcome Screen -->
+                <!-- Generic Empty State -->
+                <div class="empty-state" id="empty-state">
+                    <svg viewBox="0 0 100 100" width="120" height="120" style="opacity: 0.1;">
+                        <rect width="100" height="100" rx="20" fill="#ffffff"/>
+                        <path d="M40 30 L20 50 L40 70 M60 30 L80 50 L60 70" stroke="#1e1e1e" stroke-width="8" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                    <div style="font-size: 24px; color: #333; font-weight: bold; margin-top: 20px; letter-spacing: 1px;">AeroCode</div>
+                    <div style="font-size: 13px; color: #444; margin-top: 10px;">Ctrl + O to Open Folder &nbsp;&nbsp;|&nbsp;&nbsp; Ctrl + N for New File</div>
+                </div>
+
+                <!-- Welcome Screen Tab -->
                 <div class="welcome-screen" id="welcome-screen">
                     <h1 class="welcome-title">AeroCode</h1>
                     <p class="welcome-subtitle">Lightweight Offline Editor</p>
@@ -374,7 +392,6 @@
     <div class="context-menu-item" onclick="cmdDelete()">Delete</div>
 </div>
 
-<!-- Required Scripts (Loaded Synchronously to Ensure Terminal Mounts) -->
 <script src="./monaco-editor/vs/loader.js"></script>
 <script src="./xterm/xterm.js"></script>
 
@@ -436,31 +453,57 @@
         if (editor) setTimeout(() => editor.layout(), 100);
     }
 
-    // --- Search Panel Logic ---
+    // --- Search Panel Logic (Full Text Scan) ---
     const searchInput = document.getElementById('search-input');
     const searchResults = document.getElementById('search-results');
+    let searchTimeout;
 
     searchInput.addEventListener('input', (e) => {
-        const query = e.target.value.toLowerCase();
-        searchResults.innerHTML = '';
-        if (!query) return;
+        clearTimeout(searchTimeout);
+        searchTimeout = setTimeout(async () => {
+            const query = e.target.value.toLowerCase();
+            searchResults.innerHTML = '';
+            if (!query) return;
 
-        Object.keys(vfs).forEach(path => {
-            if (path.toLowerCase().includes(query)) {
-                const filename = path.split('/').pop();
-                const div = document.createElement('div');
-                div.className = 'tree-item-wrap file-node';
-                div.style.padding = '4px 8px';
-                div.innerHTML = `
-                    <div class="tree-item"><i class="icon ${getIconClass(filename)}"></i> ${filename}</div>
-                    <div style="font-size: 10px; color: #666; padding-left: 22px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${path}</div>
-                `;
-                div.onclick = () => {
-                    openFileFromVFS(path, filename);
-                };
-                searchResults.appendChild(div);
+            for (const path of Object.keys(vfs)) {
+                let matchName = path.toLowerCase().includes(query);
+                let matchContent = false;
+                let snippet = "";
+
+                if (!vfs[path].model && vfs[path].handle && vfs[path].handle.kind === 'file') {
+                    try {
+                        const fd = await vfs[path].handle.getFile();
+                        vfs[path].content = await fd.text();
+                    } catch(err){}
+                }
+
+                const content = vfs[path].model ? vfs[path].model.getValue() : vfs[path].content;
+                if (content && typeof content === 'string' && content.toLowerCase().includes(query)) {
+                    matchContent = true;
+                    const idx = content.toLowerCase().indexOf(query);
+                    snippet = content.substring(Math.max(0, idx - 15), idx + 20).replace(/\n/g, ' ');
+                }
+
+                if (matchName || matchContent) {
+                    const filename = path.split('/').pop();
+                    const div = document.createElement('div');
+                    div.className = 'tree-item-wrap file-node';
+                    div.style.padding = '4px 8px';
+                    div.style.flexDirection = 'column';
+                    div.style.alignItems = 'flex-start';
+                    
+                    div.innerHTML = `
+                        <div style="display:flex; align-items:center; gap:6px; width:100%;">
+                            <i class="icon ${getIconClass(filename)}"></i> 
+                            <span style="white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${filename}</span>
+                        </div>
+                        <div style="font-size: 10px; color: #666; padding-left: 22px; width: 100%; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${path}</div>${matchContent ? `<div style="font-size: 10px; color: #aaa; margin-top: 4px; background: #2a2a2a; border: 1px solid #444; border-radius: 3px; padding: 2px 4px; width: 100%; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">...${snippet}...</div>` : ''}
+                    `;
+                    div.onclick = () => openFileFromVFS(path, filename);
+                    searchResults.appendChild(div);
+                }
             }
-        });
+        }, 300);
     });
 
     // --- Resizer Logic ---
@@ -777,7 +820,6 @@
             label.appendChild(input);
             input.focus();
             
-            // Select filename but exclude extension if it's a file
             const dotIndex = oldName.lastIndexOf('.');
             if (entry.kind === 'file' && dotIndex > 0) {
                 input.setSelectionRange(0, dotIndex);
@@ -818,7 +860,7 @@
             input.addEventListener('keydown', (e) => {
                 if (e.key === 'Enter') finishRename(true);
                 if (e.key === 'Escape') finishRename(false);
-                e.stopPropagation(); // Stop editor keybinds
+                e.stopPropagation(); 
             });
             input.addEventListener('click', e => e.stopPropagation());
         });
@@ -842,19 +884,21 @@
         fileStatus.innerText = "Reading File...";
         
         if (!vfs[path].model) {
-            try {
-                const fileData = await vfs[path].handle.getFile();
-                const content = await fileData.text();
-                vfs[path].model = monaco.editor.createModel(content, vfs[path].lang, monaco.Uri.file(path));
-            } catch (err) {
-                fileStatus.innerText = "Error reading file";
-                return;
+            if (vfs[path].handle) {
+                try {
+                    const fileData = await vfs[path].handle.getFile();
+                    const content = await fileData.text();
+                    vfs[path].model = monaco.editor.createModel(content, vfs[path].lang, monaco.Uri.file(path));
+                } catch (err) {
+                    fileStatus.innerText = "Error reading file";
+                    return;
+                }
+            } else {
+                vfs[path].model = monaco.editor.createModel(vfs[path].content, vfs[path].lang, monaco.Uri.file(path));
             }
         }
 
-        if (openTabs.includes('Welcome')) openTabs = openTabs.filter(t => t !== 'Welcome');
         if (!openTabs.includes(path)) openTabs.push(path);
-        
         switchFile(path);
     }
 
@@ -864,6 +908,7 @@
             currentFile = 'Welcome';
             welcomeScreen.style.display = 'flex';
             editorDiv.style.display = 'none';
+            document.getElementById('empty-state').style.display = 'none';
             langStatus.innerText = "Ready";
             renderTabs();
             updateActiveSidebar();
@@ -878,8 +923,9 @@
         editor.setModel(vfs[path].model);
         
         welcomeScreen.style.display = 'none';
+        document.getElementById('empty-state').style.display = 'none';
         editorDiv.style.display = 'block';
-        editorDiv.style.opacity = '1';
+        setTimeout(() => editorDiv.style.opacity = '1', 50);
         
         langStatus.innerText = vfs[path].lang.toUpperCase();
         fileStatus.innerText = "Ready";
@@ -914,13 +960,13 @@
         });
         
         if (openTabs.length === 0) {
-            welcomeScreen.style.display = 'flex';
-            editorDiv.style.opacity = '0';
+            welcomeScreen.style.display = 'none';
+            editorDiv.style.display = 'none';
+            document.getElementById('empty-state').style.display = 'flex';
             langStatus.innerText = "No File";
             currentFile = null;
         } else {
-            welcomeScreen.style.display = 'none';
-            if(editor) editorDiv.style.opacity = '1';
+            document.getElementById('empty-state').style.display = 'none';
         }
     }
 
@@ -932,7 +978,7 @@
             if (openTabs.length > 0) {
                 switchFile(openTabs[openTabs.length - 1]);
             } else {
-                switchFile('Welcome'); 
+                renderTabs(); // This will trigger empty state
             }
         } else {
             renderTabs();
@@ -972,14 +1018,12 @@
         
         if (rootDirectoryHandle) await buildWorkspace(rootDirectoryHandle);
 
-        if (openTabs.includes('Welcome')) openTabs = openTabs.filter(t => t !== 'Welcome');
         if (!openTabs.includes(path)) openTabs.push(path);
-        
         switchFile(path);
     }
 
     async function forceManualSave() {
-        if (!editor || currentFile === 'Welcome' || !vfs[currentFile]) return;
+        if (!editor || currentFile === 'Welcome' || currentFile === null || !vfs[currentFile]) return;
         try {
             let handle = vfs[currentFile].handle;
             if (!handle) {
@@ -998,7 +1042,7 @@
     }
 
     async function silentAutoSave() {
-        if (!editor || currentFile === 'Welcome' || !vfs[currentFile]) return;
+        if (!editor || currentFile === 'Welcome' || currentFile === null || !vfs[currentFile]) return;
         updatePreviewTab(); 
         
         if (vfs[currentFile].handle) {
@@ -1014,7 +1058,7 @@
     // --- Asynchronous VFS Preview Compiler ---
     async function buildLiveHTML() {
         let htmlPath = null;
-        if (currentFile !== 'Welcome' && vfs[currentFile] && vfs[currentFile].lang === 'html') {
+        if (currentFile !== 'Welcome' && currentFile !== null && vfs[currentFile] && vfs[currentFile].lang === 'html') {
             htmlPath = currentFile;
         } else {
             htmlPath = Object.keys(vfs).find(k => vfs[k].lang === 'html' && (vfs[k].model || vfs[k].handle));
@@ -1209,8 +1253,16 @@
         }
     }
 
+    function forceEditorFind() {
+        if (editor && currentFile !== 'Welcome' && currentFile !== null) {
+            editor.focus();
+            editor.getAction('actions.find').run();
+        }
+    }
+
     // --- MONACO INITIALIZATION ---
     window.addEventListener('load', () => {
+        renderTabs();
         setTimeout(initMonaco, 100); 
     });
 
@@ -1242,9 +1294,10 @@
             setTimeout(() => { overlay.style.display = 'none'; }, 300);
             
             fileStatus.innerText = "Ready";
+            switchFile(currentFile);
 
             editor.onDidType((text) => {
-                if (currentFile === 'Welcome' || !vfs[currentFile] || vfs[currentFile].lang !== 'html') return;
+                if (currentFile === 'Welcome' || currentFile === null || !vfs[currentFile] || vfs[currentFile].lang !== 'html') return;
                 
                 if (text === '>') {
                     const position = editor.getPosition();
@@ -1272,21 +1325,31 @@
             });
 
             editor.onDidChangeModelContent(() => {
-                if (currentFile === 'Welcome') return;
+                if (currentFile === 'Welcome' || currentFile === null) return;
                 clearTimeout(autoSaveTimer);
                 fileStatus.innerText = "Typing...";
                 autoSaveTimer = setTimeout(silentAutoSave, 1000); 
             });
 
-            // Keybindings
-            editor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.KeyS, forceManualSave);
-            editor.addCommand(monaco.KeyMod.Alt | monaco.KeyCode.KeyP, launchPreview);
-            
+            // Global Keybindings
             document.addEventListener('keydown', e => { 
                 if (e.ctrlKey || e.metaKey) {
                     if (e.key === 's') { e.preventDefault(); forceManualSave(); }
+                    if (e.key === 'o') { e.preventDefault(); openFolder(); }
                     if (e.key === '=' || e.key === '+') { e.preventDefault(); zoomIn(); }
                     if (e.key === '-') { e.preventDefault(); zoomOut(); }
+                    if (e.key === 'f' && !e.shiftKey) { 
+                        e.preventDefault(); 
+                        forceEditorFind();
+                    }
+                    if ((e.key === 'f' || e.key === 'F') && e.shiftKey) {
+                        e.preventDefault();
+                        if (currentSidebarView !== 'search' || document.getElementById('sidebar').classList.contains('hidden')) {
+                            toggleActivityBar('search');
+                        } else {
+                            document.getElementById('search-input').focus();
+                        }
+                    }
                     if (e.key === '`') {
                         e.preventDefault();
                         toggleTerminal();
