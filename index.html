@@ -9,16 +9,15 @@
     <link rel="stylesheet" href="./xterm/xterm.css" />
     
     <style>
-        /* Exact Theme Variables */
+        /* Exact VS Code Web Theme Variables */
         :root {
             --ui-zoom: 1;
             --font-ui: calc(13px * var(--ui-zoom));
             --font-term: calc(12px * var(--ui-zoom));
             --sidebar-width: 260px;
-            --terminal-height: 200px;
             
-            --bg-base: #1e1e1e;
-            --bg-sidebar: #181818;
+            --bg-base: #1e1e1e;          
+            --bg-sidebar: #181818;       
             --border-color: #2b2b2b;
             --focus-border: #007fd4;
             --hover-bg: #2a2d2e;
@@ -35,6 +34,7 @@
             background-color: var(--bg-base); color: var(--text-main); overflow: hidden; 
         }
         
+        /* Custom VS Code Scrollbars */
         ::-webkit-scrollbar { width: 10px; height: 10px; }
         ::-webkit-scrollbar-track { background: transparent; }
         ::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.1); border: 2px solid transparent; background-clip: padding-box; border-radius: 5px; }
@@ -55,6 +55,7 @@
         .tb-icon { color: var(--text-muted); cursor: pointer; display: flex; align-items: center; justify-content: center; width: 24px; height: 24px; border-radius: 4px;}
         .tb-icon:hover { background-color: rgba(255,255,255,0.1); color: #fff;}
 
+        /* Center Search/Preview Bar */
         .workspace-search-bar {
             background-color: #2b2b2b; color: #ccc; border: 1px solid #3c3c3c;
             border-radius: 6px; padding: 4px 180px; font-size: 12px; cursor: pointer;
@@ -62,10 +63,10 @@
         }
         .workspace-search-bar:hover { background-color: #333333; border-color: #555; }
 
-        /* File Icons */
-        .icon { display: inline-block; width: 18px; height: 18px; background-size: contain; background-repeat: no-repeat; vertical-align: middle; margin-right: 4px;}
+        /* Authentic VS Code Seti File Icons */
+        .icon { display: inline-block; width: calc(16px * var(--ui-zoom)); height: calc(16px * var(--ui-zoom)); background-size: contain; background-repeat: no-repeat; vertical-align: middle; }
         .icon-html { background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'><path fill='%23E34F26' d='M5.4 4.1L1.5 8l3.9 3.9-.7.7L0 8l4.7-4.7.7.8zm5.2 0l-.7.8L13.8 8l-3.9 3.9.7.7L15.3 8l-4.7-4.7z'/></svg>"); }
-        .icon-js { background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'><rect width='14' height='14' x='1' y='1' fill='%23F7DF1E'/><path d='M5.4 11.4c-.4.3-.9.4-1.5.4-.5 0-.9-.1-1.3-.3l.4-1.2c.3.2.6.3 1 .3.3 0 .5-.1.5-.3 0-.2-.2-.3-.6-.4-.8-.2-1.4-.6-1.4-1.4 0-.8.6-1.4 1.6-1.4.5 0 1 .1 1.3.3l-.4 1.2c-.3-.2-.6-.3-.9-.3-.3 0-.5.1-.5.3 0 .2.2.3.6.4.8.2 1.4.6 1.4 1.4 0 .9-.6 1.4-1.6 1.4zm4.8 0c-.5.3-1.1.4-1.8.4-1.3 0-2.1-.8-2.1-2.1v-3.7h1.4v3.6c0 .7.3 1 1 1 .3 0 .6-.1.8-.2l.7 1z' fill='%23000'/></svg>"); }
+        .icon-js { background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'><text x='8' y='12' font-family='sans-serif' font-weight='bold' font-size='10' fill='%23F7DF1E' text-anchor='middle'>JS</text></svg>"); }
         .icon-css { background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'><path fill='%2342A5F5' d='M6.5 3L5.5 8H3l-.5 2h2.5l-1 5h2l1-5h3l-1 5h2l1-5h2.5l.5-2h-2.5l1-5h2l.5-2h-2.5l1-5h-2l-1 5h-3l1-5h-2l-1 5H3l-.5 2h2.5zM7.5 8l1-5h3l-1 5h-3z'/></svg>"); }
         .icon-json { background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'><text x='8' y='12' font-family='sans-serif' font-weight='bold' font-size='10' fill='%23CBCB41' text-anchor='middle'>{ }</text></svg>"); }
         .icon-c { background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'><text x='8' y='12' font-family='sans-serif' font-weight='bold' font-size='11' fill='%235967BA' text-anchor='middle'>C</text></svg>"); }
@@ -115,37 +116,28 @@
         }
         .settings-btn:hover { background: #006eb8; }
 
-        /* Understandable Black & White Activity Bar */
+        /* Authentic VS Code Codicon SVG Paths for Activity Bar */
         .activity-bar {
-            width: 52px; background-color: var(--bg-sidebar); display: flex; flex-direction: column;
+            width: 48px; background-color: var(--bg-sidebar); display: flex; flex-direction: column;
             align-items: center; padding-top: 0; flex-shrink: 0; z-index: 10; border-right: 1px solid var(--border-color);
         }
         
         .hamburger-menu {
-            width: 52px; height: 48px; display: flex; justify-content: center; align-items: center;
-            cursor: pointer; color: var(--text-muted); position: relative; margin-bottom: 5px;
+            width: 48px; height: 48px; display: flex; justify-content: center; align-items: center;
+            cursor: pointer; color: var(--text-muted); position: relative;
         }
         .hamburger-menu:hover { color: #fff; }
         .hamburger-menu.active .dropdown { display: block; }
 
         .activity-icon {
-            width: 52px; height: 48px; display: flex; justify-content: center; align-items: center;
-            cursor: pointer; color: var(--text-muted); border-left: 3px solid transparent; box-sizing: border-box;
-            transition: color 0.2s ease;
+            width: 48px; height: 48px; display: flex; justify-content: center; align-items: center;
+            cursor: pointer; color: var(--text-muted); border-left: 2px solid transparent; box-sizing: border-box;
         }
         .activity-icon:hover { color: #ffffff; }
-        .activity-icon.active { color: #ffffff; border-left: 3px solid #ffffff; }
+        .activity-icon.active { color: #ffffff; border-left: 2px solid var(--focus-border); }
         .activity-spacer { flex: 1; }
 
-        .svg-icon { display: inline-flex; align-items: center; justify-content: center; width: 26px; height: 26px; }
-        
-        /* Understandable SVG Icons */
-        .svg-icon-folder svg { width: 24px; height: 24px; }
-        .svg-icon-search svg { width: 24px; height: 24px; }
-        .svg-icon-plugins svg { width: 24px; height: 24px; }
-        .svg-icon-terminal svg { width: 24px; height: 24px; }
-        .svg-icon-settings svg { width: 24px; height: 24px; }
-
+        .svg-icon { display: inline-flex; align-items: center; justify-content: center; width: 24px; height: 24px; }
         .svg-close {
             width: 20px; height: 20px; display: inline-flex; align-items: center; justify-content: center;
             cursor: pointer; color: var(--text-muted); border-radius: 4px; transition: background 0.1s;
@@ -154,7 +146,7 @@
         .svg-close:hover { background-color: rgba(255,255,255,0.1); color: #fff; }
 
         /* Main Workspace Area */
-        .main-area { display: flex; flex: 1; height: calc(100vh - 57px); }
+        .main-area { display: flex; flex: 1; height: calc(100vh - 57px); } /* 35px top + 22px bottom */
         
         .sidebar { 
             width: var(--sidebar-width); background-color: var(--bg-sidebar); display: flex; 
@@ -163,15 +155,15 @@
         .sidebar.hidden { display: none; }
 
         .resizer {
-            width: 4px; background-color: transparent; cursor: col-resize; z-index: 10; margin-left: -2px;
+            width: 1px; background-color: var(--border-color); cursor: col-resize; z-index: 10;
         }
-        .resizer:hover, .resizer.resizing { background-color: var(--focus-border); }
+        .resizer:hover, .resizer.resizing { background-color: var(--focus-border); width: 2px; }
 
         .editor-terminal-column { flex: 1; display: flex; flex-direction: column; min-width: 0;}
         .editor-container { flex: 1; display: flex; flex-direction: column; min-width: 0; position: relative; }
         .editor-container.drag-over::after {
             content: ''; position: absolute; top: 0; left: 0; right: 0; bottom: 0;
-            background: rgba(255, 255, 255, 0.05); border: 2px dashed #fff; z-index: 100; pointer-events: none;
+            background: rgba(0, 127, 212, 0.1); border: 2px dashed var(--focus-border); z-index: 100; pointer-events: none;
         }
 
         .sidebar-header { 
@@ -181,7 +173,7 @@
         }
         .sidebar-header:hover { color: #fff; }
         
-        /* Directory Tree UI */
+        /* Directory Tree UI (No Folder Icons, Exact Padding) */
         .workspace-tree { flex: 1; overflow-y: auto; display: block; overflow-x: hidden; }
         .tree-children { display: none; flex-direction: column; width: 100%; }
         .tree-children.open { display: flex; }
@@ -209,6 +201,7 @@
         }
         #search-input:focus { border: 1px solid var(--focus-border); }
 
+        /* Exact VS Code Sidebar Empty State */
         #explorer-empty { padding: 10px 20px; display: none; flex-direction: column; }
         .empty-text { font-size: 13px; color: var(--text-main); margin-bottom: 15px; line-height: 1.4; }
         .empty-btn { 
@@ -251,16 +244,15 @@
             z-index: 5; user-select: none; 
         }
 
-        /* Improved Load Overlay */
         #loading-overlay { 
-            position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: var(--bg-base); 
-            display: flex; align-items: center; justify-content: center; z-index: 50; 
-            font-size: var(--font-ui); color: var(--text-muted); flex-direction: column; gap: 15px; transition: opacity 0.3s ease; 
+            position: absolute; top: 35px; left: 0; right: 0; bottom: 0; background: var(--bg-base); 
+            display: flex; align-items: center; justify-content: center; z-index: 10; 
+            font-size: var(--font-ui); color: var(--text-muted); flex-direction: column; gap: 10px; transition: opacity 0.2s ease; 
         }
-        .spinner { width: 35px; height: 35px; border: 3px solid var(--bg-activity); border-top-color: #fff; border-radius: 50%; animation: spin 1s linear infinite; }
+        .spinner { width: 30px; height: 30px; border: 3px solid var(--bg-activity); border-top-color: var(--focus-border); border-radius: 50%; animation: spin 1s linear infinite; }
         @keyframes spin { to { transform: rotate(360deg); } }
 
-        /* Terminal Panel with Resizer */
+        /* Terminal Panel */
         .terminal-resizer {
             height: 4px; background-color: transparent; cursor: row-resize; z-index: 10;
             border-top: 1px solid var(--border-color); display: none; margin-top: -2px;
@@ -271,7 +263,7 @@
         .terminal-header { font-size: 11px; padding: 5px 15px; text-transform: uppercase; color: var(--text-main); background: var(--bg-base); border-bottom: 1px solid var(--border-color); user-select: none; display: flex; justify-content: space-between; align-items: center; letter-spacing: 0.5px; }
         #terminal { flex: 1; width: 100%; padding: 5px; position: relative;}
 
-        /* Status Bar */
+        /* Authentic Exact Status Bar */
         .status-bar { 
             background-color: var(--bg-sidebar); border-top: 1px solid var(--border-color); 
             height: 22px; display: flex; justify-content: space-between; align-items: center; 
@@ -286,6 +278,7 @@
 <body>
 
 <div class="ide-container">
+    <!-- Centered Search Title Bar -->
     <div class="title-bar">
         <div class="top-left-actions">
             <span class="tb-icon" title="Go Back"><svg viewBox="0 0 16 16" fill="currentColor" width="16" height="16"><path d="M7.7 13.3l-5-5-.7-.7.7-.7 5-5 .7.7L4.1 7h10.4v1H4.1l4.3 4.6-.7.7z"/></svg></span>
@@ -306,11 +299,11 @@
     <!-- Main Content Area -->
     <div class="main-area">
         
-        <!-- NEW UNDERSTANDABLE ACTIVITY BAR -->
+        <!-- Activity Bar (VS Code Codicons Outline) -->
         <div class="activity-bar">
             <!-- Hamburger Menu -->
             <div class="hamburger-menu" id="hamburger-menu" onclick="toggleHamburger(event)">
-                <span class="svg-icon"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M3 18h18v-2H3v2zm0-5h18v-2H3v2zm0-7v2h18V6H3z"/></svg></span>
+                <span class="svg-icon"><svg viewBox="0 0 16 16" fill="currentColor"><path d="M14 4.5H2v-1h12v1zM14 8.5H2v-1h12v1zM14 12.5H2v-1h12v1z"/></svg></span>
                 <div class="dropdown" id="main-dropdown">
                     <div class="dropdown-item" onclick="createNewFile()"><span>New File</span><span class="shortcut">Ctrl+N</span></div>
                     <div class="dropdown-item" onclick="openFolder()"><span>Open Folder Workspace</span><span class="shortcut" id="menu-sc-open">Ctrl+O</span></div>
@@ -323,28 +316,35 @@
                 </div>
             </div>
 
-            <!-- Solid Folder for Explorer -->
+            <!-- Authentic VS Code SVG Paths -->
             <div class="activity-icon active" id="activity-explorer" onclick="toggleActivityBar('explorer')" title="Explorer">
-                <span class="svg-icon svg-icon-folder"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M10 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2h-8l-2-2z"/></svg></span>
+                <span class="svg-icon"><svg viewBox="0 0 16 16" fill="currentColor"><path d="M13.5 13v-9h-3V2H2v12h11.5zM3 13V3h6.5v2H13v8H3z"/></svg></span>
             </div>
-            <!-- Solid Magnifying Glass for Search -->
             <div class="activity-icon" id="activity-search" onclick="toggleActivityBar('search')" title="Search">
-                <span class="svg-icon svg-icon-search"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M15.5 14h-.79l-.28-.27A6.471 6.471 0 0 0 16 9.5 6.5 6.5 0 1 0 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/></svg></span>
+                <span class="svg-icon"><svg viewBox="0 0 16 16" fill="currentColor"><path d="M10.4 9.6a4.5 4.5 0 11-1.4-1.4l3.7 3.7-.7.7-3.6-3.6zM6 10a4 4 0 100-8 4 4 0 000 8z"/></svg></span>
             </div>
-            <!-- Code Bracket / Plugin for Extensions -->
-            <div class="activity-icon" title="Plugins / Tools">
-                <span class="svg-icon svg-icon-plugins"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M9.4 16.6L4.8 12l4.6-4.6L8 6l-6 6 6 6 1.4-1.4zm5.2 0l4.6-4.6-4.6-4.6L16 6l6 6-6 6-1.4-1.4z"/></svg></span>
+            <div class="activity-icon" title="Source Control">
+                <span class="svg-icon"><svg viewBox="0 0 16 16" fill="currentColor"><path d="M11 2a2 2 0 10-1.2 3.6v4.8a2 2 0 101.4 0V5.6A2 2 0 0011 2zm0 3a1 1 0 110-2 1 1 0 010 2zm0 8a1 1 0 110-2 1 1 0 010 2zM5 2a2 2 0 00-1 3.7v4.6a2 2 0 101.4 0V5.7A2 2 0 005 2zM5 4a1 1 0 110-2 1 1 0 010 2zm0 8a1 1 0 110-2 1 1 0 010 2z"/></svg></span>
+            </div>
+            <div class="activity-icon" title="Run and Debug">
+                <span class="svg-icon"><svg viewBox="0 0 16 16" fill="currentColor"><path d="M12.2 7.7l-7-4.5A.5.5 0 004.5 3.6v9a.5.5 0 00.7.4l7-4.5a.5.5 0 000-.8zM5.5 4.7L10.7 8l-5.2 3.3V4.7z"/></svg></span>
+            </div>
+            <div class="activity-icon" title="Remote">
+                <span class="svg-icon"><svg viewBox="0 0 16 16" fill="currentColor"><path d="M14.5 2h-13l-1 1v9l1 1h3v2h-2v1h8v-1h-2v-2h3l1-1v-9l-1-1zm-.5 9h-12v-8h12v8z"/></svg></span>
+            </div>
+            <div class="activity-icon" title="Extensions">
+                <span class="svg-icon"><svg viewBox="0 0 16 16" fill="currentColor"><path d="M13 10V2H5v3H2v8h8v-3h3zm-4 2H3V6h3v3h3v4zm3-5H9V4h3v3zM5 10v2h3v-2H5zm7.5-1h-2V6h2v3z"/></svg></span>
             </div>
             
             <div class="activity-spacer"></div>
             
-            <!-- Terminal Prompt Icon -->
-            <div class="activity-icon" id="activity-terminal" onclick="toggleTerminal()" title="Terminal">
-                <span class="svg-icon svg-icon-terminal"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M20 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm-8.5 12H19v2h-7.5v-2zM5.5 14.83L4.09 13.41 8.5 9l-4.41-4.41L5.5 3.17 11.33 9l-5.83 5.83z"/></svg></span>
+            <!-- Accounts -->
+            <div class="activity-icon" title="Accounts">
+                <span class="svg-icon"><svg viewBox="0 0 16 16" fill="currentColor"><path d="M8 8a3 3 0 100-6 3 3 0 000 6zm0-5a2 2 0 110 4 2 2 0 010-4zm4.8 11.5H3.2c-.4 0-.7-.2-.9-.5s-.2-.7 0-1a6 6 0 0111.4 0c.2.3.2.6 0 1s-.5.5-.9.5zM4.1 13.5h7.8a5 5 0 00-7.8 0z"/></svg></span>
             </div>
-            <!-- Solid Gear for Settings -->
+            <!-- Settings Icon -->
             <div class="activity-icon" onclick="openSettingsModal()" title="Settings">
-                <span class="svg-icon svg-icon-settings"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M19.14,12.94c0.04-0.3,0.06-0.61,0.06-0.94c0-0.32-0.02-0.64-0.06-0.94l2.03-1.58c0.18-0.14,0.23-0.41,0.12-0.61 l-1.92-3.32c-0.12-0.22-0.37-0.29-0.59-0.22l-2.39,0.96c-0.5-0.38-1.03-0.7-1.62-0.94L14.4,2.81c-0.04-0.24-0.24-0.41-0.48-0.41 h-3.84c-0.24,0-0.43,0.17-0.47,0.41L9.25,5.35C8.66,5.59,8.12,5.92,7.63,6.29L5.24,5.33c-0.22-0.08-0.47,0-0.59,0.22L2.73,8.87 C2.62,9.08,2.66,9.34,2.86,9.48l2.03,1.58C4.84,11.36,4.8,11.69,4.8,12s0.02,0.64,0.06,0.94l-2.03,1.58 c-0.18,0.14-0.23,0.41-0.12,0.61l1.92,3.32c0.12,0.22,0.37,0.29,0.59,0.22l2.39-0.96c0.5,0.38,1.03,0.7,1.62,0.94l0.36,2.54 c0.05,0.24,0.24,0.41,0.48,0.41h3.84c0.24,0,0.43-0.17,0.47-0.41l0.36-2.54c0.59-0.24,1.13-0.56,1.62-0.94l2.39,0.96 c0.22,0.08,0.47,0,0.59-0.22l1.92-3.32c0.12-0.22,0.07-0.49-0.12-0.61L19.14,12.94z M12,15.6c-1.98,0-3.6-1.62-3.6-3.6 s1.62-3.6,3.6-3.6s3.6,1.62,3.6,3.6S13.98,15.6,12,15.6z"/></svg></span>
+                <span class="svg-icon"><svg viewBox="0 0 16 16" fill="currentColor"><path d="M14.6 7.6l-1.3-.3c-.1-.4-.2-.8-.4-1.2l.9-1-.5-.8-1.2.6c-.3-.2-.6-.4-.9-.5l-.3-1.3h-1L9.6 4.3c-.4.1-.8.2-1.2.4L7.8 3.8l-.8.5.6 1.2c-.2.3-.4.6-.5.9l-1.3.3v1l1.3.3c.1.4.2.8.4 1.2l-.9 1 .5.8 1.2-.6c.3.2.6.4.9.5l.3 1.3h1l.3-1.3c.4-.1.8-.2 1.2-.4l1 .9.8-.5-.6-1.2c.2-.3.4-.6.5-.9l1.3-.3v-1zm-6.6 2.4A2 2 0 118 6a2 2 0 010 4z"/></svg></span>
             </div>
         </div>
 
@@ -367,6 +367,7 @@
                     </div>
                 </div>
 
+                <!-- Authentic Empty State Match -->
                 <div id="explorer-empty">
                     <div style="font-size: 11px; font-weight: bold; color: var(--text-main); margin-bottom: 10px; display: flex; align-items: center; cursor: pointer;">
                         <span class="chevron open" style="margin-right: 4px;">▶</span> NO FOLDER OPENED
@@ -374,11 +375,26 @@
                     <p class="empty-text">You have not yet opened a folder.</p>
                     <button class="empty-btn" onclick="openFolder()">Open Folder</button>
                     <button class="empty-btn" onclick="reopenLastFolder()">Open Recent</button>
+                    
+                    <p class="empty-text" style="margin-top: 15px;">To connect to a machine that has Remote Tunnel Access enabled or learn about how to do that, click here:</p>
+                    <button class="empty-btn">Connect to Tunnel...</button>
+                    
+                    <p class="empty-text" style="margin-top: 15px;">You can open a remote repository or pull request without cloning.</p>
+                    <button class="empty-btn">Open Remote Repository</button>
+
+                    <div style="margin-top: auto; border-top: 1px solid var(--border-color); padding-top: 10px; display: flex; flex-direction: column; gap: 10px; margin-left: -20px; margin-right: -20px; padding-left: 20px;">
+                        <div style="font-size: 11px; font-weight: bold; color: var(--text-main); display: flex; align-items: center; cursor: pointer;">
+                            <span class="chevron" style="margin-right: 4px;">▶</span> OUTLINE
+                        </div>
+                        <div style="border-top: 1px solid var(--border-color); padding-top: 10px; font-size: 11px; font-weight: bold; color: var(--text-main); display: flex; align-items: center; cursor: pointer;">
+                            <span class="chevron" style="margin-right: 4px;">▶</span> TIMELINE
+                        </div>
+                    </div>
                 </div>
             </div>
 
             <div id="sidebar-search" style="display: none; flex-direction: column; height: 100%; padding: 10px;">
-                <div style="font-size: 11px; text-transform: uppercase; font-weight: bold; color: var(--text-main); margin-bottom: 10px;">Search</div>
+                <div style="font-size: 11px; text-transform: uppercase; color: var(--text-main); margin-bottom: 10px;">Search</div>
                 <input type="text" id="search-input" placeholder="Search files and content..." autocomplete="off">
                 <div id="search-results" style="flex: 1; overflow-y: auto;"></div>
             </div>
@@ -386,12 +402,26 @@
         
         <div class="resizer" id="sidebar-resizer"></div>
 
+        <!-- Editor and Terminal Column -->
         <div class="editor-terminal-column" id="drop-zone">
             <div class="editor-container">
                 <div class="editor-tabs" id="editor-tabs"></div>
                 
-                <!-- Explicit Welcome Screen -->
-                <div class="welcome-screen" id="welcome-screen" style="display: flex;">
+                <div id="loading-overlay">
+                    <div class="spinner"></div>
+                    <span id="loading-text" style="margin-top: 10px;">Starting Engine...</span>
+                </div>
+
+                <!-- Generic Empty State (Watermark) -->
+                <div class="empty-state" id="empty-state">
+                    <svg viewBox="0 0 100 100" width="200" height="200" style="opacity: 0.03;">
+                        <rect width="100" height="100" rx="20" fill="#ffffff"/>
+                        <path d="M40 30 L20 50 L40 70 M60 30 L80 50 L60 70" stroke="#1e1e1e" stroke-width="8" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                </div>
+
+                <!-- Welcome Screen Tab Content -->
+                <div class="welcome-screen" id="welcome-screen">
                     <h1 class="welcome-title">AeroCode</h1>
                     <p class="welcome-subtitle">Editing evolved</p>
                     
@@ -412,40 +442,28 @@
                     </div>
                 </div>
 
-                <div class="empty-state" id="empty-state">
-                    <svg viewBox="0 0 100 100" width="200" height="200" style="opacity: 0.02;">
-                        <path d="M40 30 L20 50 L40 70 M60 30 L80 50 L60 70" stroke="#ffffff" stroke-width="8" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
-                    </svg>
-                </div>
-
-                <!-- Instant Loading Overlay -->
-                <div id="loading-overlay">
-                    <div class="spinner"></div>
-                    <span id="loading-text" style="margin-top: 10px;">Booting Editor...</span>
-                </div>
-
                 <div id="editor"></div>
             </div>
             
-            <!-- Draggable Terminal Resizer -->
             <div class="terminal-resizer" id="terminal-resizer"></div>
-            
             <div class="terminal-area" id="terminal-area">
                 <div class="terminal-header">
                     <span>Terminal</span>
-                    <span class="svg-close" onclick="toggleTerminal()">
-                        <svg viewBox="0 0 16 16" fill="currentColor"><path d="M8 7.3l4.1-4.2.7.7L8.7 8l4.1 4.1-.7.7L8 8.7l-4.1 4.1-.7-.7L7.3 8 3.2 3.9l.7-.7L8 7.3z"/></svg>
-                    </span>
+                    <span class="svg-close" onclick="toggleTerminal()"><svg viewBox="0 0 16 16" fill="currentColor"><path d="M8 7.3l4.1-4.2.7.7L8.7 8l4.1 4.1-.7.7L8 8.7l-4.1 4.1-.7-.7L7.3 8 3.2 3.9l.7-.7L8 7.3z"/></svg></span>
                 </div>
                 <div id="terminal"></div>
             </div>
         </div>
     </div>
 
-    <!-- Status Bar -->
+    <!-- Authentic VS Code Status Bar -->
     <div class="status-bar">
         <div class="status-left">
             <div class="status-item" id="file-status">Initializing...</div>
+            <div class="status-item" style="margin-left: 10px;">
+                <svg viewBox="0 0 16 16" fill="currentColor" width="14" height="14"><path d="M8 1.5a6.5 6.5 0 1 0 0 13 6.5 6.5 0 0 0 0-13zM2.5 8a5.5 5.5 0 0 1 8.95-4.28L4.28 11.45A5.48 5.48 0 0 1 2.5 8zm5.5 5.5a5.48 5.48 0 0 1-3.45-1.22l7.17-7.17A5.5 5.5 0 0 1 8 13.5z"/></svg> 0
+                <svg viewBox="0 0 16 16" fill="currentColor" width="14" height="14" style="margin-left:5px;"><path d="M8 1L1 14h14L8 1zm0 3.3l4.6 8.2H3.4L8 4.3zM7.5 7h1v3h-1V7zm0 4h1v1h-1v-1z"/></svg> 0
+            </div>
         </div>
         <div class="status-right">
             <div class="status-item" id="cursor-position">Ln 1, Col 1</div>
@@ -454,6 +472,9 @@
             <div class="status-item">LF</div>
             <div class="status-item" id="language-status">{ } HTML</div>
             <div class="status-item">Layout: us</div>
+            <div class="status-item">
+                <svg viewBox="0 0 16 16" fill="currentColor" width="14" height="14"><path d="M8 1.5c-2.5 0-4.5 2-4.5 4.5v3.5l-2 2v1h13v-1l-2-2V6c0-2.5-2-4.5-4.5-4.5zm0 13c1.1 0 2-.9 2-2H6c0 1.1.9 2 2 2z"/></svg>
+            </div>
         </div>
     </div>
 </div>
@@ -495,6 +516,13 @@
     </div>
 </div>
 
+<!-- Custom Context Menu -->
+<div class="context-menu" id="context-menu">
+    <div class="context-menu-item" onclick="cmdNewFile()">New File</div>
+    <div class="context-menu-item" onclick="cmdNewFolder()">New Folder</div>
+    <div class="context-menu-item" onclick="cmdDelete()">Delete</div>
+</div>
+
 <script src="./monaco-editor/vs/loader.js"></script>
 <script src="./xterm/xterm.js"></script>
 
@@ -517,7 +545,7 @@
         document.getElementById('menu-sc-open').innerText = `Ctrl+${appSettings.keyOpen.toUpperCase()}`;
         document.getElementById('menu-sc-find').innerText = `Ctrl+${appSettings.keyFind.toUpperCase()}`;
         document.getElementById('menu-sc-term').innerText = `Ctrl+${appSettings.keyTerm.toUpperCase()}`;
-        document.getElementById('title-sc-preview').innerText = `Workspace (Alt+${appSettings.keyPreview.toUpperCase()})`;
+        document.getElementById('title-sc-preview').innerText = `Workspace`;
         
         if (editor) {
             editor.updateOptions({
@@ -697,7 +725,7 @@
     });
     document.addEventListener('mousemove', (e) => {
         if (!isResizing) return;
-        let newWidth = e.clientX - 52; 
+        let newWidth = e.clientX - 48; 
         if (newWidth < 150) newWidth = 150; if (newWidth > 600) newWidth = 600;
         document.documentElement.style.setProperty('--sidebar-width', newWidth + 'px');
         if (editor) editor.layout(); 
@@ -774,8 +802,8 @@
     // --- State & VFS ---
     let vfs = {}; 
     let rootDirectoryHandle = null;
-    let openTabs = []; 
-    let currentFile = null; 
+    let openTabs = ['Welcome']; 
+    let currentFile = 'Welcome'; 
     let editor = null;
     let autoSaveTimer = null;
     let previewTab = null;
@@ -1420,15 +1448,12 @@
             renderTabs();
         }
         
-        const loader = document.getElementById('loading-overlay');
-        setTimeout(() => { if (loader) loader.style.opacity = '0'; setTimeout(()=>loader.style.display='none',300); }, 1500);
-        
-        setTimeout(initMonaco, 100); 
+        setTimeout(initMonaco, 50); 
     });
 
     function initMonaco() {
         if(typeof require === 'undefined') {
-            setTimeout(initMonaco, 100);
+            setTimeout(initMonaco, 50);
             return;
         }
         
@@ -1452,9 +1477,12 @@
                 acceptSuggestionOnEnter: "on"
             });
 
+            // INSTANT LOADING CLEAR
             const overlay = document.getElementById('loading-overlay');
-            overlay.style.opacity = '0';
-            setTimeout(() => { overlay.style.display = 'none'; }, 300);
+            if(overlay) {
+                overlay.style.opacity = '0';
+                setTimeout(() => { overlay.style.display = 'none'; }, 200);
+            }
             
             fileStatus.innerText = "Ready";
 
@@ -1493,7 +1521,7 @@
                 autoSaveTimer = setTimeout(silentAutoSave, 1000); 
             });
 
-            // Universal Keybind Interceptor driven by Settings
+            // Universal Keybind Interceptor
             document.addEventListener('keydown', e => { 
                 if (e.ctrlKey || e.metaKey) {
                     const k = e.key.toLowerCase();
