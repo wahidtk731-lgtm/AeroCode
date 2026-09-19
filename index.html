@@ -5,23 +5,23 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>AeroCode</title>
     
-    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='20' fill='%23007fd4'/%3E%3Cpath d='M40 30 L20 50 L40 70 M60 30 L80 50 L60 70' stroke='white' stroke-width='8' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E">
+    <!-- VS Code Ribbon Favicon -->
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Cpath fill='%23007acc' d='M23.9 6.2L12 15.2l-4.5-3.8-3.1 1 12 11.2 11.4-15-4-2.4z'/%3E%3Cpath fill='%230066a6' d='M12 15.2v11.7l11.9-8.8-11.9-2.9z'/%3E%3C/svg%3E">
+    
     <link rel="preload" href="./monaco-editor/vs/loader.js" as="script">
     <link rel="stylesheet" href="./xterm/xterm.css" />
     
     <style>
+        /* Exact VS Code Theme Variables based on Image Analysis */
         :root {
             --ui-zoom: 1;
             --font-ui: calc(13px * var(--ui-zoom));
             --font-term: calc(12px * var(--ui-zoom));
-            --sidebar-width: 250px;
+            --sidebar-width: 260px;
             
-            /* VS Code Dark+ Colors */
-            --bg-base: #1e1e1e;
-            --bg-sidebar: #252526;
-            --bg-activity: #333333;
-            --bg-title: #323233;
-            --border-color: #454545;
+            --bg-base: #1e1e1e;          /* Editor Background */
+            --bg-sidebar: #181818;       /* Sidebar, Activity Bar, Top Bar, Status Bar */
+            --border-color: #2b2b2b;
             --focus-border: #007fd4;
             --hover-bg: #2a2d2e;
             --active-bg: #37373d;
@@ -43,71 +43,67 @@
         ::-webkit-scrollbar { width: 10px; height: 10px; }
         ::-webkit-scrollbar-track { background: transparent; }
         ::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.1); border: 2px solid transparent; background-clip: padding-box; border-radius: 5px; }
-        ::-webkit-scrollbar-thumb:hover { background: rgba(255, 255, 255, 0.2); border: 2px solid transparent; background-clip: padding-box; }
-        ::-webkit-scrollbar-corner { background: transparent; }
+        ::-webkit-scrollbar-thumb:hover { background: rgba(255, 255, 255, 0.2); }
 
         .ide-container { display: flex; flex-direction: column; height: 100vh; }
         
-        /* Top Navigation Bar */
+        /* Exact VS Code Web Top Bar */
         .title-bar { 
-            background-color: var(--bg-title); height: 30px; display: flex; align-items: center; 
+            background-color: var(--bg-sidebar); height: 35px; display: flex; align-items: center; justify-content: center;
             padding: 0 10px; font-size: var(--font-ui); border-bottom: 1px solid var(--bg-base); 
             user-select: none; position: relative; z-index: 100;
         }
-        .menu-bar { display: flex; gap: 5px; flex: 1; }
-        .menu-item { position: relative; }
-        .menu-btn { cursor: pointer; padding: 4px 8px; border-radius: 4px; }
-        .menu-btn:hover, .menu-item.active .menu-btn { background-color: rgba(255,255,255,0.1); }
-        
+
+        /* Center Search/Preview Bar */
+        .workspace-search-bar {
+            background-color: #2b2b2b; color: #ccc; border: 1px solid #3c3c3c;
+            border-radius: 6px; padding: 4px 150px; font-size: 12px; cursor: pointer;
+            display: flex; align-items: center; justify-content: center;
+        }
+        .workspace-search-bar:hover { background-color: #333; }
+
+        /* Exact File Icons from Image */
+        .icon { display: inline-block; width: calc(16px * var(--ui-zoom)); height: calc(16px * var(--ui-zoom)); background-size: contain; background-repeat: no-repeat; vertical-align: middle; }
+        .icon-html { background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'><path d='M5 4L1 8l4 4 .7-.7L2.4 8l3.3-3.3L5 4zm6 0l-.7.7L13.6 8l-3.3 3.3.7.7 4-4-4-4z' fill='%23E34F26'/></svg>"); }
+        .icon-css { background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'><path d='M6.5 3L5.5 8H3l-.5 2h2.5l-1 5h2l1-5h3l-1 5h2l1-5h2.5l.5-2h-2.5l1-5h2l.5-2h-2.5l1-5h-2l-1 5h-3l1-5h-2l-1 5H3l-.5 2h2.5zM7.5 8l1-5h3l-1 5h-3z' fill='%2342A5F5'/></svg>"); }
+        .icon-js { background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'><text x='8' y='12' font-family='sans-serif' font-weight='bold' font-size='10' fill='%23F7DF1E' text-anchor='middle'>JS</text></svg>"); }
+        .icon-cs { background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'><text x='8' y='12' font-family='sans-serif' font-weight='bold' font-size='10' fill='%2342A5F5' text-anchor='middle'>C%23</text></svg>"); }
+        .icon-py { background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'><text x='8' y='12' font-family='sans-serif' font-weight='bold' font-size='10' fill='%23FFD43B' text-anchor='middle'>Py</text></svg>"); }
+        .icon-java { background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'><text x='8' y='12' font-family='sans-serif' font-weight='bold' font-size='10' fill='%23E76F00' text-anchor='middle'>Java</text></svg>"); }
+        .icon-default { background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'><rect width='10' height='12' x='3' y='2' fill='none' stroke='%23ccc' stroke-width='1.5'/></svg>"); }
+
+        /* Context Menus & Dropdowns */
         .dropdown { 
             display: none; position: absolute; top: 100%; left: 0; background-color: var(--bg-sidebar); 
-            border: 1px solid var(--border-color); min-width: 200px; box-shadow: 0 4px 6px rgba(0,0,0,0.5); 
-            padding: 5px 0; border-radius: 4px; 
+            border: 1px solid var(--border-color); min-width: 220px; box-shadow: 0 4px 6px rgba(0,0,0,0.5); 
+            padding: 5px 0; border-radius: 4px; z-index: 1000;
         }
-        .menu-item.active .dropdown { display: block; }
-        .dropdown-item { padding: 6px 15px; cursor: pointer; display: flex; justify-content: space-between; align-items: center; color: var(--text-main); }
+        .dropdown-item { padding: 6px 15px; cursor: pointer; display: flex; justify-content: space-between; align-items: center; color: var(--text-main); font-size: 13px;}
         .dropdown-item:hover { background-color: var(--focus-border); color: #fff; }
-        .shortcut { color: var(--text-muted); font-size: calc(var(--font-ui) - 2px); }
+        .shortcut { color: var(--text-muted); font-size: 11px; }
         .dropdown-item:hover .shortcut { color: rgba(255,255,255,0.8); }
 
-        .run-quick-btn { 
-            background: #1e7145; color: white; border: none; padding: 4px 10px; 
-            border-radius: 4px; cursor: pointer; margin-right: 15px; font-size: calc(var(--font-ui) - 1px); 
-        }
-        .run-quick-btn:hover { background: #228b55; }
-        .title-bar-brand { font-weight: 600; color: var(--focus-border); letter-spacing: 0.5px;}
-
-        /* Modern Material-Style Icons */
-        .icon { display: inline-block; width: calc(16px * var(--ui-zoom)); height: calc(16px * var(--ui-zoom)); background-size: contain; background-repeat: no-repeat; vertical-align: middle; }
-        .icon-html { background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><rect width='24' height='24' rx='4' fill='%23E34F26'/><text x='12' y='17' fill='white' font-size='12' font-family='sans-serif' font-weight='bold' text-anchor='middle'>HTML</text></svg>"); }
-        .icon-js { background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><rect width='24' height='24' rx='4' fill='%23F7DF1E'/><text x='12' y='17' fill='black' font-size='13' font-family='sans-serif' font-weight='bold' text-anchor='middle'>JS</text></svg>"); }
-        .icon-css { background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><rect width='24' height='24' rx='4' fill='%231572B6'/><text x='12' y='17' fill='white' font-size='12' font-family='sans-serif' font-weight='bold' text-anchor='middle'>CSS</text></svg>"); }
-        .icon-json { background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><rect width='24' height='24' rx='4' fill='%23854CC7'/><text x='12' y='17' fill='white' font-size='10' font-family='sans-serif' font-weight='bold' text-anchor='middle'>JSON</text></svg>"); }
-        .icon-c { background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><rect width='24' height='24' rx='4' fill='%2300599C'/><text x='12' y='17' fill='white' font-size='14' font-family='sans-serif' font-weight='bold' text-anchor='middle'>C</text></svg>"); }
-        .icon-cpp { background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><rect width='24' height='24' rx='4' fill='%2300599C'/><text x='12' y='17' fill='white' font-size='12' font-family='sans-serif' font-weight='bold' text-anchor='middle'>C++</text></svg>"); }
-        .icon-cs { background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><rect width='24' height='24' rx='4' fill='%23178600'/><text x='12' y='17' fill='white' font-size='13' font-family='sans-serif' font-weight='bold' text-anchor='middle'>C%23</text></svg>"); }
-        .icon-py { background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><rect width='24' height='24' rx='4' fill='%233776AB'/><text x='12' y='17' fill='%23FFD43B' font-size='14' font-family='sans-serif' font-weight='bold' text-anchor='middle'>Py</text></svg>"); }
-        .icon-java { background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><rect width='24' height='24' rx='4' fill='%23E76F00'/><text x='12' y='16' fill='white' font-size='10' font-family='sans-serif' font-weight='bold' text-anchor='middle'>Java</text></svg>"); }
-        .icon-folder { background-image: url("data:image/svg+xml;utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='%23dcb67a' d='M10 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2h-8l-2-2z'/%3E%3C/svg%3E"); }
-        .icon-folder-open { background-image: url("data:image/svg+xml;utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='%23dcb67a' d='M19 20H4C2.89 20 2 19.1 2 18V6C2 4.89 2.89 4 4 4H10L12 6H19C20.1 6 21 6.89 21 8V18C21 19.1 20.1 20 19 20ZM4 8V18H19V8H4Z'/%3E%3C/svg%3E"); }
-        .icon-default { background-image: url("data:image/svg+xml;utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='%23cccccc' d='M6 2c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V8l-6-6H6zm7 7V3.5L18.5 9H13z'/%3E%3C/svg%3E"); }
-
-        /* Context Menu */
         .context-menu { 
             position: fixed; background: var(--bg-sidebar); border: 1px solid var(--border-color); 
             z-index: 1000; box-shadow: 0 4px 6px rgba(0,0,0,0.5); border-radius: 4px; 
             padding: 5px 0; display: none; 
         }
-        .context-menu-item { padding: 6px 15px; cursor: pointer; font-size: var(--font-ui); color: var(--text-main); }
-        .context-menu-item:hover { background: var(--focus-border); color: white; }
 
-        /* Activity Bar (VS Code Codicons) */
+        /* Activity Bar (Exact VS Code Layout) */
         .activity-bar {
-            width: 50px; background-color: var(--bg-activity); display: flex; flex-direction: column;
-            align-items: center; padding-top: 10px; flex-shrink: 0; z-index: 10;
+            width: 48px; background-color: var(--bg-sidebar); display: flex; flex-direction: column;
+            align-items: center; padding-top: 0; flex-shrink: 0; z-index: 10; border-right: 1px solid var(--border-color);
         }
+        
+        .hamburger-menu {
+            width: 48px; height: 48px; display: flex; justify-content: center; align-items: center;
+            cursor: pointer; color: var(--text-muted); position: relative;
+        }
+        .hamburger-menu:hover { color: #fff; }
+        .hamburger-menu.active .dropdown { display: block; left: 48px; top: 10px; }
+
         .activity-icon {
-            width: 50px; height: 48px; display: flex; justify-content: center; align-items: center;
+            width: 48px; height: 48px; display: flex; justify-content: center; align-items: center;
             cursor: pointer; color: var(--text-muted); border-left: 2px solid transparent; box-sizing: border-box;
         }
         .activity-icon:hover { color: #ffffff; }
@@ -115,7 +111,7 @@
         .activity-spacer { flex: 1; }
 
         /* Main Workspace Area */
-        .main-area { display: flex; flex: 1; height: calc(100vh - 52px); }
+        .main-area { display: flex; flex: 1; height: calc(100vh - 57px); } /* 35px title + 22px status */
         
         .sidebar { 
             width: var(--sidebar-width); background-color: var(--bg-sidebar); display: flex; 
@@ -125,30 +121,26 @@
 
         /* Drag-to-Resize Handle */
         .resizer {
-            width: 4px; background-color: var(--bg-sidebar); cursor: col-resize; 
-            border-left: 1px solid var(--border-color); border-right: 1px solid var(--border-color); z-index: 10;
+            width: 1px; background-color: var(--border-color); cursor: col-resize; z-index: 10;
         }
-        .resizer:hover, .resizer.resizing { background-color: var(--focus-border); }
+        .resizer:hover, .resizer.resizing { background-color: var(--focus-border); width: 2px; }
 
         .editor-terminal-column { flex: 1; display: flex; flex-direction: column; min-width: 0;}
-        
-        /* Drag & Drop Overlay Area */
         .editor-container { flex: 1; display: flex; flex-direction: column; min-width: 0; position: relative; }
         .editor-container.drag-over::after {
             content: ''; position: absolute; top: 0; left: 0; right: 0; bottom: 0;
-            background: rgba(0, 127, 212, 0.1); border: 2px dashed var(--focus-border);
-            z-index: 100; pointer-events: none;
+            background: rgba(0, 127, 212, 0.1); border: 2px dashed var(--focus-border); z-index: 100; pointer-events: none;
         }
 
         /* Sidebar Headers */
         .sidebar-header { 
-            padding: 10px 15px; font-size: 11px; text-transform: uppercase; 
+            padding: 10px 15px 5px 15px; font-size: 11px; text-transform: uppercase; 
             font-weight: bold; color: var(--text-main); display: flex; justify-content: space-between; 
             cursor: pointer; user-select: none; letter-spacing: 0.5px;
         }
         .sidebar-header:hover { color: #fff; }
         
-        /* Directory Tree UI (VS Code Indentation Engine) */
+        /* Directory Tree UI (No Folder Icons, Exact Padding) */
         .workspace-tree { flex: 1; overflow-y: auto; display: block; overflow-x: hidden; }
         .tree-children { display: none; flex-direction: column; width: 100%; }
         .tree-children.open { display: flex; }
@@ -160,15 +152,15 @@
         .tree-item-wrap:hover { background-color: var(--hover-bg); }
         .tree-item-wrap.active { background-color: var(--active-bg); color: #ffffff; }
         
-        .chevron { width: 16px; height: 16px; display: inline-flex; align-items: center; justify-content: center; font-size: 10px; color: var(--text-muted); transition: transform 0.1s; }
+        .chevron { width: 16px; height: 16px; display: inline-flex; align-items: center; justify-content: center; font-size: 11px; color: var(--text-muted); transition: transform 0.1s; }
         .chevron.open { transform: rotate(90deg); }
-        .item-name { margin-left: 6px; flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: var(--font-ui); }
+        .item-name { margin-left: 4px; flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: var(--font-ui); }
 
         /* Inline Rename Input */
         .inline-rename-input {
             background: var(--bg-sidebar); color: #fff; border: 1px solid var(--focus-border); outline: none;
-            padding: 2px 4px; font-family: inherit; font-size: inherit; width: 80%; 
-            margin-left: 6px; border-radius: 4px;
+            padding: 1px 4px; font-family: inherit; font-size: inherit; width: 80%; 
+            margin-left: 4px; border-radius: 2px;
         }
 
         /* Search Panel Input */
@@ -181,16 +173,16 @@
         /* Editor Tabs */
         .editor-tabs { 
             display: flex; background-color: var(--bg-sidebar); height: calc(35px * var(--ui-zoom)); 
-            overflow-x: auto; flex-shrink: 0; 
+            overflow-x: auto; flex-shrink: 0; border-bottom: 1px solid var(--bg-base);
         }
         .tab { 
-            padding: 0 15px; background-color: #2d2d2d; border-right: 1px solid var(--bg-sidebar); 
+            padding: 0 10px 0 15px; background-color: #2d2d2d; border-right: 1px solid var(--bg-base); 
             color: var(--text-muted); font-size: var(--font-ui); display: flex; align-items: center; 
             gap: 6px; cursor: pointer; user-select: none; min-width: max-content; border-top: 1px solid transparent; 
         }
         .tab.active { background-color: var(--bg-base); color: #ffffff; border-top: 1px solid var(--focus-border); }
         .tab:hover:not(.active) { background-color: var(--bg-sidebar); }
-        .tab-close { font-size: calc(var(--font-ui) - 3px); margin-left: 5px; padding: 3px 5px; border-radius: 4px; opacity: 0; color: var(--text-muted); }
+        .tab-close { font-size: calc(var(--font-ui) - 2px); margin-left: 5px; padding: 2px 4px; border-radius: 4px; opacity: 0; color: var(--text-muted); }
         .tab:hover .tab-close, .tab.active .tab-close { opacity: 1; }
         .tab-close:hover { background-color: rgba(255,255,255,0.1); color: white; }
 
@@ -207,9 +199,8 @@
         .welcome-section h3 { font-size: calc(14px * var(--ui-zoom)); color: var(--text-main); margin-bottom: 15px; font-weight: normal; }
         .welcome-action { color: var(--focus-border); font-size: calc(14px * var(--ui-zoom)); cursor: pointer; margin-bottom: 10px; display: flex; align-items: center; gap: 8px; }
         .welcome-action:hover { color: #0098ff; text-decoration: underline; }
-        #recent-folder-btn { display: none; color: #dcb67a; }
 
-        /* Empty State */
+        /* Empty State Watermark */
         .empty-state { 
             position: absolute; top: 35px; left: 0; right: 0; bottom: 0; background: var(--bg-base); 
             display: none; align-items: center; justify-content: center; flex-direction: column; 
@@ -226,63 +217,54 @@
 
         /* Terminal Panel */
         .terminal-area { display: none; height: calc(200px * var(--ui-zoom)); background-color: var(--bg-base); border-top: 1px solid var(--border-color); flex-direction: column; flex-shrink: 0; }
-        .terminal-header { font-size: 11px; padding: 5px 15px; text-transform: uppercase; color: var(--text-main); background: var(--bg-sidebar); border-bottom: 1px solid var(--border-color); user-select: none; display: flex; justify-content: space-between; align-items: center; letter-spacing: 0.5px; }
+        .terminal-header { font-size: 11px; padding: 5px 15px; text-transform: uppercase; color: var(--text-main); background: var(--bg-base); border-bottom: 1px solid var(--border-color); user-select: none; display: flex; justify-content: space-between; align-items: center; letter-spacing: 0.5px; }
         .terminal-close { cursor: pointer; color: var(--text-muted); font-size: var(--font-ui); }
         .terminal-close:hover { color: white; }
         #terminal { flex: 1; width: 100%; padding: 5px; }
 
-        /* Status Bar */
-        .status-bar { background-color: var(--focus-border); height: calc(22px * var(--ui-zoom)); display: flex; justify-content: space-between; align-items: center; padding: 0 10px; font-size: calc(var(--font-ui) - 1px); color: white; user-select: none; }
-        .status-left, .status-right { display: flex; gap: 15px; }
+        /* Exact VS Code Status Bar */
+        .status-bar { background-color: var(--bg-sidebar); border-top: 1px solid var(--border-color); height: calc(22px * var(--ui-zoom)); display: flex; justify-content: space-between; align-items: center; padding: 0 10px; font-size: 12px; color: var(--text-main); user-select: none; }
+        .status-left, .status-right { display: flex; align-items: center; gap: 15px; }
+        .status-item { cursor: pointer; display: flex; align-items: center; gap: 4px; }
+        .status-item:hover { background-color: rgba(255,255,255,0.1); }
     </style>
 </head>
 <body>
 
 <div class="ide-container">
-    <!-- Main Menu -->
+    <!-- Centered Search Title Bar (Web App Style) -->
     <div class="title-bar">
-        <div class="menu-bar">
-            <div class="menu-item">
-                <div class="menu-btn">File</div>
-                <div class="dropdown">
-                    <div class="dropdown-item" onclick="createNewFile()"><span>New File</span><span class="shortcut">Ctrl+N</span></div>
-                    <div class="dropdown-item" onclick="openFolder()"><span>Open Folder...</span><span class="shortcut">Ctrl+O</span></div>
-                    <div class="dropdown-item" onclick="forceManualSave()"><span>Save</span><span class="shortcut">Ctrl+S</span></div>
-                </div>
-            </div>
-            <div class="menu-item">
-                <div class="menu-btn">Edit</div>
-                <div class="dropdown">
-                    <div class="dropdown-item" onclick="if(editor && currentFile !== 'Welcome') editor.trigger('keyboard', 'undo', null);"><span>Undo</span></div>
-                    <div class="dropdown-item" onclick="if(editor && currentFile !== 'Welcome') editor.trigger('keyboard', 'redo', null);"><span>Redo</span></div>
-                    <div class="dropdown-item" onclick="forceEditorFind()"><span>Find</span><span class="shortcut">Ctrl+F</span></div>
-                    <div class="dropdown-item" onclick="toggleActivityBar('search')"><span>Search Workspace</span><span class="shortcut">Ctrl+Shift+F</span></div>
-                </div>
-            </div>
-            <div class="menu-item">
-                <div class="menu-btn">View</div>
-                <div class="dropdown">
-                    <div class="dropdown-item" onclick="zoomIn()"><span>Zoom In</span><span class="shortcut">Ctrl++</span></div>
-                    <div class="dropdown-item" onclick="zoomOut()"><span>Zoom Out</span><span class="shortcut">Ctrl+-</span></div>
-                </div>
-            </div>
-            <div class="menu-item">
-                <div class="menu-btn">Terminal</div>
-                <div class="dropdown">
-                    <div class="dropdown-item" onclick="toggleTerminal()"><span>New Terminal</span><span class="shortcut">Ctrl+`</span></div>
-                </div>
-            </div>
+        <div class="workspace-search-bar" onclick="launchPreview()" title="Click to Launch Web Preview">
+            <svg viewBox="0 0 24 24" fill="currentColor" width="14" height="14" style="margin-right: 6px;">
+                <path d="M8 5v14l11-7z"/>
+            </svg>
+            Launch Preview (Alt+P)
         </div>
-        
-        <button class="run-quick-btn" onclick="launchPreview()">▶ Preview HTML</button>
-        <div class="title-bar-brand">AeroCode</div>
     </div>
 
     <!-- Main Content Area -->
     <div class="main-area">
         
-        <!-- VS Code Activity Bar -->
+        <!-- Activity Bar -->
         <div class="activity-bar">
+            <!-- Hamburger Menu -->
+            <div class="hamburger-menu" id="hamburger-menu" onclick="toggleHamburger(event)">
+                <svg viewBox="0 0 24 24" fill="currentColor" width="24" height="24">
+                    <path d="M3 18h18v-2H3v2zm0-5h18v-2H3v2zm0-7v2h18V6H3z"/>
+                </svg>
+                <!-- Merged Dropdown Menu -->
+                <div class="dropdown" id="main-dropdown">
+                    <div class="dropdown-item" onclick="createNewFile()"><span>New File</span><span class="shortcut">Ctrl+N</span></div>
+                    <div class="dropdown-item" onclick="openFolder()"><span>Open Folder Workspace</span><span class="shortcut">Ctrl+O</span></div>
+                    <div class="dropdown-item" onclick="forceManualSave()"><span>Save Active File</span><span class="shortcut">Ctrl+S</span></div>
+                    <div style="height: 1px; background: var(--border-color); margin: 4px 0;"></div>
+                    <div class="dropdown-item" onclick="forceEditorFind()"><span>Find in File</span><span class="shortcut">Ctrl+F</span></div>
+                    <div class="dropdown-item" onclick="toggleActivityBar('search')"><span>Search Workspace</span><span class="shortcut">Ctrl+Shift+F</span></div>
+                    <div style="height: 1px; background: var(--border-color); margin: 4px 0;"></div>
+                    <div class="dropdown-item" onclick="toggleTerminal()"><span>Toggle Terminal</span><span class="shortcut">Ctrl+`</span></div>
+                </div>
+            </div>
+
             <!-- Explorer Icon -->
             <div class="activity-icon active" id="activity-explorer" onclick="toggleActivityBar('explorer')" title="Explorer">
                 <svg viewBox="0 0 24 24" fill="currentColor" width="24" height="24">
@@ -295,24 +277,36 @@
                     <path d="M15.25 13.84l4.24 4.24-1.41 1.41-4.24-4.24a6.5 6.5 0 1 1 1.41-1.41zM6.5 11.5a5 5 0 1 0 0-10 5 5 0 0 0 0 10z"/>
                 </svg>
             </div>
+            <!-- Source Control Dummy -->
+            <div class="activity-icon" title="Source Control">
+                <svg viewBox="0 0 24 24" fill="currentColor" width="24" height="24">
+                    <path d="M10 3a2 2 0 0 1 1 1.7v4.6a2 2 0 0 1-1.8 2.6l-2.4 2.4A2 2 0 1 1 5.3 13l2.2-2.2V4.7A2 2 0 1 1 10 3zm-2.5 7.8V4.7a2 2 0 0 1-1 0v6.1a2 2 0 0 1 1 0zM5 11a1 1 0 1 0 0 2 1 1 0 0 0 0-2zm4-7a1 1 0 1 0 0 2 1 1 0 0 0 0-2z"/>
+                </svg>
+            </div>
+            <!-- Run Dummy -->
+            <div class="activity-icon" title="Run and Debug">
+                <svg viewBox="0 0 24 24" fill="currentColor" width="24" height="24">
+                    <path d="M20 14h-3.3l1.8 4.7-.9.4-2-5.1H12v3l-5-4 5-4v3h3.5l2-5.1.9.4-1.8 4.7H20v2zM6 10H3V9h3v1zm0-3H4V6h2v1zm0 7H4v-1h2v1z"/>
+                </svg>
+            </div>
             <!-- Extensions Icon -->
             <div class="activity-icon" title="Extensions">
                 <svg viewBox="0 0 24 24" fill="currentColor" width="24" height="24">
-                    <path d="M14.5 1H9.5v5h5V1zm-1 4h-3V2h3v3zm6-4h-5v5h5V1zm-1 4h-3V2h3v3zM14.5 8H9.5v5h5V8zm-1 4h-3V9h3v3zm-5-4H3.5v5h5V8zm-1 4h-3V9h3v3z"/>
+                    <path d="M20.5 11H19V7c0-1.1-.9-2-2-2h-4V3.5C13 2.12 11.88 1 10.5 1S8 2.12 8 3.5V5H4c-1.1 0-1.99.9-1.99 2v3.8H.5v3.4h1.5V18c0 1.1.9 2 2 2h4v1.5c0 1.38 1.12 2.5 2.5 2.5s2.5-1.12 2.5-2.5V20h4c1.1 0 2-.9 2-2v-4.5h1.5v-2.5zM17 18H4V7h13v11z"/>
                 </svg>
             </div>
             
             <div class="activity-spacer"></div>
             
-            <!-- Terminal Toggle Icon -->
-            <div class="activity-icon" id="activity-terminal" onclick="toggleTerminal()" title="Terminal (Ctrl+`)">
+            <!-- Accounts -->
+            <div class="activity-icon" title="Accounts">
                 <svg viewBox="0 0 24 24" fill="currentColor" width="24" height="24">
-                    <path d="M3.5 4l-1 1v10l1 1h11l1-1V5l-1-1h-11zm10 10h-9V6h9v8zM4.5 7.5l2 2-2 2 .71.71L7.91 9.5l-2.7-2.71-.71.71zm4 4h4v1h-4v-1z"/>
+                    <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 3c1.66 0 3 1.34 3 3s-1.34 3-3 3-3-1.34-3-3 1.34-3 3-3zm0 14.2c-2.5 0-4.71-1.28-6-3.22.03-1.99 4-3.08 6-3.08 1.99 0 5.97 1.09 6 3.08-1.29 1.94-3.5 3.22-6 3.22z"/>
                 </svg>
             </div>
 
             <!-- Settings Icon -->
-            <div class="activity-icon" title="Settings">
+            <div class="activity-icon" title="Manage">
                 <svg viewBox="0 0 24 24" fill="currentColor" width="24" height="24">
                     <path d="M19.4 13c.0-.3.0-.6.0-1s0-.7-.0-1l2.1-1.6c.2-.2.3-.4.2-.6l-2-3.5c-.1-.2-.3-.3-.5-.2l-2.5 1c-.5-.4-1.1-.7-1.7-1l-.4-2.6c-.0-.2-.2-.4-.5-.4h-4c-.3 0-.5.2-.5.4l-.4 2.6c-.6.3-1.2.6-1.7 1l-2.5-1c-.2-.1-.5 0-.6.2l-2 3.5c-.1.2-.1.5-.1-.6L4.6 11c-.0.3-.0.6-.0 1s0 .7.0 1l-2.1 1.6c-.2.2-.3.4-.2.6l2 3.5c.1.2.3.3.5.2l2.5-1c.5.4 1.1.7 1.7 1l.4 2.6c.0.2.2.4.5.4h4c.3 0 .5-.2.5-.4l.4-2.6c.6-.3 1.2-.6 1.7-1l2.5 1c.2.1.5 0 .6-.2l2-3.5c.1-.2.1-.5-.1-.6L19.4 13zM12 15.5c-1.9 0-3.5-1.6-3.5-3.5s1.6-3.5 3.5-3.5 3.5 1.6 3.5 3.5-1.6 3.5-3.5 3.5z"/>
                 </svg>
@@ -323,9 +317,14 @@
         <div class="sidebar" id="sidebar">
             <!-- Explorer View -->
             <div id="sidebar-explorer" style="display: flex; flex-direction: column; height: 100%;">
-                <div class="sidebar-header" onclick="toggleWorkspace()">
+                <div class="sidebar-header">
+                    <span>EXPLORER</span>
+                    <span>...</span>
+                </div>
+                <!-- Top Level Accordion -->
+                <div style="font-size: 11px; font-weight: bold; color: var(--text-main); padding: 4px 10px; cursor: pointer; display: flex; align-items: center;" onclick="toggleWorkspace()">
+                    <span id="workspace-chevron" class="chevron open" style="margin-right: 4px;">▶</span>
                     <span id="workspace-title">NO FOLDER OPENED</span>
-                    <span id="workspace-chevron" class="chevron open" style="margin-left: 5px;">▶</span>
                 </div>
                 <div class="workspace-tree" id="workspace-tree">
                     <div class="tree-children open" id="file-tree-root"></div>
@@ -334,7 +333,7 @@
 
             <!-- Search View -->
             <div id="sidebar-search" style="display: none; flex-direction: column; height: 100%; padding: 10px;">
-                <div style="font-size: 11px; text-transform: uppercase; font-weight: bold; color: var(--text-main); margin-bottom: 10px;">Search</div>
+                <div style="font-size: 11px; text-transform: uppercase; color: var(--text-main); margin-bottom: 10px;">Search</div>
                 <input type="text" id="search-input" placeholder="Search files and content..." autocomplete="off">
                 <div id="search-results" style="flex: 1; overflow-y: auto;"></div>
             </div>
@@ -350,41 +349,39 @@
                 
                 <div id="loading-overlay">
                     <div class="spinner"></div>
-                    <span id="loading-text">Starting Engine...</span>
+                    <span id="loading-text" style="margin-top: 10px;">Starting Engine...</span>
                 </div>
 
                 <!-- Generic Empty State (Watermark) -->
                 <div class="empty-state" id="empty-state">
-                    <svg viewBox="0 0 100 100" width="120" height="120" style="opacity: 0.05;">
+                    <svg viewBox="0 0 100 100" width="200" height="200" style="opacity: 0.03;">
                         <rect width="100" height="100" rx="20" fill="#ffffff"/>
                         <path d="M40 30 L20 50 L40 70 M60 30 L80 50 L60 70" stroke="#1e1e1e" stroke-width="8" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
                     </svg>
-                    <div style="font-size: 24px; color: var(--text-muted); font-weight: bold; margin-top: 20px; letter-spacing: 1px;">AeroCode</div>
-                    <div style="font-size: 13px; color: var(--border-color); margin-top: 10px;">Ctrl+O to Open Workspace &nbsp;&nbsp;|&nbsp;&nbsp; Ctrl+N for New File</div>
                 </div>
 
                 <!-- Welcome Screen Tab Content -->
                 <div class="welcome-screen" id="welcome-screen">
                     <h1 class="welcome-title">AeroCode</h1>
-                    <p class="welcome-subtitle">Lightweight Offline Editor</p>
+                    <p class="welcome-subtitle">Editing evolved</p>
                     
                     <div class="welcome-section">
                         <h3>Start</h3>
                         <div class="welcome-action" onclick="createNewFile()">
-                            <i class="icon icon-default"></i> New File...
+                            New File...
                         </div>
                         <div class="welcome-action" onclick="openFolder()">
-                            <i class="icon icon-folder"></i> Open Folder Workspace...
+                            Open Folder...
                         </div>
                     </div>
 
                     <div class="welcome-section">
-                        <h3>Recent Workspace</h3>
+                        <h3>Recent</h3>
                         <div class="welcome-action" id="recent-folder-btn" onclick="reopenLastFolder()">
-                            <i class="icon icon-folder-open"></i> Reopen <span id="recent-folder-name" style="margin-left: 5px; font-weight:bold;"></span>
+                            Reopen <span id="recent-folder-name" style="margin-left: 5px; font-weight:bold;"></span>
                         </div>
                         <p style="color:var(--text-muted); font-size:12px; max-width:400px; margin-top:5px;">
-                            Note: Browsers clear file permissions on reload. Click to restore your workspace.
+                            Browser privacy requires re-verifying disk access.
                         </p>
                     </div>
                 </div>
@@ -402,11 +399,25 @@
         </div>
     </div>
 
+    <!-- Authentic VS Code Status Bar -->
     <div class="status-bar">
-        <div class="status-left"><span id="file-status">Ready</span></div>
+        <div class="status-left">
+            <div class="status-item" id="file-status">Ready</div>
+            <div class="status-item" style="margin-left: 10px;">
+                <svg viewBox="0 0 16 16" fill="currentColor" width="14" height="14"><path d="M8 1.5a6.5 6.5 0 1 0 0 13 6.5 6.5 0 0 0 0-13zM2.5 8a5.5 5.5 0 0 1 8.95-4.28L4.28 11.45A5.48 5.48 0 0 1 2.5 8zm5.5 5.5a5.48 5.48 0 0 1-3.45-1.22l7.17-7.17A5.5 5.5 0 0 1 8 13.5z"/></svg> 0
+                <svg viewBox="0 0 16 16" fill="currentColor" width="14" height="14" style="margin-left:5px;"><path d="M8 1L1 14h14L8 1zm0 3.3l4.6 8.2H3.4L8 4.3zM7.5 7h1v3h-1V7zm0 4h1v1h-1v-1z"/></svg> 0
+            </div>
+        </div>
         <div class="status-right">
-            <span id="cursor-position">Ln 1, Col 1</span>
-            <span id="language-status">Ready</span>
+            <div class="status-item" id="cursor-position">Ln 1, Col 1</div>
+            <div class="status-item">Tab Size: 4</div>
+            <div class="status-item">UTF-8</div>
+            <div class="status-item">LF</div>
+            <div class="status-item" id="language-status">{ } HTML</div>
+            <div class="status-item">Layout: us</div>
+            <div class="status-item">
+                <svg viewBox="0 0 16 16" fill="currentColor" width="14" height="14"><path d="M8 1.5c-2.5 0-4.5 2-4.5 4.5v3.5l-2 2v1h13v-1l-2-2V6c0-2.5-2-4.5-4.5-4.5zm0 13c1.1 0 2-.9 2-2H6c0 1.1.9 2 2 2z"/></svg>
+            </div>
         </div>
     </div>
 </div>
@@ -443,6 +454,17 @@
 
     // --- Activity Bar & Sidebar Toggles ---
     let currentSidebarView = 'explorer';
+
+    function toggleHamburger(e) {
+        e.stopPropagation();
+        const menu = document.getElementById('hamburger-menu');
+        menu.classList.toggle('active');
+    }
+
+    document.addEventListener('click', () => {
+        document.getElementById('hamburger-menu').classList.remove('active');
+        document.getElementById('context-menu').style.display = 'none';
+    });
 
     function toggleActivityBar(view) {
         const sb = document.getElementById('sidebar');
@@ -568,7 +590,7 @@
 
     document.addEventListener('mousemove', (e) => {
         if (!isResizing) return;
-        let newWidth = e.clientX - 50;
+        let newWidth = e.clientX - 48; // Offset Activity bar width
         if (newWidth < 150) newWidth = 150;
         if (newWidth > 600) newWidth = 600;
         document.documentElement.style.setProperty('--sidebar-width', newWidth + 'px');
@@ -583,22 +605,7 @@
         }
     });
 
-    // --- Menu & Context Logic ---
-    document.querySelectorAll('.menu-btn').forEach(btn => {
-        btn.addEventListener('click', (e) => {
-            const parent = e.target.parentElement;
-            const isActive = parent.classList.contains('active');
-            document.querySelectorAll('.menu-item').forEach(item => item.classList.remove('active'));
-            if (!isActive) parent.classList.add('active');
-            e.stopPropagation();
-        });
-    });
-    
-    document.addEventListener('click', () => {
-        document.querySelectorAll('.menu-item').forEach(item => item.classList.remove('active'));
-        document.getElementById('context-menu').style.display = 'none';
-    });
-
+    // --- Context Logic ---
     let contextTargetHandle = null;
     let contextTargetPath = null;
 
@@ -761,6 +768,7 @@
         fileTreeRoot.innerHTML = '';
         workspaceTitle.innerText = dirHandle.name.toUpperCase();
         fileStatus.innerText = "Scanning Directory...";
+        // Exact VS Code padding calculation base depth = 0
         await buildTreeUI(dirHandle, fileTreeRoot, "", 0);
         fileStatus.innerText = "Workspace Loaded";
     }
@@ -786,6 +794,7 @@
                 const wrap = document.createElement('div');
                 wrap.className = 'tree-item-wrap dir-node';
                 wrap.setAttribute('data-path', currentPath);
+                // Math for VS Code Tree Indentation
                 wrap.style.paddingLeft = `${10 + (depth * 14)}px`;
                 
                 const chev = document.createElement('span');
@@ -794,7 +803,8 @@
                 
                 const label = document.createElement('div');
                 label.className = 'tree-item';
-                label.innerHTML = `<i class="icon icon-folder"></i> <span class="item-name">${entry.name}</span>`;
+                // EXACT MATCH to image: No folder icon, just name
+                label.innerHTML = `<span class="item-name">${entry.name}</span>`;
                 
                 wrap.appendChild(chev);
                 wrap.appendChild(label);
@@ -813,7 +823,6 @@
                     if (isOpen) {
                         childContainer.classList.remove('open');
                         chev.classList.remove('open');
-                        label.querySelector('.icon').classList.replace('icon-folder-open', 'icon-folder');
                     } else {
                         if (!loaded) {
                             await buildTreeUI(entry, childContainer, currentPath + '/', depth + 1);
@@ -821,7 +830,6 @@
                         }
                         childContainer.classList.add('open');
                         chev.classList.add('open');
-                        label.querySelector('.icon').classList.replace('icon-folder', 'icon-folder-open');
                     }
                 });
 
@@ -839,8 +847,8 @@
                 wrap.setAttribute('data-path', currentPath);
                 wrap.setAttribute('draggable', 'true');
                 
-                // Align files slightly right of the folder chevron
-                wrap.style.paddingLeft = `${10 + (depth * 14) + 18}px`;
+                // Align files flush with folder chevron
+                wrap.style.paddingLeft = `${10 + (depth * 14) + 16}px`;
                 
                 const label = document.createElement('div');
                 label.className = 'tree-item';
@@ -987,7 +995,7 @@
         editorDiv.style.display = 'block';
         setTimeout(() => editorDiv.style.opacity = '1', 50);
         
-        langStatus.innerText = vfs[path].lang.toUpperCase();
+        langStatus.innerHTML = `{ } ${vfs[path].lang.toUpperCase()}`;
         fileStatus.innerText = "Ready";
         
         renderTabs();
@@ -1201,7 +1209,6 @@
             terminalArea.style.display = 'flex';
             termIcon.classList.add('active');
             
-            // Defer init slightly to ensure container has dimensions
             setTimeout(() => {
                 if (!termInstance) initTerminalEngine();
                 if (editor) editor.layout(); 
@@ -1211,12 +1218,6 @@
             termIcon.classList.remove('active');
             if (editor) editor.layout(); 
         }
-    }
-
-    function closeTerminal() {
-        terminalArea.style.display = 'none';
-        document.getElementById('activity-terminal').classList.remove('active');
-        if(editor) editor.layout();
     }
 
     function initTerminalEngine() {
