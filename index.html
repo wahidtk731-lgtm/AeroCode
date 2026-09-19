@@ -1,1431 +1,2513 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>AeroCode</title>
-    
-    <!-- VS Code Ribbon Favicon -->
-    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Cpath fill='%23007acc' d='M23.9 6.2L12 15.2l-4.5-3.8-3.1 1 12 11.2 11.4-15-4-2.4z'/%3E%3Cpath fill='%230066a6' d='M12 15.2v11.7l11.9-8.8-11.9-2.9z'/%3E%3C/svg%3E">
-    
-    <link rel="preload" href="./monaco-editor/vs/loader.js" as="script">
+
+    <!-- Authentic VS Code Blue Ribbon Favicon -->
+    <link
+      rel="icon"
+      href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Cpath fill='%23007acc' d='M23.9 6.2L12 15.2l-4.5-3.8-3.1 1 12 11.2 11.4-15-4-2.4z'/%3E%3Cpath fill='%230066a6' d='M12 15.2v11.7l11.9-8.8-11.9-2.9z'/%3E%3C/svg%3E"
+    />
+
+    <link rel="preload" href="./monaco-editor/vs/loader.js" as="script" />
     <link rel="stylesheet" href="./xterm/xterm.css" />
-    
+
     <style>
-        /* Exact VS Code Theme Variables based on Image Analysis */
-        :root {
-            --ui-zoom: 1;
-            --font-ui: calc(13px * var(--ui-zoom));
-            --font-term: calc(12px * var(--ui-zoom));
-            --sidebar-width: 260px;
-            
-            --bg-base: #1e1e1e;          /* Editor Background */
-            --bg-sidebar: #181818;       /* Sidebar, Activity Bar, Top Bar, Status Bar */
-            --border-color: #2b2b2b;
-            --focus-border: #007fd4;
-            --hover-bg: #2a2d2e;
-            --active-bg: #37373d;
-            --text-main: #cccccc;
-            --text-muted: #858585;
-        }
+      /* Exact VS Code Theme Variables */
+      :root {
+        --ui-zoom: 1;
+        --font-ui: calc(13px * var(--ui-zoom));
+        --font-term: calc(12px * var(--ui-zoom));
+        --sidebar-width: 260px;
 
-        * { box-sizing: border-box; margin: 0; padding: 0; }
-        
-        body, html { 
-            height: 100%; 
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans", Helvetica, Arial, sans-serif; 
-            background-color: var(--bg-base); 
-            color: var(--text-main); 
-            overflow: hidden; 
-        }
-        
-        /* Custom VS Code Scrollbars */
-        ::-webkit-scrollbar { width: 10px; height: 10px; }
-        ::-webkit-scrollbar-track { background: transparent; }
-        ::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.1); border: 2px solid transparent; background-clip: padding-box; border-radius: 5px; }
-        ::-webkit-scrollbar-thumb:hover { background: rgba(255, 255, 255, 0.2); }
+        --bg-base: #1e1e1e; /* Editor Background */
+        --bg-sidebar: #181818; /* Sidebar, Activity Bar, Top Bar, Status Bar */
+        --border-color: #2b2b2b;
+        --focus-border: #007fd4;
+        --hover-bg: #2a2d2e;
+        --active-bg: #37373d;
+        --text-main: #cccccc;
+        --text-muted: #858585;
+        --radius-ui: 6px;
+      }
 
-        .ide-container { display: flex; flex-direction: column; height: 100vh; }
-        
-        /* Exact VS Code Web Top Bar */
-        .title-bar { 
-            background-color: var(--bg-sidebar); height: 35px; display: flex; align-items: center; justify-content: center;
-            padding: 0 10px; font-size: var(--font-ui); border-bottom: 1px solid var(--bg-base); 
-            user-select: none; position: relative; z-index: 100;
-        }
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
 
-        /* Center Search/Preview Bar */
-        .workspace-search-bar {
-            background-color: #2b2b2b; color: #ccc; border: 1px solid #3c3c3c;
-            border-radius: 6px; padding: 4px 150px; font-size: 12px; cursor: pointer;
-            display: flex; align-items: center; justify-content: center;
-        }
-        .workspace-search-bar:hover { background-color: #333; }
+      body,
+      html {
+        height: 100%;
+        font-family:
+          -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans", Helvetica,
+          Arial, sans-serif;
+        background-color: var(--bg-base);
+        color: var(--text-main);
+        overflow: hidden;
+      }
 
-        /* Exact File Icons from Image */
-        .icon { display: inline-block; width: calc(16px * var(--ui-zoom)); height: calc(16px * var(--ui-zoom)); background-size: contain; background-repeat: no-repeat; vertical-align: middle; }
-        .icon-html { background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'><path d='M5 4L1 8l4 4 .7-.7L2.4 8l3.3-3.3L5 4zm6 0l-.7.7L13.6 8l-3.3 3.3.7.7 4-4-4-4z' fill='%23E34F26'/></svg>"); }
-        .icon-css { background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'><path d='M6.5 3L5.5 8H3l-.5 2h2.5l-1 5h2l1-5h3l-1 5h2l1-5h2.5l.5-2h-2.5l1-5h2l.5-2h-2.5l1-5h-2l-1 5h-3l1-5h-2l-1 5H3l-.5 2h2.5zM7.5 8l1-5h3l-1 5h-3z' fill='%2342A5F5'/></svg>"); }
-        .icon-js { background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'><text x='8' y='12' font-family='sans-serif' font-weight='bold' font-size='10' fill='%23F7DF1E' text-anchor='middle'>JS</text></svg>"); }
-        .icon-cs { background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'><text x='8' y='12' font-family='sans-serif' font-weight='bold' font-size='10' fill='%2342A5F5' text-anchor='middle'>C%23</text></svg>"); }
-        .icon-py { background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'><text x='8' y='12' font-family='sans-serif' font-weight='bold' font-size='10' fill='%23FFD43B' text-anchor='middle'>Py</text></svg>"); }
-        .icon-java { background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'><text x='8' y='12' font-family='sans-serif' font-weight='bold' font-size='10' fill='%23E76F00' text-anchor='middle'>Java</text></svg>"); }
-        .icon-default { background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'><rect width='10' height='12' x='3' y='2' fill='none' stroke='%23ccc' stroke-width='1.5'/></svg>"); }
+      /* Custom VS Code Scrollbars */
+      ::-webkit-scrollbar {
+        width: 10px;
+        height: 10px;
+      }
+      ::-webkit-scrollbar-track {
+        background: transparent;
+      }
+      ::-webkit-scrollbar-thumb {
+        background: rgba(255, 255, 255, 0.1);
+        border: 2px solid transparent;
+        background-clip: padding-box;
+        border-radius: 5px;
+      }
+      ::-webkit-scrollbar-thumb:hover {
+        background: rgba(255, 255, 255, 0.2);
+      }
 
-        /* Context Menus & Dropdowns */
-        .dropdown { 
-            display: none; position: absolute; top: 100%; left: 0; background-color: var(--bg-sidebar); 
-            border: 1px solid var(--border-color); min-width: 220px; box-shadow: 0 4px 6px rgba(0,0,0,0.5); 
-            padding: 5px 0; border-radius: 4px; z-index: 1000;
-        }
-        .dropdown-item { padding: 6px 15px; cursor: pointer; display: flex; justify-content: space-between; align-items: center; color: var(--text-main); font-size: 13px;}
-        .dropdown-item:hover { background-color: var(--focus-border); color: #fff; }
-        .shortcut { color: var(--text-muted); font-size: 11px; }
-        .dropdown-item:hover .shortcut { color: rgba(255,255,255,0.8); }
+      .ide-container {
+        display: flex;
+        flex-direction: column;
+        height: 100vh;
+      }
 
-        .context-menu { 
-            position: fixed; background: var(--bg-sidebar); border: 1px solid var(--border-color); 
-            z-index: 1000; box-shadow: 0 4px 6px rgba(0,0,0,0.5); border-radius: 4px; 
-            padding: 5px 0; display: none; 
-        }
+      /* Exact VS Code Web Top Bar */
+      .title-bar {
+        background-color: var(--bg-sidebar);
+        height: 35px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 0 10px;
+        font-size: var(--font-ui);
+        border-bottom: 1px solid var(--border-color);
+        user-select: none;
+        position: relative;
+        z-index: 100;
+      }
 
-        /* Activity Bar (Exact VS Code Layout) */
-        .activity-bar {
-            width: 48px; background-color: var(--bg-sidebar); display: flex; flex-direction: column;
-            align-items: center; padding-top: 0; flex-shrink: 0; z-index: 10; border-right: 1px solid var(--border-color);
-        }
-        
-        .hamburger-menu {
-            width: 48px; height: 48px; display: flex; justify-content: center; align-items: center;
-            cursor: pointer; color: var(--text-muted); position: relative;
-        }
-        .hamburger-menu:hover { color: #fff; }
-        .hamburger-menu.active .dropdown { display: block; left: 48px; top: 10px; }
+      /* Center Search/Preview Bar */
+      .workspace-search-bar {
+        background-color: #2b2b2b;
+        color: #ccc;
+        border: 1px solid #3c3c3c;
+        border-radius: var(--radius-ui);
+        padding: 4px 150px;
+        font-size: 12px;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: background 0.1s;
+      }
+      .workspace-search-bar:hover {
+        background-color: #333333;
+        border-color: #555;
+      }
 
-        .activity-icon {
-            width: 48px; height: 48px; display: flex; justify-content: center; align-items: center;
-            cursor: pointer; color: var(--text-muted); border-left: 2px solid transparent; box-sizing: border-box;
-        }
-        .activity-icon:hover { color: #ffffff; }
-        .activity-icon.active { color: #ffffff; border-left: 2px solid var(--focus-border); }
-        .activity-spacer { flex: 1; }
+      /* Authentic VS Code Seti File Icons */
+      .icon {
+        display: inline-block;
+        width: calc(16px * var(--ui-zoom));
+        height: calc(16px * var(--ui-zoom));
+        background-size: contain;
+        background-repeat: no-repeat;
+        vertical-align: middle;
+      }
+      .icon-html {
+        background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'><path fill='%23E34F26' d='M1 2l1.3 10.6L8 14l5.7-1.4L15 2H1zm11.2 8.3L8 11.4l-4.2-1.1-.3-2.6h1.7l.1 1.4 2.7.7 2.7-.7.2-2.4H3.4l-.2-2h7.8l-.1-1.3H2.8L2.6 4h8.9l.7 6.3z'/></svg>");
+      }
+      .icon-js {
+        background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'><rect width='14' height='14' x='1' y='1' fill='%23F7DF1E'/><path d='M5.4 11.4c-.4.3-.9.4-1.5.4-.5 0-.9-.1-1.3-.3l.4-1.2c.3.2.6.3 1 .3.3 0 .5-.1.5-.3 0-.2-.2-.3-.6-.4-.8-.2-1.4-.6-1.4-1.4 0-.8.6-1.4 1.6-1.4.5 0 1 .1 1.3.3l-.4 1.2c-.3-.2-.6-.3-.9-.3-.3 0-.5.1-.5.3 0 .2.2.3.6.4.8.2 1.4.6 1.4 1.4 0 .9-.6 1.4-1.6 1.4zm4.8 0c-.5.3-1.1.4-1.8.4-1.3 0-2.1-.8-2.1-2.1v-3.7h1.4v3.6c0 .7.3 1 1 1 .3 0 .6-.1.8-.2l.7 1z' fill='%23000'/></svg>");
+      }
+      .icon-css {
+        background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'><path fill='%231572B6' d='M1 2l1.3 10.6L8 14l5.7-1.4L15 2H1zm10.6 8.3L8 11.4l-3.6-1-.2-2h1.6l.1 1 2.1.5 2.1-.5.1-1.7H3.8L3.6 4h8.8l-.2 2.2H5.4l.1 1h4.6l.5 3.1z'/></svg>");
+      }
+      .icon-json {
+        background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'><path fill='%23CBCB41' d='M6.5 3L5.5 8H3l-.5 2h2.5l-1 5h2l1-5h3l-1 5h2l1-5h2.5l.5-2h-2.5l1-5h2l.5-2h-2.5l1-5h-2l-1 5h-3l1-5h-2l-1 5H3l-.5 2h2.5zM7.5 8l1-5h3l-1 5h-3z'/></svg>");
+      }
+      .icon-c {
+        background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'><path fill='%235967BA' d='M13.2 8.4c0-2.5-2.1-4.6-4.6-4.6-2.5 0-4.6 2.1-4.6 4.6 0 2.5 2.1 4.6 4.6 4.6 1.8 0 3.3-1 4.1-2.5l-1.6-.9c-.5 1-1.4 1.6-2.5 1.6-1.5 0-2.8-1.2-2.8-2.8s1.2-2.8 2.8-2.8c1.1 0 2 .7 2.5 1.6l1.6-.9c-.8-1.5-2.3-2.5-4.1-2.5z'/></svg>");
+      }
+      .icon-cpp {
+        background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'><path fill='%235967BA' d='M10.2 8.4c0-1.8-1.4-3.2-3.2-3.2-1.8 0-3.2 1.4-3.2 3.2 0 1.8 1.4 3.2 3.2 3.2 1.1 0 2.1-.6 2.7-1.5l-1.2-.7c-.4.6-1 1-1.5 1-1 0-1.8-.8-1.8-1.8s.8-1.8 1.8-1.8c.6 0 1.2.4 1.5 1l1.2-.7c-.6-1-1.6-1.7-2.7-1.7zm3.8-1h-1v-1h-1v1h-1v1h1v1h1v-1h1v-1zm3 0h-1v-1h-1v1h-1v1h1v1h1v-1h1v-1z'/></svg>");
+      }
+      .icon-cs {
+        background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'><path fill='%23178600' d='M9.2 8.4c0-1.8-1.4-3.2-3.2-3.2-1.8 0-3.2 1.4-3.2 3.2 0 1.8 1.4 3.2 3.2 3.2 1.1 0 2.1-.6 2.7-1.5l-1.2-.7c-.4.6-1 1-1.5 1-1 0-1.8-.8-1.8-1.8s.8-1.8 1.8-1.8c.6 0 1.2.4 1.5 1l1.2-.7c-.6-1-1.6-1.7-2.7-1.7zm6.3-.5L14.3 6H13l.8 1.9h-1.6L11.4 6h-1.3l1.1 1.9h-1.6v1.1h1l-.8 2h1.3l.8-2h1.6l-1 2h1.3l1-2h1.6V7.9h-1z'/></svg>");
+      }
+      .icon-py {
+        background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'><path fill='%233776AB' d='M7.8 2.3c-1.8 0-2.4.8-2.4 2.4V6h4.9v.7H4.1c-1.8 0-2.8 1.3-2.8 3.5 0 2.2 1 3.5 2.8 3.5h1V11c0-1.8.8-2.4 2.4-2.4h3.5c1.8 0 2.4-.8 2.4-2.4V4.6c0-1.6-.6-2.3-2.4-2.3H7.8zm-1 1a.6.6 0 1 1 0 1.2.6.6 0 0 1 0-1.2z'/><path fill='%23FFD43B' d='M8.2 13.7c1.8 0 2.4-.8 2.4-2.4V10H5.7v-.7h6.2c1.8 0 2.8-1.3 2.8-3.5 0-2.2-1-3.5-2.8-3.5h-1v2.7c0 1.8-.8 2.4-2.4 2.4H5c-1.8 0-2.4.8-2.4 2.4v1.6c0 1.6.6 2.3 2.4 2.3h3.2zm1-1a.6.6 0 1 1 0-1.2.6.6 0 0 1 0 1.2z'/></svg>");
+      }
+      .icon-java {
+        background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'><path fill='%23E76F00' d='M10.8 10.3c-1.2 0-3-.5-4.2-.8.5-1.4 1.3-2.7 1.3-2.7.9 1 1.9 2.5 2.9 3.5zm-5.7-1.1c-1.5.3-2.6.5-3.3.5 1-.9 2-1.7 3.3-2V8.9c-.8.8-1.8 1.5-2.9 2-1 .4-1.5.8-1.5 1.1s.6.7 1.5.9c2 .4 4.5.6 6.3.6 1.8 0 3.1-.1 4.1-.4 1-.2 1.5-.6 1.5-1s-.5-.7-1.4-1c-1.2.6-3 1.2-4.9 1.4-1.2.1-2.4-.1-2.7-.2zm1.6-6c-.7 1.6-.3 3.6-.3 3.6-.9-1.2-1-2.9-.3-4 .3-.4 1.1-.9 1.5-.9.4.1.2 1-.9 1.3zm1.9 1.3c-.6 1-.3 2.2-.3 2.2-.5-.7-.5-1.7-.1-2.4.2-.3.7-.5 1-.4.2.1 0 .5-.6.6zM6 13.5c-.8.1-1.6.2-2.3.2-1.1 0-1.7-.1-1.7-.3s.6-.3 1.7-.4c1.1-.1 2.5-.2 3.7-.2 1.2 0 2.2.1 2.9.2s1.1.2 1.1.3c0 .1-.6.2-1.7.3-1 .1-2.3.1-3.7-.1zm-.4 1.4c-.6 0-1.1-.1-1.1-.2s.5-.1 1.1-.2c1-.1 2.3-.1 3.5-.1s2.2 0 2.6.1c.5 0 .8.1.8.2s-.3.1-.8.2c-.4.1-1.4.1-2.6.1-1.2-.1-2.5-.1-3.5-.1z'/></svg>");
+      }
+      .icon-default {
+        background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'><path fill='%23cccccc' d='M13.5 4.5L9.5.5H3a1 1 0 0 0-1 1v13a1 1 0 0 0 1 1h10a1 1 0 0 0 1-1v-10zm-4-3l3 3h-3v-3zM3 14.5v-13h5.5v4h4v9H3z'/></svg>");
+      }
 
-        /* Main Workspace Area */
-        .main-area { display: flex; flex: 1; height: calc(100vh - 57px); } /* 35px title + 22px status */
-        
-        .sidebar { 
-            width: var(--sidebar-width); background-color: var(--bg-sidebar); display: flex; 
-            flex-direction: column; flex-shrink: 0; transition: width 0.1s;
-        }
-        .sidebar.hidden { display: none; }
+      /* Dropdowns & Menus */
+      .dropdown {
+        display: none;
+        position: absolute;
+        top: 100%;
+        left: 0;
+        background-color: var(--bg-sidebar);
+        border: 1px solid var(--border-color);
+        min-width: 240px;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.6);
+        padding: 5px 0;
+        border-radius: var(--radius-ui);
+        z-index: 1000;
+      }
+      .dropdown-item {
+        padding: 6px 15px;
+        cursor: pointer;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        color: var(--text-main);
+        font-size: 13px;
+      }
+      .dropdown-item:hover {
+        background-color: var(--focus-border);
+        color: #fff;
+      }
+      .shortcut {
+        color: var(--text-muted);
+        font-size: 11px;
+      }
+      .dropdown-item:hover .shortcut {
+        color: rgba(255, 255, 255, 0.8);
+      }
 
-        /* Drag-to-Resize Handle */
-        .resizer {
-            width: 1px; background-color: var(--border-color); cursor: col-resize; z-index: 10;
-        }
-        .resizer:hover, .resizer.resizing { background-color: var(--focus-border); width: 2px; }
+      .context-menu {
+        position: fixed;
+        background: var(--bg-sidebar);
+        border: 1px solid var(--border-color);
+        z-index: 1000;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.6);
+        border-radius: var(--radius-ui);
+        padding: 5px 0;
+        display: none;
+        min-width: 200px;
+      }
 
-        .editor-terminal-column { flex: 1; display: flex; flex-direction: column; min-width: 0;}
-        .editor-container { flex: 1; display: flex; flex-direction: column; min-width: 0; position: relative; }
-        .editor-container.drag-over::after {
-            content: ''; position: absolute; top: 0; left: 0; right: 0; bottom: 0;
-            background: rgba(0, 127, 212, 0.1); border: 2px dashed var(--focus-border); z-index: 100; pointer-events: none;
-        }
+      /* Settings Modal Popup (Rounded, Centered) */
+      #settings-modal {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        width: 420px;
+        background: var(--bg-sidebar);
+        border: 1px solid var(--border-color);
+        z-index: 9999;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.8);
+        border-radius: 8px;
+        display: none;
+        flex-direction: column;
+      }
+      .settings-header {
+        padding: 12px 15px;
+        border-bottom: 1px solid var(--border-color);
+        font-weight: bold;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        color: #fff;
+        font-size: 14px;
+      }
+      .settings-body {
+        padding: 20px;
+        font-size: 13px;
+        color: var(--text-main);
+        overflow-y: auto;
+        max-height: 70vh;
+      }
+      .settings-group {
+        margin-bottom: 15px;
+      }
+      .settings-group label {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 5px;
+        color: var(--text-main);
+      }
+      .settings-checkbox {
+        margin-right: 8px;
+        cursor: pointer;
+        width: 14px;
+        height: 14px;
+      }
+      .settings-input {
+        width: 80px;
+        background: #3c3c3c;
+        border: 1px solid var(--border-color);
+        color: #fff;
+        padding: 4px 8px;
+        border-radius: 4px;
+        outline: none;
+        text-align: center;
+        text-transform: lowercase;
+      }
+      .settings-input:focus {
+        border-color: var(--focus-border);
+      }
+      .settings-btn {
+        background: var(--focus-border);
+        color: #fff;
+        border: none;
+        padding: 8px 12px;
+        border-radius: 4px;
+        cursor: pointer;
+        width: 100%;
+        font-weight: bold;
+        margin-top: 10px;
+        transition: background 0.1s;
+      }
+      .settings-btn:hover {
+        background: #006eb8;
+      }
 
-        /* Sidebar Headers */
-        .sidebar-header { 
-            padding: 10px 15px 5px 15px; font-size: 11px; text-transform: uppercase; 
-            font-weight: bold; color: var(--text-main); display: flex; justify-content: space-between; 
-            cursor: pointer; user-select: none; letter-spacing: 0.5px;
-        }
-        .sidebar-header:hover { color: #fff; }
-        
-        /* Directory Tree UI (No Folder Icons, Exact Padding) */
-        .workspace-tree { flex: 1; overflow-y: auto; display: block; overflow-x: hidden; }
-        .tree-children { display: none; flex-direction: column; width: 100%; }
-        .tree-children.open { display: flex; }
-        
-        .tree-item-wrap { 
-            display: flex; align-items: center; width: 100%; padding: 4px 0;
-            cursor: pointer; user-select: none; color: var(--text-main);
-        }
-        .tree-item-wrap:hover { background-color: var(--hover-bg); }
-        .tree-item-wrap.active { background-color: var(--active-bg); color: #ffffff; }
-        
-        .chevron { width: 16px; height: 16px; display: inline-flex; align-items: center; justify-content: center; font-size: 11px; color: var(--text-muted); transition: transform 0.1s; }
-        .chevron.open { transform: rotate(90deg); }
-        .item-name { margin-left: 4px; flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: var(--font-ui); }
+      /* Authentic SVGs for Activity Bar */
+      .activity-bar {
+        width: 48px;
+        background-color: var(--bg-sidebar);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        padding-top: 0;
+        flex-shrink: 0;
+        z-index: 10;
+        border-right: 1px solid var(--border-color);
+      }
+      .hamburger-menu {
+        width: 48px;
+        height: 48px;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        cursor: pointer;
+        color: var(--text-muted);
+        position: relative;
+      }
+      .hamburger-menu:hover {
+        color: #fff;
+      }
+      .hamburger-menu.active .dropdown {
+        display: block;
+        left: 48px;
+        top: 10px;
+      }
 
-        /* Inline Rename Input */
-        .inline-rename-input {
-            background: var(--bg-sidebar); color: #fff; border: 1px solid var(--focus-border); outline: none;
-            padding: 1px 4px; font-family: inherit; font-size: inherit; width: 80%; 
-            margin-left: 4px; border-radius: 2px;
-        }
+      .activity-icon {
+        width: 48px;
+        height: 48px;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        cursor: pointer;
+        color: var(--text-muted);
+        border-left: 2px solid transparent;
+        box-sizing: border-box;
+      }
+      .activity-icon:hover {
+        color: #ffffff;
+      }
+      .activity-icon.active {
+        color: #ffffff;
+        border-left: 2px solid var(--focus-border);
+      }
+      .activity-spacer {
+        flex: 1;
+      }
 
-        /* Search Panel Input */
-        #search-input {
-            width: 100%; padding: 6px 8px; background: #3c3c3c; border: 1px solid transparent; 
-            color: #fff; border-radius: 4px; outline: none; margin-bottom: 10px; font-family: inherit;
-        }
-        #search-input:focus { border: 1px solid var(--focus-border); }
-        
-        /* Editor Tabs */
-        .editor-tabs { 
-            display: flex; background-color: var(--bg-sidebar); height: calc(35px * var(--ui-zoom)); 
-            overflow-x: auto; flex-shrink: 0; border-bottom: 1px solid var(--bg-base);
-        }
-        .tab { 
-            padding: 0 10px 0 15px; background-color: #2d2d2d; border-right: 1px solid var(--bg-base); 
-            color: var(--text-muted); font-size: var(--font-ui); display: flex; align-items: center; 
-            gap: 6px; cursor: pointer; user-select: none; min-width: max-content; border-top: 1px solid transparent; 
-        }
-        .tab.active { background-color: var(--bg-base); color: #ffffff; border-top: 1px solid var(--focus-border); }
-        .tab:hover:not(.active) { background-color: var(--bg-sidebar); }
-        .tab-close { font-size: calc(var(--font-ui) - 2px); margin-left: 5px; padding: 2px 4px; border-radius: 4px; opacity: 0; color: var(--text-muted); }
-        .tab:hover .tab-close, .tab.active .tab-close { opacity: 1; }
-        .tab-close:hover { background-color: rgba(255,255,255,0.1); color: white; }
+      /* Perfect Center SVG Wrapper */
+      .svg-icon {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 24px;
+        height: 24px;
+      }
+      .svg-close {
+        width: 20px;
+        height: 20px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        color: var(--text-muted);
+        border-radius: 4px;
+        transition: background 0.1s;
+      }
+      .svg-close svg {
+        width: 14px;
+        height: 14px;
+      }
+      .svg-close:hover {
+        background-color: rgba(255, 255, 255, 0.1);
+        color: #fff;
+      }
 
-        #editor { flex: 1; width: 100%; opacity: 0; transition: opacity 0.2s ease; display: none; }
-        
-        /* Welcome Screen */
-        .welcome-screen { 
-            display: flex; flex-direction: column; justify-content: center; padding: 40px; 
-            background: var(--bg-base); flex: 1; overflow-y: auto; user-select: none; 
+      /* Main Workspace Area */
+      .main-area {
+        display: flex;
+        flex: 1;
+        height: calc(100vh - 57px);
+      }
+
+      .sidebar {
+        width: var(--sidebar-width);
+        background-color: var(--bg-sidebar);
+        display: flex;
+        flex-direction: column;
+        flex-shrink: 0;
+        transition: width 0.1s;
+      }
+      .sidebar.hidden {
+        display: none;
+      }
+
+      .resizer {
+        width: 1px;
+        background-color: var(--border-color);
+        cursor: col-resize;
+        z-index: 10;
+      }
+      .resizer:hover,
+      .resizer.resizing {
+        background-color: var(--focus-border);
+        width: 2px;
+      }
+
+      .editor-terminal-column {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        min-width: 0;
+      }
+      .editor-container {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        min-width: 0;
+        position: relative;
+      }
+      .editor-container.drag-over::after {
+        content: "";
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(0, 127, 212, 0.1);
+        border: 2px dashed var(--focus-border);
+        z-index: 100;
+        pointer-events: none;
+      }
+
+      .sidebar-header {
+        padding: 10px 15px 5px 15px;
+        font-size: 11px;
+        text-transform: uppercase;
+        font-weight: bold;
+        color: var(--text-main);
+        display: flex;
+        justify-content: space-between;
+        cursor: pointer;
+        user-select: none;
+        letter-spacing: 0.5px;
+      }
+      .sidebar-header:hover {
+        color: #fff;
+      }
+
+      /* Tree UI: Exact Matches Reference (No Folders) */
+      .workspace-tree {
+        flex: 1;
+        overflow-y: auto;
+        display: block;
+        overflow-x: hidden;
+      }
+      .tree-children {
+        display: none;
+        flex-direction: column;
+        width: 100%;
+      }
+      .tree-children.open {
+        display: flex;
+      }
+
+      .tree-item-wrap {
+        display: flex;
+        align-items: center;
+        width: 100%;
+        padding: 4px 0;
+        cursor: pointer;
+        user-select: none;
+        color: var(--text-main);
+      }
+      .tree-item-wrap:hover {
+        background-color: var(--hover-bg);
+      }
+      .tree-item-wrap.active {
+        background-color: var(--active-bg);
+        color: #ffffff;
+      }
+
+      .chevron {
+        width: 16px;
+        height: 16px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 11px;
+        color: var(--text-muted);
+        transition: transform 0.1s;
+      }
+      .chevron.open {
+        transform: rotate(90deg);
+      }
+      .item-name {
+        margin-left: 4px;
+        flex: 1;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        font-size: var(--font-ui);
+      }
+
+      .inline-rename-input {
+        background: var(--bg-sidebar);
+        color: #fff;
+        border: 1px solid var(--focus-border);
+        outline: none;
+        padding: 1px 4px;
+        font-family: inherit;
+        font-size: inherit;
+        width: 80%;
+        margin-left: 4px;
+        border-radius: 4px;
+      }
+
+      #search-input {
+        width: 100%;
+        padding: 6px 8px;
+        background: #3c3c3c;
+        border: 1px solid transparent;
+        color: #fff;
+        border-radius: var(--radius-ui);
+        outline: none;
+        margin-bottom: 10px;
+        font-family: inherit;
+      }
+      #search-input:focus {
+        border: 1px solid var(--focus-border);
+      }
+
+      /* VS Code Style Editor Tabs */
+      .editor-tabs {
+        display: flex;
+        background-color: var(--bg-sidebar);
+        height: 35px;
+        overflow-x: auto;
+        flex-shrink: 0;
+      }
+      .tab {
+        padding: 0 8px 0 15px;
+        background-color: #2d2d2d;
+        border-right: 1px solid var(--bg-base);
+        color: var(--text-muted);
+        font-size: 13px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 6px;
+        cursor: pointer;
+        user-select: none;
+        min-width: max-content;
+        border-top: 1px solid transparent;
+        border-top-left-radius: 8px;
+        border-top-right-radius: 8px; /* Rounded top corners */
+      }
+      .tab.active {
+        background-color: var(--bg-base);
+        color: #ffffff;
+        border-top: 1px solid var(--focus-border);
+      }
+      .tab:hover:not(.active) {
+        background-color: var(--bg-sidebar);
+      }
+
+      #editor {
+        flex: 1;
+        width: 100%;
+        opacity: 0;
+        transition: opacity 0.2s ease;
+        display: none;
+      }
+
+      .welcome-screen {
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        padding: 40px;
+        background: var(--bg-base);
+        flex: 1;
+        overflow-y: auto;
+        user-select: none;
+      }
+      .welcome-title {
+        font-size: calc(36px * var(--ui-zoom));
+        color: #fff;
+        margin-bottom: 5px;
+        font-weight: normal;
+      }
+      .welcome-subtitle {
+        font-size: calc(16px * var(--ui-zoom));
+        color: var(--text-muted);
+        margin-bottom: 30px;
+      }
+      .welcome-section {
+        margin-bottom: 25px;
+      }
+      .welcome-section h3 {
+        font-size: calc(14px * var(--ui-zoom));
+        color: var(--text-main);
+        margin-bottom: 15px;
+        font-weight: normal;
+      }
+      .welcome-action {
+        color: var(--focus-border);
+        font-size: calc(14px * var(--ui-zoom));
+        cursor: pointer;
+        margin-bottom: 10px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+      .welcome-action:hover {
+        color: #0098ff;
+        text-decoration: underline;
+      }
+
+      .empty-state {
+        position: absolute;
+        top: 35px;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: var(--bg-base);
+        display: none;
+        align-items: center;
+        justify-content: center;
+        flex-direction: column;
+        z-index: 5;
+        user-select: none;
+      }
+
+      #loading-overlay {
+        position: absolute;
+        top: 35px;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: var(--bg-base);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 10;
+        font-size: var(--font-ui);
+        color: var(--text-muted);
+        flex-direction: column;
+        gap: 10px;
+        transition: opacity 0.2s ease;
+      }
+      .spinner {
+        width: 30px;
+        height: 30px;
+        border: 3px solid var(--bg-activity);
+        border-top-color: var(--focus-border);
+        border-radius: 50%;
+        animation: spin 1s linear infinite;
+      }
+      @keyframes spin {
+        to {
+          transform: rotate(360deg);
         }
-        .welcome-title { font-size: calc(36px * var(--ui-zoom)); color: #fff; margin-bottom: 5px; font-weight: normal; }
-        .welcome-subtitle { font-size: calc(16px * var(--ui-zoom)); color: var(--text-muted); margin-bottom: 30px; }
-        .welcome-section { margin-bottom: 25px; }
-        .welcome-section h3 { font-size: calc(14px * var(--ui-zoom)); color: var(--text-main); margin-bottom: 15px; font-weight: normal; }
-        .welcome-action { color: var(--focus-border); font-size: calc(14px * var(--ui-zoom)); cursor: pointer; margin-bottom: 10px; display: flex; align-items: center; gap: 8px; }
-        .welcome-action:hover { color: #0098ff; text-decoration: underline; }
+      }
 
-        /* Empty State Watermark */
-        .empty-state { 
-            position: absolute; top: 35px; left: 0; right: 0; bottom: 0; background: var(--bg-base); 
-            display: none; align-items: center; justify-content: center; flex-direction: column; 
-            z-index: 5; user-select: none; 
-        }
+      /* Terminal Panel */
+      .terminal-area {
+        display: none;
+        height: 200px;
+        background-color: var(--bg-base);
+        border-top: 1px solid var(--border-color);
+        flex-direction: column;
+        flex-shrink: 0;
+      }
+      .terminal-header {
+        font-size: 11px;
+        padding: 5px 15px;
+        text-transform: uppercase;
+        color: var(--text-main);
+        background: var(--bg-base);
+        border-bottom: 1px solid var(--border-color);
+        user-select: none;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        letter-spacing: 0.5px;
+      }
+      #terminal {
+        flex: 1;
+        width: 100%;
+        padding: 5px;
+        position: relative;
+      }
 
-        #loading-overlay { 
-            position: absolute; top: 35px; left: 0; right: 0; bottom: 0; background: var(--bg-base); 
-            display: flex; align-items: center; justify-content: center; z-index: 10; 
-            font-size: var(--font-ui); color: var(--text-muted); flex-direction: column; gap: 10px; transition: opacity 0.2s ease; 
-        }
-        .spinner { width: 30px; height: 30px; border: 3px solid var(--bg-activity); border-top-color: var(--focus-border); border-radius: 50%; animation: spin 1s linear infinite; }
-        @keyframes spin { to { transform: rotate(360deg); } }
-
-        /* Terminal Panel */
-        .terminal-area { display: none; height: calc(200px * var(--ui-zoom)); background-color: var(--bg-base); border-top: 1px solid var(--border-color); flex-direction: column; flex-shrink: 0; }
-        .terminal-header { font-size: 11px; padding: 5px 15px; text-transform: uppercase; color: var(--text-main); background: var(--bg-base); border-bottom: 1px solid var(--border-color); user-select: none; display: flex; justify-content: space-between; align-items: center; letter-spacing: 0.5px; }
-        .terminal-close { cursor: pointer; color: var(--text-muted); font-size: var(--font-ui); }
-        .terminal-close:hover { color: white; }
-        #terminal { flex: 1; width: 100%; padding: 5px; }
-
-        /* Exact VS Code Status Bar */
-        .status-bar { background-color: var(--bg-sidebar); border-top: 1px solid var(--border-color); height: calc(22px * var(--ui-zoom)); display: flex; justify-content: space-between; align-items: center; padding: 0 10px; font-size: 12px; color: var(--text-main); user-select: none; }
-        .status-left, .status-right { display: flex; align-items: center; gap: 15px; }
-        .status-item { cursor: pointer; display: flex; align-items: center; gap: 4px; }
-        .status-item:hover { background-color: rgba(255,255,255,0.1); }
+      /* Authentic Exact Status Bar */
+      .status-bar {
+        background-color: var(--bg-sidebar);
+        border-top: 1px solid var(--border-color);
+        height: 22px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 0 10px;
+        font-size: 12px;
+        color: var(--text-main);
+        user-select: none;
+        line-height: 22px;
+        flex-shrink: 0;
+      }
+      .status-left,
+      .status-right {
+        display: flex;
+        align-items: center;
+        gap: 15px;
+      }
+      .status-item {
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        gap: 4px;
+      }
+      .status-item:hover {
+        background-color: rgba(255, 255, 255, 0.1);
+      }
     </style>
-</head>
-<body>
-
-<div class="ide-container">
-    <!-- Centered Search Title Bar (Web App Style) -->
-    <div class="title-bar">
-        <div class="workspace-search-bar" onclick="launchPreview()" title="Click to Launch Web Preview">
-            <svg viewBox="0 0 24 24" fill="currentColor" width="14" height="14" style="margin-right: 6px;">
-                <path d="M8 5v14l11-7z"/>
-            </svg>
-            Launch Preview (Alt+P)
+  </head>
+  <body>
+    <div class="ide-container">
+      <!-- Centered Search/Title Bar -->
+      <div class="title-bar">
+        <div
+          class="workspace-search-bar"
+          onclick="launchPreview()"
+          title="Click to Launch Web Preview"
+        >
+          <svg
+            viewBox="0 0 24 24"
+            fill="currentColor"
+            width="14"
+            height="14"
+            style="margin-right: 6px"
+          >
+            <path d="M8 5v14l11-7z" />
+          </svg>
+          Launch Preview (<span id="title-sc-preview">Alt+P</span>)
         </div>
-    </div>
+      </div>
 
-    <!-- Main Content Area -->
-    <div class="main-area">
-        
+      <!-- Main Content Area -->
+      <div class="main-area">
         <!-- Activity Bar -->
         <div class="activity-bar">
-            <!-- Hamburger Menu -->
-            <div class="hamburger-menu" id="hamburger-menu" onclick="toggleHamburger(event)">
-                <svg viewBox="0 0 24 24" fill="currentColor" width="24" height="24">
-                    <path d="M3 18h18v-2H3v2zm0-5h18v-2H3v2zm0-7v2h18V6H3z"/>
-                </svg>
-                <!-- Merged Dropdown Menu -->
-                <div class="dropdown" id="main-dropdown">
-                    <div class="dropdown-item" onclick="createNewFile()"><span>New File</span><span class="shortcut">Ctrl+N</span></div>
-                    <div class="dropdown-item" onclick="openFolder()"><span>Open Folder Workspace</span><span class="shortcut">Ctrl+O</span></div>
-                    <div class="dropdown-item" onclick="forceManualSave()"><span>Save Active File</span><span class="shortcut">Ctrl+S</span></div>
-                    <div style="height: 1px; background: var(--border-color); margin: 4px 0;"></div>
-                    <div class="dropdown-item" onclick="forceEditorFind()"><span>Find in File</span><span class="shortcut">Ctrl+F</span></div>
-                    <div class="dropdown-item" onclick="toggleActivityBar('search')"><span>Search Workspace</span><span class="shortcut">Ctrl+Shift+F</span></div>
-                    <div style="height: 1px; background: var(--border-color); margin: 4px 0;"></div>
-                    <div class="dropdown-item" onclick="toggleTerminal()"><span>Toggle Terminal</span><span class="shortcut">Ctrl+`</span></div>
-                </div>
+          <!-- Hamburger Menu -->
+          <div
+            class="hamburger-menu"
+            id="hamburger-menu"
+            onclick="toggleHamburger(event)"
+          >
+            <span class="svg-icon"
+              ><svg viewBox="0 0 16 16" fill="currentColor">
+                <path
+                  d="M14 4.5H2v-1h12v1zM14 8.5H2v-1h12v1zM14 12.5H2v-1h12v1z"
+                /></svg
+            ></span>
+            <div class="dropdown" id="main-dropdown">
+              <div class="dropdown-item" onclick="createNewFile()">
+                <span>New File</span><span class="shortcut">Ctrl+N</span>
+              </div>
+              <div class="dropdown-item" onclick="openFolder()">
+                <span>Open Folder Workspace</span
+                ><span class="shortcut" id="menu-sc-open">Ctrl+O</span>
+              </div>
+              <div class="dropdown-item" onclick="forceManualSave()">
+                <span>Save Active File</span
+                ><span class="shortcut" id="menu-sc-save">Ctrl+S</span>
+              </div>
+              <div
+                style="
+                  height: 1px;
+                  background: var(--border-color);
+                  margin: 4px 0;
+                "
+              ></div>
+              <div class="dropdown-item" onclick="forceEditorFind()">
+                <span>Find in File</span
+                ><span class="shortcut" id="menu-sc-find">Ctrl+F</span>
+              </div>
+              <div class="dropdown-item" onclick="toggleActivityBar('search')">
+                <span>Search Workspace</span
+                ><span class="shortcut">Ctrl+Shift+F</span>
+              </div>
+              <div
+                style="
+                  height: 1px;
+                  background: var(--border-color);
+                  margin: 4px 0;
+                "
+              ></div>
+              <div class="dropdown-item" onclick="toggleTerminal()">
+                <span>Toggle Terminal</span
+                ><span class="shortcut" id="menu-sc-term">Ctrl+`</span>
+              </div>
             </div>
+          </div>
 
-            <!-- Explorer Icon -->
-            <div class="activity-icon active" id="activity-explorer" onclick="toggleActivityBar('explorer')" title="Explorer">
-                <svg viewBox="0 0 24 24" fill="currentColor" width="24" height="24">
-                    <path d="M14.5 1h-11l-1 1v12l1 1h11l1-1V2l-1-1zM4.5 13V2h9v11h-9zM16.5 4h1v11h-11v-1h10V4z"/>
-                </svg>
-            </div>
-            <!-- Search Icon -->
-            <div class="activity-icon" id="activity-search" onclick="toggleActivityBar('search')" title="Search (Ctrl+Shift+F)">
-                <svg viewBox="0 0 24 24" fill="currentColor" width="24" height="24">
-                    <path d="M15.25 13.84l4.24 4.24-1.41 1.41-4.24-4.24a6.5 6.5 0 1 1 1.41-1.41zM6.5 11.5a5 5 0 1 0 0-10 5 5 0 0 0 0 10z"/>
-                </svg>
-            </div>
-            <!-- Source Control Dummy -->
-            <div class="activity-icon" title="Source Control">
-                <svg viewBox="0 0 24 24" fill="currentColor" width="24" height="24">
-                    <path d="M10 3a2 2 0 0 1 1 1.7v4.6a2 2 0 0 1-1.8 2.6l-2.4 2.4A2 2 0 1 1 5.3 13l2.2-2.2V4.7A2 2 0 1 1 10 3zm-2.5 7.8V4.7a2 2 0 0 1-1 0v6.1a2 2 0 0 1 1 0zM5 11a1 1 0 1 0 0 2 1 1 0 0 0 0-2zm4-7a1 1 0 1 0 0 2 1 1 0 0 0 0-2z"/>
-                </svg>
-            </div>
-            <!-- Run Dummy -->
-            <div class="activity-icon" title="Run and Debug">
-                <svg viewBox="0 0 24 24" fill="currentColor" width="24" height="24">
-                    <path d="M20 14h-3.3l1.8 4.7-.9.4-2-5.1H12v3l-5-4 5-4v3h3.5l2-5.1.9.4-1.8 4.7H20v2zM6 10H3V9h3v1zm0-3H4V6h2v1zm0 7H4v-1h2v1z"/>
-                </svg>
-            </div>
-            <!-- Extensions Icon -->
-            <div class="activity-icon" title="Extensions">
-                <svg viewBox="0 0 24 24" fill="currentColor" width="24" height="24">
-                    <path d="M20.5 11H19V7c0-1.1-.9-2-2-2h-4V3.5C13 2.12 11.88 1 10.5 1S8 2.12 8 3.5V5H4c-1.1 0-1.99.9-1.99 2v3.8H.5v3.4h1.5V18c0 1.1.9 2 2 2h4v1.5c0 1.38 1.12 2.5 2.5 2.5s2.5-1.12 2.5-2.5V20h4c1.1 0 2-.9 2-2v-4.5h1.5v-2.5zM17 18H4V7h13v11z"/>
-                </svg>
-            </div>
-            
-            <div class="activity-spacer"></div>
-            
-            <!-- Accounts -->
-            <div class="activity-icon" title="Accounts">
-                <svg viewBox="0 0 24 24" fill="currentColor" width="24" height="24">
-                    <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 3c1.66 0 3 1.34 3 3s-1.34 3-3 3-3-1.34-3-3 1.34-3 3-3zm0 14.2c-2.5 0-4.71-1.28-6-3.22.03-1.99 4-3.08 6-3.08 1.99 0 5.97 1.09 6 3.08-1.29 1.94-3.5 3.22-6 3.22z"/>
-                </svg>
-            </div>
+          <!-- Authentic VS Code SVG Paths -->
+          <div
+            class="activity-icon active"
+            id="activity-explorer"
+            onclick="toggleActivityBar('explorer')"
+            title="Explorer"
+          >
+            <span class="svg-icon"
+              ><svg viewBox="0 0 16 16" fill="currentColor">
+                <path
+                  d="M13.5 13v-9h-3V2H2v12h11.5zM3 13V3h6.5v2H13v8H3z"
+                /></svg
+            ></span>
+          </div>
+          <div
+            class="activity-icon"
+            id="activity-search"
+            onclick="toggleActivityBar('search')"
+            title="Search"
+          >
+            <span class="svg-icon"
+              ><svg viewBox="0 0 16 16" fill="currentColor">
+                <path
+                  d="M10.4 9.6a4.5 4.5 0 11-1.4-1.4l3.7 3.7-.7.7-3.6-3.6zM6 10a4 4 0 100-8 4 4 0 000 8z"
+                /></svg
+            ></span>
+          </div>
+          <div class="activity-icon" title="Source Control">
+            <span class="svg-icon"
+              ><svg viewBox="0 0 16 16" fill="currentColor">
+                <path
+                  d="M11 2a2 2 0 10-1.2 3.6v4.8a2 2 0 101.4 0V5.6A2 2 0 0011 2zm0 3a1 1 0 110-2 1 1 0 010 2zm0 8a1 1 0 110-2 1 1 0 010 2zM5 2a2 2 0 00-1 3.7v4.6a2 2 0 101.4 0V5.7A2 2 0 005 2zM5 4a1 1 0 110-2 1 1 0 010 2zm0 8a1 1 0 110-2 1 1 0 010 2z"
+                /></svg
+            ></span>
+          </div>
+          <div class="activity-icon" title="Run and Debug">
+            <span class="svg-icon"
+              ><svg viewBox="0 0 16 16" fill="currentColor">
+                <path
+                  d="M12.2 7.7l-7-4.5A.5.5 0 004.5 3.6v9a.5.5 0 00.7.4l7-4.5a.5.5 0 000-.8zM5.5 4.7L10.7 8l-5.2 3.3V4.7z"
+                /></svg
+            ></span>
+          </div>
+          <div class="activity-icon" title="Extensions">
+            <span class="svg-icon"
+              ><svg viewBox="0 0 16 16" fill="currentColor">
+                <path
+                  d="M13 10V2H5v3H2v8h8v-3h3zm-4 2H3V6h3v3h3v4zm3-5H9V4h3v3z"
+                /></svg
+            ></span>
+          </div>
 
-            <!-- Settings Icon -->
-            <div class="activity-icon" title="Manage">
-                <svg viewBox="0 0 24 24" fill="currentColor" width="24" height="24">
-                    <path d="M19.4 13c.0-.3.0-.6.0-1s0-.7-.0-1l2.1-1.6c.2-.2.3-.4.2-.6l-2-3.5c-.1-.2-.3-.3-.5-.2l-2.5 1c-.5-.4-1.1-.7-1.7-1l-.4-2.6c-.0-.2-.2-.4-.5-.4h-4c-.3 0-.5.2-.5.4l-.4 2.6c-.6.3-1.2.6-1.7 1l-2.5-1c-.2-.1-.5 0-.6.2l-2 3.5c-.1.2-.1.5-.1-.6L4.6 11c-.0.3-.0.6-.0 1s0 .7.0 1l-2.1 1.6c-.2.2-.3.4-.2.6l2 3.5c.1.2.3.3.5.2l2.5-1c.5.4 1.1.7 1.7 1l.4 2.6c.0.2.2.4.5.4h4c.3 0 .5-.2.5-.4l.4-2.6c.6-.3 1.2-.6 1.7-1l2.5 1c.2.1.5 0 .6-.2l2-3.5c.1-.2.1-.5-.1-.6L19.4 13zM12 15.5c-1.9 0-3.5-1.6-3.5-3.5s1.6-3.5 3.5-3.5 3.5 1.6 3.5 3.5-1.6 3.5-3.5 3.5z"/>
-                </svg>
-            </div>
+          <div class="activity-spacer"></div>
+
+          <!-- Terminal Toggle Icon -->
+          <div
+            class="activity-icon"
+            id="activity-terminal"
+            onclick="toggleTerminal()"
+            title="Terminal"
+          >
+            <span class="svg-icon"
+              ><svg viewBox="0 0 16 16" fill="currentColor">
+                <path
+                  d="M2.5 3L2 3.5v9l.5.5h11l.5-.5v-9L13.5 3h-11zM3 4h10v8H3V4zm3 2H5v1h1V6zm2 2H7v1h1V8zm2 2H9v1h1v-1zm-4 0v1h1v-1H6zm4 2H5v1h5v-1z"
+                /></svg
+            ></span>
+          </div>
+
+          <!-- Settings Icon -->
+          <div
+            class="activity-icon"
+            onclick="openSettingsModal()"
+            title="Settings"
+          >
+            <span class="svg-icon"
+              ><svg viewBox="0 0 16 16" fill="currentColor">
+                <path
+                  d="M14.6 7.6l-1.3-.3c-.1-.4-.2-.8-.4-1.2l.9-1-.5-.8-1.2.6c-.3-.2-.6-.4-.9-.5l-.3-1.3h-1L9.6 4.3c-.4.1-.8.2-1.2.4L7.8 3.8l-.8.5.6 1.2c-.2.3-.4.6-.5.9l-1.3.3v1l1.3.3c.1.4.2.8.4 1.2l-.9 1 .5.8 1.2-.6c.3.2.6.4.9.5l.3 1.3h1l.3-1.3c.4-.1.8-.2 1.2-.4l1 .9.8-.5-.6-1.2c.2-.3.4-.6.5-.9l1.3-.3v-1zm-6.6 2.4A2 2 0 118 6a2 2 0 010 4z"
+                /></svg
+            ></span>
+          </div>
         </div>
 
         <!-- Dynamic Sidebar Panels -->
         <div class="sidebar" id="sidebar">
-            <!-- Explorer View -->
-            <div id="sidebar-explorer" style="display: flex; flex-direction: column; height: 100%;">
-                <div class="sidebar-header">
-                    <span>EXPLORER</span>
-                    <span>...</span>
-                </div>
-                <!-- Top Level Accordion -->
-                <div style="font-size: 11px; font-weight: bold; color: var(--text-main); padding: 4px 10px; cursor: pointer; display: flex; align-items: center;" onclick="toggleWorkspace()">
-                    <span id="workspace-chevron" class="chevron open" style="margin-right: 4px;">▶</span>
-                    <span id="workspace-title">NO FOLDER OPENED</span>
-                </div>
-                <div class="workspace-tree" id="workspace-tree">
-                    <div class="tree-children open" id="file-tree-root"></div>
-                </div>
+          <div
+            id="sidebar-explorer"
+            style="display: flex; flex-direction: column; height: 100%"
+          >
+            <div class="sidebar-header">
+              <span>EXPLORER</span>
+              <span>...</span>
             </div>
+            <div
+              style="
+                font-size: 11px;
+                font-weight: bold;
+                color: var(--text-main);
+                padding: 4px 10px;
+                cursor: pointer;
+                display: flex;
+                align-items: center;
+                letter-spacing: 0.5px;
+              "
+              onclick="toggleWorkspace()"
+            >
+              <span
+                id="workspace-chevron"
+                class="chevron open"
+                style="margin-right: 4px"
+                >▶</span
+              >
+              <span id="workspace-title">NO FOLDER OPENED</span>
+            </div>
+            <div class="workspace-tree" id="workspace-tree">
+              <div class="tree-children open" id="file-tree-root"></div>
+            </div>
+          </div>
 
-            <!-- Search View -->
-            <div id="sidebar-search" style="display: none; flex-direction: column; height: 100%; padding: 10px;">
-                <div style="font-size: 11px; text-transform: uppercase; color: var(--text-main); margin-bottom: 10px;">Search</div>
-                <input type="text" id="search-input" placeholder="Search files and content..." autocomplete="off">
-                <div id="search-results" style="flex: 1; overflow-y: auto;"></div>
+          <div
+            id="sidebar-search"
+            style="
+              display: none;
+              flex-direction: column;
+              height: 100%;
+              padding: 10px;
+            "
+          >
+            <div
+              style="
+                font-size: 11px;
+                text-transform: uppercase;
+                color: var(--text-main);
+                margin-bottom: 10px;
+              "
+            >
+              Search
             </div>
+            <input
+              type="text"
+              id="search-input"
+              placeholder="Search files and content..."
+              autocomplete="off"
+            />
+            <div id="search-results" style="flex: 1; overflow-y: auto"></div>
+          </div>
         </div>
-        
-        <!-- Draggable Resizer -->
+
         <div class="resizer" id="sidebar-resizer"></div>
 
         <!-- Editor and Terminal Column -->
         <div class="editor-terminal-column" id="drop-zone">
-            <div class="editor-container">
-                <div class="editor-tabs" id="editor-tabs"></div>
-                
-                <div id="loading-overlay">
-                    <div class="spinner"></div>
-                    <span id="loading-text" style="margin-top: 10px;">Starting Engine...</span>
-                </div>
+          <div class="editor-container">
+            <div class="editor-tabs" id="editor-tabs"></div>
 
-                <!-- Generic Empty State (Watermark) -->
-                <div class="empty-state" id="empty-state">
-                    <svg viewBox="0 0 100 100" width="200" height="200" style="opacity: 0.03;">
-                        <rect width="100" height="100" rx="20" fill="#ffffff"/>
-                        <path d="M40 30 L20 50 L40 70 M60 30 L80 50 L60 70" stroke="#1e1e1e" stroke-width="8" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
-                    </svg>
-                </div>
-
-                <!-- Welcome Screen Tab Content -->
-                <div class="welcome-screen" id="welcome-screen">
-                    <h1 class="welcome-title">AeroCode</h1>
-                    <p class="welcome-subtitle">Editing evolved</p>
-                    
-                    <div class="welcome-section">
-                        <h3>Start</h3>
-                        <div class="welcome-action" onclick="createNewFile()">
-                            New File...
-                        </div>
-                        <div class="welcome-action" onclick="openFolder()">
-                            Open Folder...
-                        </div>
-                    </div>
-
-                    <div class="welcome-section">
-                        <h3>Recent</h3>
-                        <div class="welcome-action" id="recent-folder-btn" onclick="reopenLastFolder()">
-                            Reopen <span id="recent-folder-name" style="margin-left: 5px; font-weight:bold;"></span>
-                        </div>
-                        <p style="color:var(--text-muted); font-size:12px; max-width:400px; margin-top:5px;">
-                            Browser privacy requires re-verifying disk access.
-                        </p>
-                    </div>
-                </div>
-
-                <div id="editor"></div>
+            <div id="loading-overlay">
+              <div class="spinner"></div>
+              <span id="loading-text" style="margin-top: 10px"
+                >Starting Engine...</span
+              >
             </div>
-            
-            <div class="terminal-area" id="terminal-area">
-                <div class="terminal-header">
-                    <span>Terminal</span>
-                    <span class="terminal-close" onclick="toggleTerminal()">✖</span>
-                </div>
-                <div id="terminal"></div>
+
+            <div class="empty-state" id="empty-state">
+              <svg
+                viewBox="0 0 100 100"
+                width="150"
+                height="150"
+                style="opacity: 0.03"
+              >
+                <rect width="100" height="100" rx="20" fill="#ffffff" />
+                <path
+                  d="M40 30 L20 50 L40 70 M60 30 L80 50 L60 70"
+                  stroke="#1e1e1e"
+                  stroke-width="8"
+                  fill="none"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                />
+              </svg>
+              <div
+                style="
+                  font-size: 24px;
+                  color: var(--text-muted);
+                  font-weight: bold;
+                  margin-top: 20px;
+                  letter-spacing: 1px;
+                "
+              >
+                AeroCode
+              </div>
+              <div
+                style="
+                  font-size: 13px;
+                  color: var(--border-color);
+                  margin-top: 10px;
+                "
+              >
+                Ctrl+O to Open Workspace &nbsp;&nbsp;|&nbsp;&nbsp; Ctrl+N for
+                New File
+              </div>
             </div>
+
+            <div class="welcome-screen" id="welcome-screen">
+              <h1 class="welcome-title">AeroCode</h1>
+              <p class="welcome-subtitle">Editing evolved</p>
+
+              <div class="welcome-section">
+                <h3>Start</h3>
+                <div class="welcome-action" onclick="createNewFile()">
+                  New File...
+                </div>
+                <div class="welcome-action" onclick="openFolder()">
+                  Open Folder...
+                </div>
+              </div>
+
+              <div class="welcome-section">
+                <h3>Recent</h3>
+                <div
+                  class="welcome-action"
+                  id="recent-folder-btn"
+                  onclick="reopenLastFolder()"
+                >
+                  Reopen
+                  <span
+                    id="recent-folder-name"
+                    style="margin-left: 5px; font-weight: bold"
+                  ></span>
+                </div>
+                <p
+                  style="
+                    color: var(--text-muted);
+                    font-size: 12px;
+                    max-width: 400px;
+                    margin-top: 5px;
+                  "
+                >
+                  Browser privacy requires re-verifying disk access.
+                </p>
+              </div>
+            </div>
+
+            <div id="editor"></div>
+          </div>
+
+          <div class="terminal-area" id="terminal-area">
+            <div class="terminal-header">
+              <span>Terminal</span>
+              <span class="svg-close" onclick="toggleTerminal()">
+                <svg viewBox="0 0 16 16" fill="currentColor">
+                  <path
+                    d="M8 7.3l4.1-4.2.7.7L8.7 8l4.1 4.1-.7.7L8 8.7l-4.1 4.1-.7-.7L7.3 8 3.2 3.9l.7-.7L8 7.3z"
+                  />
+                </svg>
+              </span>
+            </div>
+            <div id="terminal"></div>
+          </div>
         </div>
-    </div>
+      </div>
 
-    <!-- Authentic VS Code Status Bar -->
-    <div class="status-bar">
+      <!-- Authentic VS Code Status Bar -->
+      <div class="status-bar">
         <div class="status-left">
-            <div class="status-item" id="file-status">Ready</div>
-            <div class="status-item" style="margin-left: 10px;">
-                <svg viewBox="0 0 16 16" fill="currentColor" width="14" height="14"><path d="M8 1.5a6.5 6.5 0 1 0 0 13 6.5 6.5 0 0 0 0-13zM2.5 8a5.5 5.5 0 0 1 8.95-4.28L4.28 11.45A5.48 5.48 0 0 1 2.5 8zm5.5 5.5a5.48 5.48 0 0 1-3.45-1.22l7.17-7.17A5.5 5.5 0 0 1 8 13.5z"/></svg> 0
-                <svg viewBox="0 0 16 16" fill="currentColor" width="14" height="14" style="margin-left:5px;"><path d="M8 1L1 14h14L8 1zm0 3.3l4.6 8.2H3.4L8 4.3zM7.5 7h1v3h-1V7zm0 4h1v1h-1v-1z"/></svg> 0
-            </div>
+          <div class="status-item" id="file-status">Ready</div>
+          <div class="status-item" style="margin-left: 10px">
+            <svg viewBox="0 0 16 16" fill="currentColor" width="14" height="14">
+              <path
+                d="M8 1.5a6.5 6.5 0 1 0 0 13 6.5 6.5 0 0 0 0-13zM2.5 8a5.5 5.5 0 0 1 8.95-4.28L4.28 11.45A5.48 5.48 0 0 1 2.5 8zm5.5 5.5a5.48 5.48 0 0 1-3.45-1.22l7.17-7.17A5.5 5.5 0 0 1 8 13.5z"
+              />
+            </svg>
+            0
+            <svg
+              viewBox="0 0 16 16"
+              fill="currentColor"
+              width="14"
+              height="14"
+              style="margin-left: 5px"
+            >
+              <path
+                d="M8 1L1 14h14L8 1zm0 3.3l4.6 8.2H3.4L8 4.3zM7.5 7h1v3h-1V7zm0 4h1v1h-1v-1z"
+              />
+            </svg>
+            0
+          </div>
         </div>
         <div class="status-right">
-            <div class="status-item" id="cursor-position">Ln 1, Col 1</div>
-            <div class="status-item">Tab Size: 4</div>
-            <div class="status-item">UTF-8</div>
-            <div class="status-item">LF</div>
-            <div class="status-item" id="language-status">{ } HTML</div>
-            <div class="status-item">Layout: us</div>
-            <div class="status-item">
-                <svg viewBox="0 0 16 16" fill="currentColor" width="14" height="14"><path d="M8 1.5c-2.5 0-4.5 2-4.5 4.5v3.5l-2 2v1h13v-1l-2-2V6c0-2.5-2-4.5-4.5-4.5zm0 13c1.1 0 2-.9 2-2H6c0 1.1.9 2 2 2z"/></svg>
-            </div>
+          <div class="status-item" id="cursor-position">Ln 1, Col 1</div>
+          <div class="status-item">Tab Size: 4</div>
+          <div class="status-item">UTF-8</div>
+          <div class="status-item">LF</div>
+          <div class="status-item" id="language-status">{ } HTML</div>
+          <div class="status-item">Layout: us</div>
+          <div class="status-item">
+            <svg viewBox="0 0 16 16" fill="currentColor" width="14" height="14">
+              <path
+                d="M8 1.5c-2.5 0-4.5 2-4.5 4.5v3.5l-2 2v1h13v-1l-2-2V6c0-2.5-2-4.5-4.5-4.5zm0 13c1.1 0 2-.9 2-2H6c0 1.1.9 2 2 2z"
+              />
+            </svg>
+          </div>
         </div>
+      </div>
     </div>
-</div>
 
-<!-- Custom Context Menu -->
-<div class="context-menu" id="context-menu">
-    <div class="context-menu-item" onclick="cmdNewFile()">New File</div>
-    <div class="context-menu-item" onclick="cmdNewFolder()">New Folder</div>
-    <div class="context-menu-item" onclick="cmdDelete()">Delete</div>
-</div>
+    <!-- Settings Popup Modal -->
+    <div id="settings-modal">
+      <div class="settings-header">
+        <span>Settings</span>
+        <span class="svg-close" onclick="closeSettingsModal()">
+          <svg viewBox="0 0 16 16" fill="currentColor">
+            <path
+              d="M8 7.3l4.1-4.2.7.7L8.7 8l4.1 4.1-.7.7L8 8.7l-4.1 4.1-.7-.7L7.3 8 3.2 3.9l.7-.7L8 7.3z"
+            />
+          </svg>
+        </span>
+      </div>
+      <div class="settings-body">
+        <div class="settings-group">
+          <label style="justify-content: flex-start">
+            <input
+              type="checkbox"
+              id="set-autocomplete"
+              class="settings-checkbox"
+            />
+            Editor: Quick Suggestions (Autocomplete)
+          </label>
+          <label style="justify-content: flex-start; margin-top: 10px">
+            <input
+              type="checkbox"
+              id="set-wordwrap"
+              class="settings-checkbox"
+            />
+            Editor: Word Wrap
+          </label>
+        </div>
+        <hr style="border-color: #454545; margin-bottom: 15px" />
+        <div class="settings-group">
+          <label
+            >Save File (Ctrl + ?)
+            <input
+              type="text"
+              id="set-key-save"
+              maxlength="1"
+              class="settings-input"
+          /></label>
+        </div>
+        <div class="settings-group">
+          <label
+            >Open Folder (Ctrl + ?)
+            <input
+              type="text"
+              id="set-key-open"
+              maxlength="1"
+              class="settings-input"
+          /></label>
+        </div>
+        <div class="settings-group">
+          <label
+            >Find in Editor (Ctrl + ?)
+            <input
+              type="text"
+              id="set-key-find"
+              maxlength="1"
+              class="settings-input"
+          /></label>
+        </div>
+        <div class="settings-group">
+          <label
+            >Toggle Terminal (Ctrl + ?)
+            <input
+              type="text"
+              id="set-key-term"
+              maxlength="1"
+              class="settings-input"
+          /></label>
+        </div>
+        <div class="settings-group">
+          <label
+            >Zoom In (Ctrl + ?)
+            <input
+              type="text"
+              id="set-key-zoomin"
+              maxlength="1"
+              class="settings-input"
+          /></label>
+        </div>
+        <div class="settings-group">
+          <label
+            >Zoom Out (Ctrl + ?)
+            <input
+              type="text"
+              id="set-key-zoomout"
+              maxlength="1"
+              class="settings-input"
+          /></label>
+        </div>
+        <div class="settings-group">
+          <label
+            >Launch Preview (Alt + ?)
+            <input
+              type="text"
+              id="set-key-preview"
+              maxlength="1"
+              class="settings-input"
+          /></label>
+        </div>
+        <button class="settings-btn" onclick="saveSettings()">
+          Save & Apply Settings
+        </button>
+      </div>
+    </div>
 
-<script src="./monaco-editor/vs/loader.js"></script>
-<script src="./xterm/xterm.js"></script>
+    <!-- Custom Context Menu -->
+    <div class="context-menu" id="context-menu">
+      <div class="context-menu-item" onclick="cmdNewFile()">New File</div>
+      <div class="context-menu-item" onclick="cmdNewFolder()">New Folder</div>
+      <div class="context-menu-item" onclick="cmdDelete()">Delete</div>
+    </div>
 
-<script>
-    if ('serviceWorker' in navigator) {
-        window.addEventListener('load', () => {
-            navigator.serviceWorker.register('./sw.js').catch(err => console.error('SW Failed:', err));
+    <script src="./monaco-editor/vs/loader.js"></script>
+    <script src="./xterm/xterm.js"></script>
+
+    <script>
+      if ("serviceWorker" in navigator) {
+        window.addEventListener("load", () => {
+          navigator.serviceWorker
+            .register("./sw.js")
+            .catch((err) => console.error("SW Failed:", err));
         });
-    }
+      }
 
-    // --- Global Zoom Settings ---
-    let baseFontSize = 14;
-    let uiZoom = 1;
+      // --- Settings & Keybind Engine ---
+      let appSettings = JSON.parse(
+        localStorage.getItem("aerocode-settings"),
+      ) || {
+        autocomplete: true,
+        wordwrap: false,
+        keyTerm: "`",
+        keySave: "s",
+        keyOpen: "o",
+        keyFind: "f",
+        keyZoomIn: "=",
+        keyZoomOut: "-",
+        keyPreview: "p",
+      };
 
-    function applyZoom() {
-        document.documentElement.style.setProperty('--ui-zoom', uiZoom);
+      function applySettingsToUI() {
+        document.getElementById("menu-sc-save").innerText =
+          `Ctrl+${appSettings.keySave.toUpperCase()}`;
+        document.getElementById("menu-sc-open").innerText =
+          `Ctrl+${appSettings.keyOpen.toUpperCase()}`;
+        document.getElementById("menu-sc-find").innerText =
+          `Ctrl+${appSettings.keyFind.toUpperCase()}`;
+        document.getElementById("menu-sc-term").innerText =
+          `Ctrl+${appSettings.keyTerm.toUpperCase()}`;
+        document.getElementById("title-sc-preview").innerText =
+          `Alt+${appSettings.keyPreview.toUpperCase()}`;
+
+        if (editor) {
+          editor.updateOptions({
+            quickSuggestions: appSettings.autocomplete,
+            suggestOnTriggerCharacters: appSettings.autocomplete,
+            wordWrap: appSettings.wordwrap ? "on" : "off",
+          });
+        }
+      }
+
+      function openSettingsModal() {
+        document.getElementById("set-autocomplete").checked =
+          appSettings.autocomplete;
+        document.getElementById("set-wordwrap").checked = appSettings.wordwrap;
+        document.getElementById("set-key-save").value = appSettings.keySave;
+        document.getElementById("set-key-open").value = appSettings.keyOpen;
+        document.getElementById("set-key-find").value = appSettings.keyFind;
+        document.getElementById("set-key-term").value = appSettings.keyTerm;
+        document.getElementById("set-key-zoomin").value = appSettings.keyZoomIn;
+        document.getElementById("set-key-zoomout").value =
+          appSettings.keyZoomOut;
+        document.getElementById("set-key-preview").value =
+          appSettings.keyPreview;
+        document.getElementById("settings-modal").style.display = "flex";
+      }
+
+      function closeSettingsModal() {
+        document.getElementById("settings-modal").style.display = "none";
+      }
+
+      function saveSettings() {
+        appSettings.autocomplete =
+          document.getElementById("set-autocomplete").checked;
+        appSettings.wordwrap = document.getElementById("set-wordwrap").checked;
+        appSettings.keySave =
+          document.getElementById("set-key-save").value.toLowerCase() || "s";
+        appSettings.keyOpen =
+          document.getElementById("set-key-open").value.toLowerCase() || "o";
+        appSettings.keyFind =
+          document.getElementById("set-key-find").value.toLowerCase() || "f";
+        appSettings.keyTerm =
+          document.getElementById("set-key-term").value.toLowerCase() || "`";
+        appSettings.keyZoomIn =
+          document.getElementById("set-key-zoomin").value.toLowerCase() || "=";
+        appSettings.keyZoomOut =
+          document.getElementById("set-key-zoomout").value.toLowerCase() || "-";
+        appSettings.keyPreview =
+          document.getElementById("set-key-preview").value.toLowerCase() || "p";
+
+        localStorage.setItem("aerocode-settings", JSON.stringify(appSettings));
+        applySettingsToUI();
+        closeSettingsModal();
+      }
+
+      // --- Global Zoom Settings ---
+      let baseFontSize = 14;
+      let uiZoom = 1;
+      function applyZoom() {
+        document.documentElement.style.setProperty("--ui-zoom", uiZoom);
         if (editor) editor.updateOptions({ fontSize: baseFontSize });
         if (termInstance) termInstance.options.fontSize = baseFontSize;
-    }
+      }
+      function zoomIn() {
+        if (baseFontSize >= 30) return;
+        baseFontSize += 2;
+        uiZoom += 0.1;
+        applyZoom();
+      }
+      function zoomOut() {
+        if (baseFontSize <= 8) return;
+        baseFontSize -= 2;
+        uiZoom -= 0.1;
+        applyZoom();
+      }
 
-    function zoomIn() { if (baseFontSize >= 30) return; baseFontSize += 2; uiZoom += 0.1; applyZoom(); }
-    function zoomOut() { if (baseFontSize <= 8) return; baseFontSize -= 2; uiZoom -= 0.1; applyZoom(); }
+      // --- Activity Bar & Sidebar Toggles ---
+      let currentSidebarView = "explorer";
 
-    // --- Activity Bar & Sidebar Toggles ---
-    let currentSidebarView = 'explorer';
-
-    function toggleHamburger(e) {
+      function toggleHamburger(e) {
         e.stopPropagation();
-        const menu = document.getElementById('hamburger-menu');
-        menu.classList.toggle('active');
-    }
+        const menu = document.getElementById("hamburger-menu");
+        menu.classList.toggle("active");
+      }
 
-    document.addEventListener('click', () => {
-        document.getElementById('hamburger-menu').classList.remove('active');
-        document.getElementById('context-menu').style.display = 'none';
-    });
+      document.addEventListener("click", () => {
+        document.getElementById("hamburger-menu").classList.remove("active");
+        document.getElementById("context-menu").style.display = "none";
+      });
 
-    function toggleActivityBar(view) {
-        const sb = document.getElementById('sidebar');
-        const rs = document.getElementById('sidebar-resizer');
-        const expIcon = document.getElementById('activity-explorer');
-        const searchIcon = document.getElementById('activity-search');
-        const explorerPane = document.getElementById('sidebar-explorer');
-        const searchPane = document.getElementById('sidebar-search');
+      function toggleActivityBar(view) {
+        const sb = document.getElementById("sidebar");
+        const rs = document.getElementById("sidebar-resizer");
+        const expIcon = document.getElementById("activity-explorer");
+        const searchIcon = document.getElementById("activity-search");
+        const explorerPane = document.getElementById("sidebar-explorer");
+        const searchPane = document.getElementById("sidebar-search");
 
-        if (currentSidebarView === view && !sb.classList.contains('hidden')) {
-            sb.classList.add('hidden');
-            rs.style.display = 'none';
-            expIcon.classList.remove('active');
-            searchIcon.classList.remove('active');
+        if (currentSidebarView === view && !sb.classList.contains("hidden")) {
+          sb.classList.add("hidden");
+          rs.style.display = "none";
+          expIcon.classList.remove("active");
+          searchIcon.classList.remove("active");
         } else {
-            sb.classList.remove('hidden');
-            rs.style.display = 'block';
-            currentSidebarView = view;
-            
-            expIcon.classList.remove('active');
-            searchIcon.classList.remove('active');
-            explorerPane.style.display = 'none';
-            searchPane.style.display = 'none';
+          sb.classList.remove("hidden");
+          rs.style.display = "block";
+          currentSidebarView = view;
 
-            if (view === 'explorer') {
-                expIcon.classList.add('active');
-                explorerPane.style.display = 'flex';
-            } else if (view === 'search') {
-                searchIcon.classList.add('active');
-                searchPane.style.display = 'flex';
-                document.getElementById('search-input').focus();
-            }
+          expIcon.classList.remove("active");
+          searchIcon.classList.remove("active");
+          explorerPane.style.display = "none";
+          searchPane.style.display = "none";
+
+          if (view === "explorer") {
+            expIcon.classList.add("active");
+            explorerPane.style.display = "flex";
+          } else if (view === "search") {
+            searchIcon.classList.add("active");
+            searchPane.style.display = "flex";
+            document.getElementById("search-input").focus();
+          }
         }
         if (editor) setTimeout(() => editor.layout(), 100);
-    }
+      }
 
-    // --- Drag & Drop Tab Engine ---
-    const dropZone = document.getElementById('drop-zone');
-    
-    dropZone.addEventListener('dragover', (e) => {
+      // --- Drag & Drop Tab Engine ---
+      const dropZone = document.getElementById("drop-zone");
+      dropZone.addEventListener("dragover", (e) => {
         e.preventDefault();
-        e.dataTransfer.dropEffect = 'copy';
-        document.querySelector('.editor-container').classList.add('drag-over');
-    });
-
-    dropZone.addEventListener('dragleave', (e) => {
-        document.querySelector('.editor-container').classList.remove('drag-over');
-    });
-
-    dropZone.addEventListener('drop', (e) => {
+        e.dataTransfer.dropEffect = "copy";
+        document.querySelector(".editor-container").classList.add("drag-over");
+      });
+      dropZone.addEventListener("dragleave", (e) => {
+        document
+          .querySelector(".editor-container")
+          .classList.remove("drag-over");
+      });
+      dropZone.addEventListener("drop", (e) => {
         e.preventDefault();
-        document.querySelector('.editor-container').classList.remove('drag-over');
-        const path = e.dataTransfer.getData('text/plain');
+        document
+          .querySelector(".editor-container")
+          .classList.remove("drag-over");
+        const path = e.dataTransfer.getData("text/plain");
         if (path && vfs[path]) {
-            const filename = path.split('/').pop();
-            openFileFromVFS(path, filename);
+          const filename = path.split("/").pop();
+          openFileFromVFS(path, filename);
         }
-    });
+      });
 
-    // --- Search Panel Logic (Full Text Scan) ---
-    const searchInput = document.getElementById('search-input');
-    const searchResults = document.getElementById('search-results');
-    let searchTimeout;
+      // --- Search Panel Logic ---
+      const searchInput = document.getElementById("search-input");
+      const searchResults = document.getElementById("search-results");
+      let searchTimeout;
 
-    searchInput.addEventListener('input', (e) => {
+      searchInput.addEventListener("input", (e) => {
         clearTimeout(searchTimeout);
         searchTimeout = setTimeout(async () => {
-            const query = e.target.value.toLowerCase();
-            searchResults.innerHTML = '';
-            if (!query) return;
+          const query = e.target.value.toLowerCase();
+          searchResults.innerHTML = "";
+          if (!query) return;
 
-            for (const path of Object.keys(vfs)) {
-                let matchName = path.toLowerCase().includes(query);
-                let matchContent = false;
-                let snippet = "";
+          for (const path of Object.keys(vfs)) {
+            let matchName = path.toLowerCase().includes(query);
+            let matchContent = false;
+            let snippet = "";
 
-                if (!vfs[path].model && vfs[path].handle && vfs[path].handle.kind === 'file') {
-                    try {
-                        const fd = await vfs[path].handle.getFile();
-                        vfs[path].content = await fd.text();
-                    } catch(err){}
-                }
+            if (
+              !vfs[path].model &&
+              vfs[path].handle &&
+              vfs[path].handle.kind === "file"
+            ) {
+              try {
+                const fd = await vfs[path].handle.getFile();
+                vfs[path].content = await fd.text();
+              } catch (err) {}
+            }
 
-                const content = vfs[path].model ? vfs[path].model.getValue() : vfs[path].content;
-                if (content && typeof content === 'string' && content.toLowerCase().includes(query)) {
-                    matchContent = true;
-                    const idx = content.toLowerCase().indexOf(query);
-                    snippet = content.substring(Math.max(0, idx - 15), idx + 20).replace(/\n/g, ' ');
-                }
+            const content = vfs[path].model
+              ? vfs[path].model.getValue()
+              : vfs[path].content;
+            if (
+              content &&
+              typeof content === "string" &&
+              content.toLowerCase().includes(query)
+            ) {
+              matchContent = true;
+              const idx = content.toLowerCase().indexOf(query);
+              snippet = content
+                .substring(Math.max(0, idx - 15), idx + 20)
+                .replace(/\n/g, " ");
+            }
 
-                if (matchName || matchContent) {
-                    const filename = path.split('/').pop();
-                    const div = document.createElement('div');
-                    div.className = 'tree-item-wrap file-node';
-                    div.style.padding = '4px 8px';
-                    div.style.flexDirection = 'column';
-                    div.style.alignItems = 'flex-start';
-                    div.style.borderRadius = '4px';
-                    
-                    div.innerHTML = `
+            if (matchName || matchContent) {
+              const filename = path.split("/").pop();
+              const div = document.createElement("div");
+              div.className = "tree-item-wrap file-node";
+              div.style.padding = "4px 8px";
+              div.style.flexDirection = "column";
+              div.style.alignItems = "flex-start";
+              div.style.borderRadius = "4px";
+
+              div.innerHTML = `
                         <div style="display:flex; align-items:center; gap:6px; width:100%;">
                             <i class="icon ${getIconClass(filename)}"></i> 
                             <span style="white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${filename}</span>
                         </div>
-                        <div style="font-size: 10px; color: var(--text-muted); padding-left: 22px; width: 100%; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${path}</div>${matchContent ? `<div style="font-size: 10px; color: var(--text-main); margin-top: 4px; background: var(--hover-bg); border: 1px solid var(--border-color); border-radius: 3px; padding: 2px 4px; width: 100%; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">...${snippet}...</div>` : ''}
+                        <div style="font-size: 10px; color: var(--text-muted); padding-left: 22px; width: 100%; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${path}</div>
+                        ${matchContent ? `<div style="font-size: 10px; color: var(--text-main); margin-top: 4px; background: var(--hover-bg); border: 1px solid var(--border-color); border-radius: 3px; padding: 2px 4px; width: 100%; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">...${snippet}...</div>` : ""}
                     `;
-                    div.onclick = () => openFileFromVFS(path, filename);
-                    searchResults.appendChild(div);
-                }
+              div.onclick = () => openFileFromVFS(path, filename);
+              searchResults.appendChild(div);
             }
+          }
         }, 300);
-    });
+      });
 
-    // --- Resizer Logic ---
-    const resizer = document.getElementById('sidebar-resizer');
-    let isResizing = false;
+      // --- Resizer Logic ---
+      const resizer = document.getElementById("sidebar-resizer");
+      let isResizing = false;
 
-    resizer.addEventListener('mousedown', (e) => {
+      resizer.addEventListener("mousedown", (e) => {
         isResizing = true;
-        resizer.classList.add('resizing');
-        document.body.style.cursor = 'col-resize';
-    });
-
-    document.addEventListener('mousemove', (e) => {
+        resizer.classList.add("resizing");
+        document.body.style.cursor = "col-resize";
+      });
+      document.addEventListener("mousemove", (e) => {
         if (!isResizing) return;
-        let newWidth = e.clientX - 48; // Offset Activity bar width
+        let newWidth = e.clientX - 48;
         if (newWidth < 150) newWidth = 150;
         if (newWidth > 600) newWidth = 600;
-        document.documentElement.style.setProperty('--sidebar-width', newWidth + 'px');
-        if (editor) editor.layout(); 
-    });
-
-    document.addEventListener('mouseup', () => {
+        document.documentElement.style.setProperty(
+          "--sidebar-width",
+          newWidth + "px",
+        );
+        if (editor) editor.layout();
+      });
+      document.addEventListener("mouseup", () => {
         if (isResizing) {
-            isResizing = false;
-            resizer.classList.remove('resizing');
-            document.body.style.cursor = 'default';
+          isResizing = false;
+          resizer.classList.remove("resizing");
+          document.body.style.cursor = "default";
         }
-    });
+      });
 
-    // --- Context Logic ---
-    let contextTargetHandle = null;
-    let contextTargetPath = null;
+      // --- Context Menu Logic ---
+      let contextTargetHandle = null;
+      let contextTargetPath = null;
 
-    document.getElementById('sidebar').addEventListener('contextmenu', (e) => {
-        e.preventDefault();
-        const fileNode = e.target.closest('.file-node');
-        const dirNode = e.target.closest('.dir-node');
-        
-        if (fileNode) {
-            contextTargetPath = fileNode.getAttribute('data-path');
-            contextTargetHandle = vfs[contextTargetPath] ? vfs[contextTargetPath].handle : null;
-        } else if (dirNode) {
-            contextTargetPath = dirNode.getAttribute('data-path');
-            contextTargetHandle = rootDirectoryHandle; 
-        } else {
-            contextTargetPath = '';
+      document
+        .getElementById("sidebar")
+        .addEventListener("contextmenu", (e) => {
+          e.preventDefault();
+          const fileNode = e.target.closest(".file-node");
+          const dirNode = e.target.closest(".dir-node");
+
+          if (fileNode) {
+            contextTargetPath = fileNode.getAttribute("data-path");
+            contextTargetHandle = vfs[contextTargetPath]
+              ? vfs[contextTargetPath].handle
+              : null;
+          } else if (dirNode) {
+            contextTargetPath = dirNode.getAttribute("data-path");
             contextTargetHandle = rootDirectoryHandle;
-        }
+          } else {
+            contextTargetPath = "";
+            contextTargetHandle = rootDirectoryHandle;
+          }
 
-        const ctx = document.getElementById('context-menu');
-        ctx.style.display = 'block';
-        ctx.style.left = e.pageX + 'px';
-        ctx.style.top = e.pageY + 'px';
-    });
+          const ctx = document.getElementById("context-menu");
+          ctx.style.display = "block";
+          ctx.style.left = e.pageX + "px";
+          ctx.style.top = e.pageY + "px";
+        });
 
-    async function cmdNewFile() {
-        if (!contextTargetHandle) return alert("Open a workspace folder first.");
+      async function cmdNewFile() {
+        if (!contextTargetHandle)
+          return alert("Open a workspace folder first.");
         createNewFile();
-    }
-    async function cmdNewFolder() {
-        if (!rootDirectoryHandle) return alert("Open a workspace folder first.");
+      }
+      async function cmdNewFolder() {
+        if (!rootDirectoryHandle)
+          return alert("Open a workspace folder first.");
         const name = prompt("Enter folder name:");
         if (!name) return;
         try {
-            await rootDirectoryHandle.getDirectoryHandle(name, { create: true });
-            await buildWorkspace(rootDirectoryHandle);
+          await rootDirectoryHandle.getDirectoryHandle(name, { create: true });
+          await buildWorkspace(rootDirectoryHandle);
         } catch (err) {
-            alert("Failed to create folder.");
+          alert("Failed to create folder.");
         }
-    }
-    async function cmdDelete() {
+      }
+      async function cmdDelete() {
         if (!contextTargetHandle || !contextTargetPath) return;
-        const confirmDel = confirm(`Are you sure you want to delete ${contextTargetPath}?`);
+        const confirmDel = confirm(
+          `Are you sure you want to delete ${contextTargetPath}?`,
+        );
         if (!confirmDel) return;
         try {
-            const name = contextTargetPath.split('/').pop();
-            await rootDirectoryHandle.removeEntry(name, { recursive: true });
-            if (openTabs.includes(contextTargetPath)) closeTab(new Event('click'), contextTargetPath);
-            await buildWorkspace(rootDirectoryHandle);
+          const name = contextTargetPath.split("/").pop();
+          await rootDirectoryHandle.removeEntry(name, { recursive: true });
+          if (openTabs.includes(contextTargetPath))
+            closeTab(new Event("click"), contextTargetPath);
+          await buildWorkspace(rootDirectoryHandle);
         } catch (err) {
-            alert("Failed to delete. Ensure file is not in use.");
+          alert("Failed to delete. Ensure file is not in use.");
         }
-    }
+      }
 
-    // --- State & VFS ---
-    let vfs = {}; 
-    let rootDirectoryHandle = null;
-    let openTabs = ['Welcome']; 
-    let currentFile = 'Welcome'; 
-    let editor = null;
-    let autoSaveTimer = null;
-    let previewTab = null;
-    let currentBlobUrl = null;
-    let termInstance = null;
+      // --- State & VFS ---
+      let vfs = {};
+      let rootDirectoryHandle = null;
+      let openTabs = ["Welcome"];
+      let currentFile = "Welcome";
+      let editor = null;
+      let autoSaveTimer = null;
+      let previewTab = null;
+      let currentBlobUrl = null;
+      let termInstance = null;
 
-    const fileTreeRoot = document.getElementById('file-tree-root');
-    const tabsContainer = document.getElementById('editor-tabs');
-    const langStatus = document.getElementById('language-status');
-    const fileStatus = document.getElementById('file-status');
-    const editorDiv = document.getElementById('editor');
-    const welcomeScreen = document.getElementById('welcome-screen');
-    const emptyState = document.getElementById('empty-state');
-    const workspaceTitle = document.getElementById('workspace-title');
-    const workspaceChevron = document.getElementById('workspace-chevron');
+      const fileTreeRoot = document.getElementById("file-tree-root");
+      const tabsContainer = document.getElementById("editor-tabs");
+      const langStatus = document.getElementById("language-status");
+      const fileStatus = document.getElementById("file-status");
+      const editorDiv = document.getElementById("editor");
+      const welcomeScreen = document.getElementById("welcome-screen");
+      const emptyState = document.getElementById("empty-state");
+      const workspaceTitle = document.getElementById("workspace-title");
+      const workspaceChevron = document.getElementById("workspace-chevron");
 
-    // --- IndexedDB ---
-    const DB_NAME = 'AeroCodeDB';
-    let db;
-    const request = indexedDB.open(DB_NAME, 1);
-    
-    request.onupgradeneeded = (e) => {
+      // --- IndexedDB ---
+      const DB_NAME = "AeroCodeDB";
+      let db;
+      const request = indexedDB.open(DB_NAME, 1);
+
+      request.onupgradeneeded = (e) => {
         db = e.target.result;
-        db.createObjectStore('workspace');
-    };
-    request.onsuccess = (e) => {
+        db.createObjectStore("workspace");
+      };
+      request.onsuccess = (e) => {
         db = e.target.result;
         checkRecentWorkspace();
-    };
+      };
 
-    function saveWorkspaceToDB(handle) {
+      function saveWorkspaceToDB(handle) {
         if (!db) return;
-        const tx = db.transaction('workspace', 'readwrite');
-        tx.objectStore('workspace').put(handle, 'lastFolder');
-    }
+        const tx = db.transaction("workspace", "readwrite");
+        tx.objectStore("workspace").put(handle, "lastFolder");
+      }
 
-    function checkRecentWorkspace() {
+      function checkRecentWorkspace() {
         if (!db) return;
-        const tx = db.transaction('workspace', 'readonly');
-        const req = tx.objectStore('workspace').get('lastFolder');
+        const tx = db.transaction("workspace", "readonly");
+        const req = tx.objectStore("workspace").get("lastFolder");
         req.onsuccess = () => {
-            if (req.result) {
-                document.getElementById('recent-folder-btn').style.display = 'flex';
-                document.getElementById('recent-folder-name').innerText = req.result.name;
-            }
+          if (req.result) {
+            document.getElementById("recent-folder-btn").style.display = "flex";
+            document.getElementById("recent-folder-name").innerText =
+              req.result.name;
+          }
         };
-    }
+      }
 
-    async function verifyPermission(fileHandle) {
-        const options = { mode: 'readwrite' };
-        if ((await fileHandle.queryPermission(options)) === 'granted') return true;
-        if ((await fileHandle.requestPermission(options)) === 'granted') return true;
+      async function verifyPermission(fileHandle) {
+        const options = { mode: "readwrite" };
+        if ((await fileHandle.queryPermission(options)) === "granted")
+          return true;
+        if ((await fileHandle.requestPermission(options)) === "granted")
+          return true;
         return false;
-    }
+      }
 
-    async function reopenLastFolder() {
-        const tx = db.transaction('workspace', 'readonly');
-        const req = tx.objectStore('workspace').get('lastFolder');
+      async function reopenLastFolder() {
+        const tx = db.transaction("workspace", "readonly");
+        const req = tx.objectStore("workspace").get("lastFolder");
         req.onsuccess = async () => {
-            if (req.result) {
-                try {
-                    const handle = req.result;
-                    const hasPerm = await verifyPermission(handle);
-                    if (hasPerm) {
-                        rootDirectoryHandle = handle;
-                        await buildWorkspace(handle);
-                    } else {
-                        alert("Permission denied. You must open the folder manually.");
-                    }
-                } catch (e) {
-                    console.error("Failed to reopen:", e);
-                }
+          if (req.result) {
+            try {
+              const handle = req.result;
+              const hasPerm = await verifyPermission(handle);
+              if (hasPerm) {
+                rootDirectoryHandle = handle;
+                await buildWorkspace(handle);
+              } else {
+                alert("Permission denied. You must open the folder manually.");
+              }
+            } catch (e) {
+              console.error("Failed to reopen:", e);
             }
+          }
         };
-    }
+      }
 
-    // --- File System Helpers ---
-    function getLang(filename) {
-        const ext = filename.split('.').pop().toLowerCase();
-        const map = { 'js': 'javascript', 'html': 'html', 'css': 'css', 'json': 'json', 'c': 'c', 'cpp': 'cpp', 'cs': 'csharp', 'py': 'python', 'java': 'java' };
-        return map[ext] || 'plaintext';
-    }
-    
-    function getIconClass(filename) {
-        const ext = filename.split('.').pop().toLowerCase();
-        const map = { 'js': 'icon-js', 'html': 'icon-html', 'css': 'icon-css', 'json': 'icon-json', 'c': 'icon-c', 'cpp': 'icon-cpp', 'cs': 'icon-cs', 'py': 'icon-py', 'java': 'icon-java' };
-        return map[ext] || 'icon-default';
-    }
+      // --- File System Helpers ---
+      function getLang(filename) {
+        const ext = filename.split(".").pop().toLowerCase();
+        const map = {
+          js: "javascript",
+          html: "html",
+          css: "css",
+          json: "json",
+          c: "c",
+          cpp: "cpp",
+          cs: "csharp",
+          py: "python",
+          java: "java",
+        };
+        return map[ext] || "plaintext";
+      }
 
-    async function openFolder() {
+      function getIconClass(filename) {
+        const ext = filename.split(".").pop().toLowerCase();
+        const map = {
+          js: "icon-js",
+          html: "icon-html",
+          css: "icon-css",
+          json: "icon-json",
+          c: "icon-c",
+          cpp: "icon-cpp",
+          cs: "icon-cs",
+          py: "icon-py",
+          java: "icon-java",
+        };
+        return map[ext] || "icon-default";
+      }
+
+      async function openFolder() {
         try {
-            rootDirectoryHandle = await window.showDirectoryPicker({ mode: 'readwrite' });
-            saveWorkspaceToDB(rootDirectoryHandle);
-            await buildWorkspace(rootDirectoryHandle);
+          rootDirectoryHandle = await window.showDirectoryPicker({
+            mode: "readwrite",
+          });
+          saveWorkspaceToDB(rootDirectoryHandle);
+          await buildWorkspace(rootDirectoryHandle);
         } catch (err) {
-            console.log("Folder select cancelled.", err);
+          console.log("Folder select cancelled.", err);
         }
-    }
+      }
 
-    async function buildWorkspace(dirHandle) {
-        fileTreeRoot.innerHTML = '';
+      async function buildWorkspace(dirHandle) {
+        fileTreeRoot.innerHTML = "";
         workspaceTitle.innerText = dirHandle.name.toUpperCase();
         fileStatus.innerText = "Scanning Directory...";
-        // Exact VS Code padding calculation base depth = 0
         await buildTreeUI(dirHandle, fileTreeRoot, "", 0);
         fileStatus.innerText = "Workspace Loaded";
-    }
+      }
 
-    // Core Tree Building Logic (VS Code Indentation Engine)
-    async function buildTreeUI(dirHandle, parentContainer, pathPrefix, depth) {
+      // Core Tree Building Logic
+      async function buildTreeUI(
+        dirHandle,
+        parentContainer,
+        pathPrefix,
+        depth,
+      ) {
         let entries = [];
         for await (const entry of dirHandle.values()) entries.push(entry);
-        
+
         entries.sort((a, b) => {
-            if(a.kind === b.kind) return a.name.localeCompare(b.name);
-            return a.kind === 'directory' ? -1 : 1;
+          if (a.kind === b.kind) return a.name.localeCompare(b.name);
+          return a.kind === "directory" ? -1 : 1;
         });
 
         for (const entry of entries) {
-            const currentPath = pathPrefix + entry.name;
-            const nodeContainer = document.createElement('div');
-            nodeContainer.style.width = '100%';
-            
-            if (entry.kind === 'directory') {
-                if (entry.name === 'node_modules' || entry.name === '.git') continue;
+          const currentPath = pathPrefix + entry.name;
+          const nodeContainer = document.createElement("div");
+          nodeContainer.style.width = "100%";
 
-                const wrap = document.createElement('div');
-                wrap.className = 'tree-item-wrap dir-node';
-                wrap.setAttribute('data-path', currentPath);
-                // Math for VS Code Tree Indentation
-                wrap.style.paddingLeft = `${10 + (depth * 14)}px`;
-                
-                const chev = document.createElement('span');
-                chev.className = 'chevron';
-                chev.innerText = '▶';
-                
-                const label = document.createElement('div');
-                label.className = 'tree-item';
-                // EXACT MATCH to image: No folder icon, just name
-                label.innerHTML = `<span class="item-name">${entry.name}</span>`;
-                
-                wrap.appendChild(chev);
-                wrap.appendChild(label);
-                nodeContainer.appendChild(wrap);
-                
-                const childContainer = document.createElement('div');
-                childContainer.className = 'tree-children';
-                nodeContainer.appendChild(childContainer);
-                parentContainer.appendChild(nodeContainer);
+          if (entry.kind === "directory") {
+            if (entry.name === "node_modules" || entry.name === ".git")
+              continue;
 
-                let loaded = false;
-                
-                wrap.addEventListener('click', async (e) => {
-                    e.stopPropagation();
-                    const isOpen = childContainer.classList.contains('open');
-                    if (isOpen) {
-                        childContainer.classList.remove('open');
-                        chev.classList.remove('open');
-                    } else {
-                        if (!loaded) {
-                            await buildTreeUI(entry, childContainer, currentPath + '/', depth + 1);
-                            loaded = true;
-                        }
-                        childContainer.classList.add('open');
-                        chev.classList.add('open');
-                    }
-                });
+            const wrap = document.createElement("div");
+            wrap.className = "tree-item-wrap dir-node";
+            wrap.setAttribute("data-path", currentPath);
+            wrap.style.paddingLeft = `${10 + depth * 14}px`;
 
-                attachInlineRename(wrap, label, entry);
+            const chev = document.createElement("span");
+            chev.className = "chevron";
+            chev.innerText = "▶";
 
-            } else {
-                if (!vfs[currentPath]) {
-                    vfs[currentPath] = { handle: entry, model: null, lang: getLang(entry.name) };
-                } else {
-                    vfs[currentPath].handle = entry; 
+            const label = document.createElement("div");
+            label.className = "tree-item";
+            label.innerHTML = `<span class="item-name">${entry.name}</span>`;
+
+            wrap.appendChild(chev);
+            wrap.appendChild(label);
+            nodeContainer.appendChild(wrap);
+
+            const childContainer = document.createElement("div");
+            childContainer.className = "tree-children";
+            nodeContainer.appendChild(childContainer);
+            parentContainer.appendChild(nodeContainer);
+
+            let loaded = false;
+
+            wrap.addEventListener("click", async (e) => {
+              e.stopPropagation();
+              const isOpen = childContainer.classList.contains("open");
+              if (isOpen) {
+                childContainer.classList.remove("open");
+                chev.classList.remove("open");
+              } else {
+                if (!loaded) {
+                  await buildTreeUI(
+                    entry,
+                    childContainer,
+                    currentPath + "/",
+                    depth + 1,
+                  );
+                  loaded = true;
                 }
-                
-                const wrap = document.createElement('div');
-                wrap.className = `tree-item-wrap file-node`;
-                wrap.setAttribute('data-path', currentPath);
-                wrap.setAttribute('draggable', 'true');
-                
-                // Align files flush with folder chevron
-                wrap.style.paddingLeft = `${10 + (depth * 14) + 16}px`;
-                
-                const label = document.createElement('div');
-                label.className = 'tree-item';
-                label.innerHTML = `<i class="icon ${getIconClass(entry.name)}"></i> <span class="item-name">${entry.name}</span>`;
-                
-                wrap.appendChild(label);
-                nodeContainer.appendChild(wrap);
-                parentContainer.appendChild(nodeContainer);
-
-                wrap.addEventListener('click', async (e) => {
-                    e.stopPropagation();
-                    await openFileFromVFS(currentPath, entry.name);
-                });
-                
-                wrap.addEventListener('dragstart', (e) => {
-                    e.dataTransfer.setData('text/plain', currentPath);
-                });
-
-                attachInlineRename(wrap, label, entry);
-            }
-        }
-    }
-
-    // --- Inline Rename Logic ---
-    function attachInlineRename(wrap, label, entry) {
-        wrap.addEventListener('dblclick', async (e) => {
-            e.stopPropagation();
-            const textSpan = label.querySelector('.item-name');
-            const oldName = entry.name;
-            
-            const input = document.createElement('input');
-            input.type = 'text';
-            input.value = oldName;
-            input.className = 'inline-rename-input';
-            
-            textSpan.style.display = 'none';
-            label.appendChild(input);
-            input.focus();
-            
-            const dotIndex = oldName.lastIndexOf('.');
-            if (entry.kind === 'file' && dotIndex > 0) {
-                input.setSelectionRange(0, dotIndex);
-            } else {
-                input.select();
-            }
-
-            let isProcessing = false;
-            
-            const finishRename = async (save) => {
-                if (isProcessing) return;
-                isProcessing = true;
-                
-                const newName = input.value.trim();
-                
-                if (save && newName && newName !== oldName) {
-                    try {
-                        if (entry.move) {
-                            await entry.move(newName);
-                            if (rootDirectoryHandle) await buildWorkspace(rootDirectoryHandle);
-                        } else {
-                            alert("Native inline renaming is not supported in this Chrome version.");
-                            input.remove();
-                            textSpan.style.display = 'inline';
-                        }
-                    } catch (err) {
-                        alert("Rename blocked by browser. Make sure the file is not open in a tab.");
-                        input.remove();
-                        textSpan.style.display = 'inline';
-                    }
-                } else {
-                    input.remove();
-                    textSpan.style.display = 'inline';
-                }
-            };
-
-            input.addEventListener('blur', () => finishRename(true));
-            input.addEventListener('keydown', (e) => {
-                if (e.key === 'Enter') finishRename(true);
-                if (e.key === 'Escape') finishRename(false);
-                e.stopPropagation(); 
+                childContainer.classList.add("open");
+                chev.classList.add("open");
+              }
             });
-            input.addEventListener('click', e => e.stopPropagation());
-        });
-    }
 
-    function toggleWorkspace() {
-        const root = document.getElementById('file-tree-root');
-        if (workspaceChevron.classList.contains('open')) {
-            workspaceChevron.classList.remove('open');
-            root.classList.remove('open');
-        } else {
-            workspaceChevron.classList.add('open');
-            root.classList.add('open');
-        }
-    }
-
-    // --- Tab & Editor Control ---
-    async function openFileFromVFS(path, filename) {
-        if (!vfs[path]) return;
-        
-        fileStatus.innerText = "Reading File...";
-        
-        if (!vfs[path].model) {
-            if (vfs[path].handle) {
-                try {
-                    const fileData = await vfs[path].handle.getFile();
-                    const content = await fileData.text();
-                    vfs[path].model = monaco.editor.createModel(content, vfs[path].lang, monaco.Uri.file(path));
-                } catch (err) {
-                    fileStatus.innerText = "Error reading file";
-                    return;
-                }
+            attachInlineRename(wrap, label, entry);
+          } else {
+            if (!vfs[currentPath]) {
+              vfs[currentPath] = {
+                handle: entry,
+                model: null,
+                lang: getLang(entry.name),
+              };
             } else {
-                vfs[path].model = monaco.editor.createModel(vfs[path].content, vfs[path].lang, monaco.Uri.file(path));
+              vfs[currentPath].handle = entry;
             }
+
+            const wrap = document.createElement("div");
+            wrap.className = `tree-item-wrap file-node`;
+            wrap.setAttribute("data-path", currentPath);
+            wrap.setAttribute("draggable", "true");
+            wrap.style.paddingLeft = `${10 + depth * 14 + 16}px`;
+
+            const label = document.createElement("div");
+            label.className = "tree-item";
+            label.innerHTML = `<i class="icon ${getIconClass(entry.name)}"></i> <span class="item-name">${entry.name}</span>`;
+
+            wrap.appendChild(label);
+            nodeContainer.appendChild(wrap);
+            parentContainer.appendChild(nodeContainer);
+
+            wrap.addEventListener("click", async (e) => {
+              e.stopPropagation();
+              await openFileFromVFS(currentPath, entry.name);
+            });
+
+            wrap.addEventListener("dragstart", (e) => {
+              e.dataTransfer.setData("text/plain", currentPath);
+            });
+
+            attachInlineRename(wrap, label, entry);
+          }
+        }
+      }
+
+      function attachInlineRename(wrap, label, entry) {
+        wrap.addEventListener("dblclick", async (e) => {
+          e.stopPropagation();
+          const textSpan = label.querySelector(".item-name");
+          const oldName = entry.name;
+
+          const input = document.createElement("input");
+          input.type = "text";
+          input.value = oldName;
+          input.className = "inline-rename-input";
+
+          textSpan.style.display = "none";
+          label.appendChild(input);
+          input.focus();
+
+          const dotIndex = oldName.lastIndexOf(".");
+          if (entry.kind === "file" && dotIndex > 0)
+            input.setSelectionRange(0, dotIndex);
+          else input.select();
+
+          let isProcessing = false;
+
+          const finishRename = async (save) => {
+            if (isProcessing) return;
+            isProcessing = true;
+
+            const newName = input.value.trim();
+
+            if (save && newName && newName !== oldName) {
+              try {
+                if (entry.move) {
+                  await entry.move(newName);
+                  if (rootDirectoryHandle)
+                    await buildWorkspace(rootDirectoryHandle);
+                } else {
+                  alert(
+                    "Native inline renaming is not supported in this Chrome version.",
+                  );
+                  input.remove();
+                  textSpan.style.display = "inline";
+                }
+              } catch (err) {
+                alert(
+                  "Rename blocked by browser. Make sure the file is not open in a tab.",
+                );
+                input.remove();
+                textSpan.style.display = "inline";
+              }
+            } else {
+              input.remove();
+              textSpan.style.display = "inline";
+            }
+          };
+
+          input.addEventListener("blur", () => finishRename(true));
+          input.addEventListener("keydown", (e) => {
+            if (e.key === "Enter") finishRename(true);
+            if (e.key === "Escape") finishRename(false);
+            e.stopPropagation();
+          });
+          input.addEventListener("click", (e) => e.stopPropagation());
+        });
+      }
+
+      function toggleWorkspace() {
+        const root = document.getElementById("file-tree-root");
+        const chev = document.getElementById("workspace-chevron");
+        if (chev.classList.contains("open")) {
+          chev.classList.remove("open");
+          root.classList.remove("open");
+        } else {
+          chev.classList.add("open");
+          root.classList.add("open");
+        }
+      }
+
+      // --- Tab & Editor Control ---
+      async function openFileFromVFS(path, filename) {
+        if (!vfs[path]) return;
+
+        fileStatus.innerText = "Reading File...";
+
+        if (!vfs[path].model) {
+          if (vfs[path].handle) {
+            try {
+              const fileData = await vfs[path].handle.getFile();
+              const content = await fileData.text();
+              vfs[path].model = monaco.editor.createModel(
+                content,
+                vfs[path].lang,
+                monaco.Uri.file(path),
+              );
+            } catch (err) {
+              fileStatus.innerText = "Error reading file";
+              return;
+            }
+          } else {
+            vfs[path].model = monaco.editor.createModel(
+              vfs[path].content,
+              vfs[path].lang,
+              monaco.Uri.file(path),
+            );
+          }
         }
 
+        if (openTabs.includes("Welcome"))
+          openTabs = openTabs.filter((t) => t !== "Welcome");
         if (!openTabs.includes(path)) openTabs.push(path);
-        switchFile(path);
-    }
 
-    function switchFile(path) {
-        if (path === 'Welcome') {
-            if (!openTabs.includes('Welcome')) openTabs.push('Welcome');
-            currentFile = 'Welcome';
-            welcomeScreen.style.display = 'flex';
-            editorDiv.style.display = 'none';
-            emptyState.style.display = 'none';
-            langStatus.innerText = "Ready";
-            renderTabs();
-            updateActiveSidebar();
-            return;
+        switchFile(path);
+      }
+
+      function switchFile(path) {
+        if (path === "Welcome") {
+          if (!openTabs.includes("Welcome")) openTabs.push("Welcome");
+          currentFile = "Welcome";
+          welcomeScreen.style.display = "flex";
+          editorDiv.style.display = "none";
+          emptyState.style.display = "none";
+          langStatus.innerText = "Ready";
+          renderTabs();
+          updateActiveSidebar();
+          return;
         }
 
         if (!vfs[path] || !editor) return;
-        
+
         if (!openTabs.includes(path)) openTabs.push(path);
         currentFile = path;
-        
+
         editor.setModel(vfs[path].model);
-        
-        welcomeScreen.style.display = 'none';
-        emptyState.style.display = 'none';
-        editorDiv.style.display = 'block';
-        setTimeout(() => editorDiv.style.opacity = '1', 50);
-        
-        langStatus.innerHTML = `{ } ${vfs[path].lang.toUpperCase()}`;
+
+        welcomeScreen.style.display = "none";
+        emptyState.style.display = "none";
+        editorDiv.style.display = "block";
+        setTimeout(() => (editorDiv.style.opacity = "1"), 50);
+
+        langStatus.innerText = `{ } ${vfs[path].lang.toUpperCase()}`;
         fileStatus.innerText = "Ready";
-        
+
         renderTabs();
         updateActiveSidebar();
-        
+
         if (previewTab && !previewTab.closed) updatePreviewTab();
-    }
+      }
 
-    function renderTabs() {
-        tabsContainer.innerHTML = '';
-        openTabs.forEach(path => {
-            if (path === 'Welcome') {
-                const tab = document.createElement('div');
-                tab.className = `tab ${currentFile === 'Welcome' ? 'active' : ''}`;
-                tab.onclick = () => switchFile('Welcome');
-                tab.innerHTML = `Welcome <span class="tab-close" onclick="closeTab(event, 'Welcome')">✖</span>`;
-                tabsContainer.appendChild(tab);
-                return;
-            }
-
-            const filename = path.split('/').pop();
-            const tab = document.createElement('div');
-            tab.className = `tab ${currentFile === path ? 'active' : ''}`;
-            tab.onclick = () => switchFile(path);
-            tab.innerHTML = `
-                <i class="icon ${getIconClass(filename)}"></i> ${filename}
-                <span class="tab-close" onclick="closeTab(event, '${path}')">✖</span>
-            `;
+      function renderTabs() {
+        tabsContainer.innerHTML = "";
+        openTabs.forEach((path) => {
+          if (path === "Welcome") {
+            const tab = document.createElement("div");
+            tab.className = `tab ${currentFile === "Welcome" ? "active" : ""}`;
+            tab.onclick = () => switchFile("Welcome");
+            tab.innerHTML = `Welcome <span class="tab-close svg-close" onclick="closeTab(event, 'Welcome')"><svg viewBox="0 0 16 16" fill="currentColor"><path d="M8 7.3l4.1-4.2.7.7L8.7 8l4.1 4.1-.7.7L8 8.7l-4.1 4.1-.7-.7L7.3 8 3.2 3.9l.7-.7L8 7.3z"/></svg></span>`;
             tabsContainer.appendChild(tab);
+            return;
+          }
+
+          const filename = path.split("/").pop();
+          const tab = document.createElement("div");
+          tab.className = `tab ${currentFile === path ? "active" : ""}`;
+          tab.onclick = () => switchFile(path);
+          tab.innerHTML = `
+                <i class="icon ${getIconClass(filename)}"></i> ${filename}
+                <span class="tab-close svg-close" onclick="closeTab(event, '${path}')"><svg viewBox="0 0 16 16" fill="currentColor"><path d="M8 7.3l4.1-4.2.7.7L8.7 8l4.1 4.1-.7.7L8 8.7l-4.1 4.1-.7-.7L7.3 8 3.2 3.9l.7-.7L8 7.3z"/></svg></span>
+            `;
+          tabsContainer.appendChild(tab);
         });
-        
+
         if (openTabs.length === 0) {
-            welcomeScreen.style.display = 'none';
-            editorDiv.style.opacity = '0';
-            editorDiv.style.display = 'none';
-            emptyState.style.display = 'flex';
-            langStatus.innerText = "No File";
-            currentFile = null;
+          welcomeScreen.style.display = "none";
+          editorDiv.style.opacity = "0";
+          editorDiv.style.display = "none";
+          emptyState.style.display = "flex";
+          langStatus.innerText = "No File";
+          currentFile = null;
         } else {
-            emptyState.style.display = 'none';
+          emptyState.style.display = "none";
         }
-    }
+      }
 
-    function closeTab(event, path) {
+      function closeTab(event, path) {
         event.stopPropagation();
-        openTabs = openTabs.filter(t => t !== path);
-        
+        openTabs = openTabs.filter((t) => t !== path);
+
         if (currentFile === path) {
-            if (openTabs.length > 0) {
-                switchFile(openTabs[openTabs.length - 1]);
-            } else {
-                renderTabs(); 
-            }
-        } else {
-            renderTabs();
-        }
-    }
+          if (openTabs.length > 0) switchFile(openTabs[openTabs.length - 1]);
+          else renderTabs();
+        } else renderTabs();
+      }
 
-    function updateActiveSidebar() {
-        document.querySelectorAll('.file-node').forEach(node => {
-            if (node.getAttribute('data-path') === currentFile) node.classList.add('active');
-            else node.classList.remove('active');
+      function updateActiveSidebar() {
+        document.querySelectorAll(".file-node").forEach((node) => {
+          if (node.getAttribute("data-path") === currentFile)
+            node.classList.add("active");
+          else node.classList.remove("active");
         });
-    }
+      }
 
-    // --- File Creation & Saving ---
-    async function createNewFile() {
-        const name = prompt("Enter new file name (e.g., script.js):", "newfile.html");
+      // --- File Creation & Saving ---
+      async function createNewFile() {
+        const name = prompt(
+          "Enter new file name (e.g., script.js):",
+          "newfile.html",
+        );
         if (!name) return;
-        
-        const cleanName = name.replace(/\//g, '-');
+
+        const cleanName = name.replace(/\//g, "-");
         let handle = null;
         let path = cleanName;
 
         if (rootDirectoryHandle) {
-            try {
-                handle = await rootDirectoryHandle.getFileHandle(cleanName, { create: true });
-            } catch (err) {
-                console.error(err);
-                return alert(`Failed to create file on disk. Ensure you have given write permission to the folder.`);
-            }
+          try {
+            handle = await rootDirectoryHandle.getFileHandle(cleanName, {
+              create: true,
+            });
+          } catch (err) {
+            console.error(err);
+            return alert(
+              `Failed to create file on disk. Ensure you have given write permission to the folder.`,
+            );
+          }
         }
-        
+
         if (vfs[path]) return alert("File already exists!");
-        
+
         const lang = getLang(cleanName);
-        vfs[path] = { lang: lang, content: '', handle: handle, model: null };
-        if (editor) vfs[path].model = monaco.editor.createModel('', lang, monaco.Uri.file(path));
-        
+        vfs[path] = { lang: lang, content: "", handle: handle, model: null };
+        if (editor)
+          vfs[path].model = monaco.editor.createModel(
+            "",
+            lang,
+            monaco.Uri.file(path),
+          );
+
         if (rootDirectoryHandle) await buildWorkspace(rootDirectoryHandle);
 
         if (!openTabs.includes(path)) openTabs.push(path);
         switchFile(path);
-    }
+      }
 
-    async function forceManualSave() {
-        if (!editor || currentFile === 'Welcome' || currentFile === null || !vfs[currentFile]) return;
+      async function forceManualSave() {
+        if (
+          !editor ||
+          currentFile === "Welcome" ||
+          currentFile === null ||
+          !vfs[currentFile]
+        )
+          return;
         try {
-            let handle = vfs[currentFile].handle;
-            if (!handle) {
-                handle = await window.showSaveFilePicker({ suggestedName: currentFile });
-                vfs[currentFile].handle = handle;
-            }
-            const writable = await handle.createWritable();
+          let handle = vfs[currentFile].handle;
+          if (!handle) {
+            handle = await window.showSaveFilePicker({
+              suggestedName: currentFile,
+            });
+            vfs[currentFile].handle = handle;
+          }
+          const writable = await handle.createWritable();
+          await writable.write(vfs[currentFile].model.getValue());
+          await writable.close();
+          fileStatus.innerText = `Saved successfully`;
+          updatePreviewTab();
+        } catch (err) {
+          fileStatus.innerText = "Save Failed or Cancelled";
+        }
+        setTimeout(() => (fileStatus.innerText = "Ready"), 3000);
+      }
+
+      async function silentAutoSave() {
+        if (
+          !editor ||
+          currentFile === "Welcome" ||
+          currentFile === null ||
+          !vfs[currentFile]
+        )
+          return;
+        updatePreviewTab();
+
+        if (vfs[currentFile].handle) {
+          try {
+            const writable = await vfs[currentFile].handle.createWritable();
             await writable.write(vfs[currentFile].model.getValue());
             await writable.close();
-            fileStatus.innerText = `Saved successfully`;
-            updatePreviewTab();
-        } catch (err) {
-            fileStatus.innerText = "Save Failed or Cancelled";
+            fileStatus.innerHTML = `Auto-saved to disk <span class="auto-save-status">✔</span>`;
+          } catch (err) {}
         }
-        setTimeout(() => fileStatus.innerText = "Ready", 3000);
-    }
+      }
 
-    async function silentAutoSave() {
-        if (!editor || currentFile === 'Welcome' || currentFile === null || !vfs[currentFile]) return;
-        updatePreviewTab(); 
-        
-        if (vfs[currentFile].handle) {
-            try {
-                const writable = await vfs[currentFile].handle.createWritable();
-                await writable.write(vfs[currentFile].model.getValue());
-                await writable.close();
-                fileStatus.innerHTML = `Auto-saved to disk <span class="auto-save-status">✔</span>`;
-            } catch (err) {}
-        }
-    }
-
-    // --- Asynchronous VFS Preview Compiler ---
-    async function buildLiveHTML() {
+      // --- Asynchronous VFS Preview Compiler ---
+      async function buildLiveHTML() {
         let htmlPath = null;
-        if (currentFile !== 'Welcome' && currentFile !== null && vfs[currentFile] && vfs[currentFile].lang === 'html') {
-            htmlPath = currentFile;
+        if (
+          currentFile !== "Welcome" &&
+          currentFile !== null &&
+          vfs[currentFile] &&
+          vfs[currentFile].lang === "html"
+        ) {
+          htmlPath = currentFile;
         } else {
-            htmlPath = Object.keys(vfs).find(k => vfs[k].lang === 'html' && (vfs[k].model || vfs[k].handle));
+          htmlPath = Object.keys(vfs).find(
+            (k) => vfs[k].lang === "html" && (vfs[k].model || vfs[k].handle),
+          );
         }
 
-        if (!htmlPath) return "<h2>No HTML file opened or found in workspace.</h2>";
+        if (!htmlPath)
+          return "<h2>No HTML file opened or found in workspace.</h2>";
 
         if (!vfs[htmlPath].model && vfs[htmlPath].handle) {
-             const fileData = await vfs[htmlPath].handle.getFile();
-             vfs[htmlPath].content = await fileData.text();
+          const fileData = await vfs[htmlPath].handle.getFile();
+          vfs[htmlPath].content = await fileData.text();
         }
 
-        let html = vfs[htmlPath].model ? vfs[htmlPath].model.getValue() : vfs[htmlPath].content;
-        const pathSegments = htmlPath.split('/');
+        let html = vfs[htmlPath].model
+          ? vfs[htmlPath].model.getValue()
+          : vfs[htmlPath].content;
+        const pathSegments = htmlPath.split("/");
         pathSegments.pop();
-        const basePath = pathSegments.length > 0 ? pathSegments.join('/') + '/' : '';
+        const basePath =
+          pathSegments.length > 0 ? pathSegments.join("/") + "/" : "";
 
         const linkRegex = /<link\s+.*?href=["'](.*?)["'].*?>/gi;
         const links = [...html.matchAll(linkRegex)];
         for (const match of links) {
-            const filename = match[1];
-            const fullPath = basePath + filename;
-            if (vfs[fullPath]) {
-                if (!vfs[fullPath].model && vfs[fullPath].handle) {
-                    const fd = await vfs[fullPath].handle.getFile();
-                    vfs[fullPath].content = await fd.text();
-                }
-                const css = vfs[fullPath].model ? vfs[fullPath].model.getValue() : vfs[fullPath].content;
-                html = html.replace(match[0], `<style>\n/* Injected: ${filename} */\n${css}\n</style>`);
+          const filename = match[1];
+          const fullPath = basePath + filename;
+          if (vfs[fullPath]) {
+            if (!vfs[fullPath].model && vfs[fullPath].handle) {
+              const fd = await vfs[fullPath].handle.getFile();
+              vfs[fullPath].content = await fd.text();
             }
+            const css = vfs[fullPath].model
+              ? vfs[fullPath].model.getValue()
+              : vfs[fullPath].content;
+            html = html.replace(
+              match[0],
+              `<style>\n/* Injected: ${filename} */\n${css}\n</style>`,
+            );
+          }
         }
 
         const scriptRegex = /<script\s+.*?src=["'](.*?)["'].*?><\/script>/gi;
         const scripts = [...html.matchAll(scriptRegex)];
         for (const match of scripts) {
-            const filename = match[1];
-            const fullPath = basePath + filename;
-            if (vfs[fullPath]) {
-                if (!vfs[fullPath].model && vfs[fullPath].handle) {
-                    const fd = await vfs[fullPath].handle.getFile();
-                    vfs[fullPath].content = await fd.text();
-                }
-                const js = vfs[fullPath].model ? vfs[fullPath].model.getValue() : vfs[fullPath].content;
-                html = html.replace(match[0], `<script>\n/* Injected: ${filename} */\n${js}\n<\/script>`);
+          const filename = match[1];
+          const fullPath = basePath + filename;
+          if (vfs[fullPath]) {
+            if (!vfs[fullPath].model && vfs[fullPath].handle) {
+              const fd = await vfs[fullPath].handle.getFile();
+              vfs[fullPath].content = await fd.text();
             }
+            const js = vfs[fullPath].model
+              ? vfs[fullPath].model.getValue()
+              : vfs[fullPath].content;
+            html = html.replace(
+              match[0],
+              `<script>\n/* Injected: ${filename} */\n${js}\n<\/script>`,
+            );
+          }
         }
 
         return html;
-    }
+      }
 
-    async function launchPreview() {
-        if (!editor && currentFile === 'Welcome') return;
+      async function launchPreview() {
+        if (!editor && currentFile === "Welcome") return;
         const finalHTML = await buildLiveHTML();
-        const blob = new Blob([finalHTML], { type: 'text/html' });
-        
+        const blob = new Blob([finalHTML], { type: "text/html" });
+
         if (currentBlobUrl) URL.revokeObjectURL(currentBlobUrl);
         currentBlobUrl = URL.createObjectURL(blob);
 
-        if (previewTab && !previewTab.closed) previewTab.location.replace(currentBlobUrl);
-        else previewTab = window.open(currentBlobUrl, 'WebIDEPreview');
-    }
+        if (previewTab && !previewTab.closed)
+          previewTab.location.replace(currentBlobUrl);
+        else previewTab = window.open(currentBlobUrl, "WebIDEPreview");
+      }
 
-    async function updatePreviewTab() {
+      async function updatePreviewTab() {
         if (previewTab && !previewTab.closed) {
-            const finalHTML = await buildLiveHTML();
-            const blob = new Blob([finalHTML], { type: 'text/html' });
-            if (currentBlobUrl) URL.revokeObjectURL(currentBlobUrl);
-            currentBlobUrl = URL.createObjectURL(blob);
-            previewTab.location.replace(currentBlobUrl);
+          const finalHTML = await buildLiveHTML();
+          const blob = new Blob([finalHTML], { type: "text/html" });
+          if (currentBlobUrl) URL.revokeObjectURL(currentBlobUrl);
+          currentBlobUrl = URL.createObjectURL(blob);
+          previewTab.location.replace(currentBlobUrl);
         }
-    }
+      }
 
-    // --- Terminal Engine ---
-    const terminalArea = document.getElementById('terminal-area');
-    
-    function toggleTerminal() {
-        const termIcon = document.getElementById('activity-terminal');
-        if (terminalArea.style.display === 'none' || terminalArea.style.display === '') {
-            terminalArea.style.display = 'flex';
-            termIcon.classList.add('active');
-            
-            setTimeout(() => {
-                if (!termInstance) initTerminalEngine();
-                if (editor) editor.layout(); 
-            }, 10);
+      // --- Terminal Engine ---
+      const terminalArea = document.getElementById("terminal-area");
+
+      function toggleTerminal() {
+        const termIcon = document.getElementById("activity-terminal");
+        if (
+          terminalArea.style.display === "none" ||
+          terminalArea.style.display === ""
+        ) {
+          terminalArea.style.display = "flex";
+          termIcon.classList.add("active");
+
+          window.requestAnimationFrame(() => {
+            if (!termInstance) initTerminalEngine();
+            if (editor) editor.layout();
+          });
         } else {
-            terminalArea.style.display = 'none';
-            termIcon.classList.remove('active');
-            if (editor) editor.layout(); 
+          terminalArea.style.display = "none";
+          termIcon.classList.remove("active");
+          if (editor) editor.layout();
         }
-    }
+      }
 
-    function initTerminalEngine() {
-        if (typeof Terminal === 'undefined') {
-            setTimeout(initTerminalEngine, 100);
-            return;
+      function initTerminalEngine() {
+        if (typeof Terminal === "undefined") {
+          setTimeout(initTerminalEngine, 100);
+          return;
         }
 
         termInstance = new Terminal({
-            theme: { background: '#1e1e1e', foreground: '#cccccc', cursor: '#ffffff' },
-            fontFamily: 'monospace', 
-            fontSize: baseFontSize, 
-            cursorBlink: true, 
-            convertEol: true
+          theme: {
+            background: "#1e1e1e",
+            foreground: "#cccccc",
+            cursor: "#ffffff",
+          },
+          fontFamily: "monospace",
+          fontSize: baseFontSize,
+          cursorBlink: true,
+          convertEol: true,
         });
-        
-        termInstance.open(document.getElementById('terminal'));
+
+        termInstance.open(document.getElementById("terminal"));
 
         const originalLog = console.log;
         const originalError = console.error;
 
-        console.log = function(...args) {
-            if(args[0] && typeof args[0] === 'string' && args[0].includes('SW Cache')) return originalLog.apply(console, args);
-            const msg = args.map(a => typeof a === 'object' ? JSON.stringify(a) : String(a)).join(' ');
-            if (termInstance) termInstance.writeln(msg);
-            originalLog.apply(console, args);
+        console.log = function (...args) {
+          if (
+            args[0] &&
+            typeof args[0] === "string" &&
+            args[0].includes("SW Cache")
+          )
+            return originalLog.apply(console, args);
+          const msg = args
+            .map((a) => (typeof a === "object" ? JSON.stringify(a) : String(a)))
+            .join(" ");
+          if (termInstance) termInstance.writeln(msg);
+          originalLog.apply(console, args);
         };
 
-        console.error = function(...args) {
-            if(args[0] && typeof args[0] === 'string' && args[0].includes('SW Failed')) return originalError.apply(console, args);
-            const msg = args.map(a => typeof a === 'object' ? JSON.stringify(a) : String(a)).join(' ');
-            if (termInstance) termInstance.writeln('\x1b[31m' + msg + '\x1b[0m');
-            originalError.apply(console, args);
+        console.error = function (...args) {
+          if (
+            args[0] &&
+            typeof args[0] === "string" &&
+            args[0].includes("SW Failed")
+          )
+            return originalError.apply(console, args);
+          const msg = args
+            .map((a) => (typeof a === "object" ? JSON.stringify(a) : String(a)))
+            .join(" ");
+          if (termInstance) termInstance.writeln("\x1b[31m" + msg + "\x1b[0m");
+          originalError.apply(console, args);
         };
 
-        const prompt = () => termInstance.write('\r\n$ ');
-        termInstance.writeln('AeroCode Terminal Engine Active.');
+        const prompt = () => termInstance.write("\r\n$ ");
+        termInstance.writeln("AeroCode Terminal Engine Active.");
         prompt();
 
-        let cmdBuffer = '';
-        termInstance.onKey(e => {
-            const ev = e.domEvent;
-            const printable = !ev.altKey && !ev.ctrlKey && !ev.metaKey;
-            
-            if (ev.keyCode === 13) {
-                termInstance.write('\r\n');
-                executeTerminalCommand(cmdBuffer.trim());
-                cmdBuffer = '';
-                prompt();
-            } else if (ev.keyCode === 8) {
-                if (cmdBuffer.length > 0) { 
-                    cmdBuffer = cmdBuffer.slice(0, -1); 
-                    termInstance.write('\b \b'); 
-                }
-            } else if (printable) {
-                cmdBuffer += e.key; 
-                termInstance.write(e.key);
-            }
-        });
-    }
+        let cmdBuffer = "";
+        termInstance.onKey((e) => {
+          const ev = e.domEvent;
+          const printable = !ev.altKey && !ev.ctrlKey && !ev.metaKey;
 
-    async function executeTerminalCommand(input) {
+          if (ev.keyCode === 13) {
+            termInstance.write("\r\n");
+            executeTerminalCommand(cmdBuffer.trim());
+            cmdBuffer = "";
+            prompt();
+          } else if (ev.keyCode === 8) {
+            if (cmdBuffer.length > 0) {
+              cmdBuffer = cmdBuffer.slice(0, -1);
+              termInstance.write("\b \b");
+            }
+          } else if (printable) {
+            cmdBuffer += e.key;
+            termInstance.write(e.key);
+          }
+        });
+      }
+
+      async function executeTerminalCommand(input) {
         if (!input) return;
-        const args = input.split(' ');
+        const args = input.split(" ");
         const base = args[0].toLowerCase();
         const target = args[1];
 
-        switch(base) {
-            case 'ls': 
-                termInstance.writeln(Object.keys(vfs).map(p => p.split('/').pop()).join('  ')); 
-                break;
-            case 'clear': 
-                termInstance.clear(); 
-                break;
-            case 'node':
-                if (!target) return termInstance.writeln('Usage: node <filename>');
-                
-                const targetKey = Object.keys(vfs).find(k => k.endsWith(target));
-                if (!targetKey) return termInstance.writeln(`\x1b[31mError: Cannot find file '${target}'.\x1b[0m`);
-                if (vfs[targetKey].lang !== 'javascript') return termInstance.writeln(`\x1b[31mError: Can only execute JavaScript files.\x1b[0m`);
-                
-                try {
-                    let jsContent = '';
-                    if (vfs[targetKey].model) {
-                        jsContent = vfs[targetKey].model.getValue();
-                    } else if (vfs[targetKey].handle) {
-                        const fd = await vfs[targetKey].handle.getFile();
-                        jsContent = await fd.text();
-                    } else {
-                        jsContent = vfs[targetKey].content;
-                    }
-                    const executeJS = new Function(jsContent);
-                    executeJS(); 
-                } catch (err) {
-                    console.error(err.toString());
-                }
-                break;
-            default: 
-                termInstance.writeln(`bash: ${base}: command not found`);
-        }
-    }
+        switch (base) {
+          case "ls":
+            termInstance.writeln(
+              Object.keys(vfs)
+                .map((p) => p.split("/").pop())
+                .join("  "),
+            );
+            break;
+          case "clear":
+            termInstance.clear();
+            break;
+          case "node":
+            if (!target) return termInstance.writeln("Usage: node <filename>");
 
-    function forceEditorFind() {
-        if (editor && currentFile !== 'Welcome' && currentFile !== null) {
-            editor.focus();
-            editor.getAction('actions.find').run();
-        }
-    }
+            const targetKey = Object.keys(vfs).find((k) => k.endsWith(target));
+            if (!targetKey)
+              return termInstance.writeln(
+                `\x1b[31mError: Cannot find file '${target}'.\x1b[0m`,
+              );
+            if (vfs[targetKey].lang !== "javascript")
+              return termInstance.writeln(
+                `\x1b[31mError: Can only execute JavaScript files.\x1b[0m`,
+              );
 
-    // --- MONACO INITIALIZATION ---
-    window.addEventListener('load', () => {
+            try {
+              let jsContent = "";
+              if (vfs[targetKey].model) {
+                jsContent = vfs[targetKey].model.getValue();
+              } else if (vfs[targetKey].handle) {
+                const fd = await vfs[targetKey].handle.getFile();
+                jsContent = await fd.text();
+              } else {
+                jsContent = vfs[targetKey].content;
+              }
+              const executeJS = new Function(jsContent);
+              executeJS();
+            } catch (err) {
+              console.error(err.toString());
+            }
+            break;
+          default:
+            termInstance.writeln(`bash: ${base}: command not found`);
+        }
+      }
+
+      function forceEditorFind() {
+        if (editor && currentFile !== "Welcome" && currentFile !== null) {
+          editor.focus();
+          editor.getAction("actions.find").run();
+        }
+      }
+
+      // --- MONACO INITIALIZATION ---
+      window.addEventListener("load", () => {
+        applySettingsToUI();
         renderTabs();
-        setTimeout(initMonaco, 100); 
-    });
+        setTimeout(initMonaco, 100);
+      });
 
-    function initMonaco() {
-        if(typeof require === 'undefined') {
-            setTimeout(initMonaco, 100);
-            return;
+      function initMonaco() {
+        if (typeof require === "undefined") {
+          setTimeout(initMonaco, 100);
+          return;
         }
-        
-        require.config({ paths: { 'vs': './monaco-editor/vs' }});
-        require(['vs/editor/editor.main'], function () {
-            
-            monaco.languages.setLanguageConfiguration('html', {
-                onEnterRules: [{
-                    beforeText: new RegExp(`<([_:\\w][_:\\w-.\\d]*)([^/>]*(?!/)>)[^<]*$`, 'i'),
-                    afterText: /^<\/([_:\w][_:\w-.\d]*)\s*>/i,
-                    action: { indentAction: monaco.languages.IndentAction.IndentOutdent }
-                }]
-            });
 
-            editor = monaco.editor.create(document.getElementById('editor'), {
-                theme: 'vs-dark', automaticLayout: true, fontSize: baseFontSize, minimap: { enabled: true },
-                autoIndent: "full", formatOnType: true, formatOnPaste: true,
-                suggestOnTriggerCharacters: true, acceptSuggestionOnEnter: "on"
-            });
+        require.config({ paths: { vs: "./monaco-editor/vs" } });
+        require(["vs/editor/editor.main"], function () {
+          monaco.languages.setLanguageConfiguration("html", {
+            onEnterRules: [
+              {
+                beforeText: new RegExp(
+                  `<([_:\\w][_:\\w-.\\d]*)([^/>]*(?!/)>)[^<]*$`,
+                  "i",
+                ),
+                afterText: /^<\/([_:\w][_:\w-.\d]*)\s*>/i,
+                action: {
+                  indentAction: monaco.languages.IndentAction.IndentOutdent,
+                },
+              },
+            ],
+          });
 
-            const overlay = document.getElementById('loading-overlay');
-            overlay.style.opacity = '0';
-            setTimeout(() => { overlay.style.display = 'none'; }, 300);
-            
-            fileStatus.innerText = "Ready";
-            switchFile(currentFile);
+          editor = monaco.editor.create(document.getElementById("editor"), {
+            theme: "vs-dark",
+            automaticLayout: true,
+            fontSize: baseFontSize,
+            minimap: { enabled: true },
+            autoIndent: "full",
+            formatOnType: true,
+            formatOnPaste: true,
+            quickSuggestions: appSettings.autocomplete,
+            suggestOnTriggerCharacters: appSettings.autocomplete,
+            wordWrap: appSettings.wordwrap ? "on" : "off",
+            acceptSuggestionOnEnter: "on",
+          });
 
-            editor.onDidType((text) => {
-                if (currentFile === 'Welcome' || currentFile === null || !vfs[currentFile] || vfs[currentFile].lang !== 'html') return;
-                
-                if (text === '>') {
-                    const position = editor.getPosition();
-                    const model = editor.getModel();
-                    const textBeforeCursor = model.getLineContent(position.lineNumber).substring(0, position.column - 1);
-                    const match = textBeforeCursor.match(/<([a-zA-Z0-9\-]+)[^>]*>$/);
-                    
-                    if (match) {
-                        const tagName = match[1].toLowerCase();
-                        const selfClosingTags = ['area', 'base', 'br', 'col', 'embed', 'hr', 'img', 'input', 'link', 'meta', 'param', 'source', 'track', 'wbr'];
-                        
-                        if (!selfClosingTags.includes(tagName) && !textBeforeCursor.endsWith('/>')) {
-                            editor.executeEdits("auto-close", [{
-                                range: new monaco.Range(position.lineNumber, position.column, position.lineNumber, position.column),
-                                text: `</${tagName}>`, forceMoveMarkers: true
-                            }]);
-                            editor.setPosition(position);
-                        }
-                    }
+          const overlay = document.getElementById("loading-overlay");
+          overlay.style.opacity = "0";
+          setTimeout(() => {
+            overlay.style.display = "none";
+          }, 300);
+
+          fileStatus.innerText = "Ready";
+
+          editor.onDidType((text) => {
+            if (
+              currentFile === "Welcome" ||
+              currentFile === null ||
+              !vfs[currentFile] ||
+              vfs[currentFile].lang !== "html"
+            )
+              return;
+
+            if (text === ">") {
+              const position = editor.getPosition();
+              const model = editor.getModel();
+              const textBeforeCursor = model
+                .getLineContent(position.lineNumber)
+                .substring(0, position.column - 1);
+              const match = textBeforeCursor.match(/<([a-zA-Z0-9\-]+)[^>]*>$/);
+
+              if (match) {
+                const tagName = match[1].toLowerCase();
+                const selfClosingTags = [
+                  "area",
+                  "base",
+                  "br",
+                  "col",
+                  "embed",
+                  "hr",
+                  "img",
+                  "input",
+                  "link",
+                  "meta",
+                  "param",
+                  "source",
+                  "track",
+                  "wbr",
+                ];
+
+                if (
+                  !selfClosingTags.includes(tagName) &&
+                  !textBeforeCursor.endsWith("/>")
+                ) {
+                  editor.executeEdits("auto-close", [
+                    {
+                      range: new monaco.Range(
+                        position.lineNumber,
+                        position.column,
+                        position.lineNumber,
+                        position.column,
+                      ),
+                      text: `</${tagName}>`,
+                      forceMoveMarkers: true,
+                    },
+                  ]);
+                  editor.setPosition(position);
                 }
-            });
+              }
+            }
+          });
 
-            editor.onDidChangeCursorPosition((e) => {
-                document.getElementById('cursor-position').innerText = `Ln ${e.position.lineNumber}, Col${e.position.column}`;
-            });
+          editor.onDidChangeCursorPosition((e) => {
+            document.getElementById("cursor-position").innerText =
+              `Ln ${e.position.lineNumber}, Col ${e.position.column}`;
+          });
 
-            editor.onDidChangeModelContent(() => {
-                if (currentFile === 'Welcome' || currentFile === null) return;
-                clearTimeout(autoSaveTimer);
-                fileStatus.innerText = "Typing...";
-                autoSaveTimer = setTimeout(silentAutoSave, 1000); 
-            });
+          editor.onDidChangeModelContent(() => {
+            if (currentFile === "Welcome" || currentFile === null) return;
+            clearTimeout(autoSaveTimer);
+            fileStatus.innerText = "Typing...";
+            autoSaveTimer = setTimeout(silentAutoSave, 1000);
+          });
 
-            // Global Keybindings
-            document.addEventListener('keydown', e => { 
-                if (e.ctrlKey || e.metaKey) {
-                    if (e.key === 's') { e.preventDefault(); forceManualSave(); }
-                    if (e.key === 'o') { e.preventDefault(); openFolder(); }
-                    if (e.key === '=' || e.key === '+') { e.preventDefault(); zoomIn(); }
-                    if (e.key === '-') { e.preventDefault(); zoomOut(); }
-                    if (e.key === 'f' && !e.shiftKey) { 
-                        e.preventDefault(); 
-                        forceEditorFind();
-                    }
-                    if ((e.key === 'f' || e.key === 'F') && e.shiftKey) {
-                        e.preventDefault();
-                        if (currentSidebarView !== 'search' || document.getElementById('sidebar').classList.contains('hidden')) {
-                            toggleActivityBar('search');
-                        } else {
-                            document.getElementById('search-input').focus();
-                        }
-                    }
-                    if (e.key === '`') {
-                        e.preventDefault();
-                        toggleTerminal();
-                    }
+          // Universal Keybind Interceptor driven by Settings
+          document.addEventListener("keydown", (e) => {
+            if (e.ctrlKey || e.metaKey) {
+              const k = e.key.toLowerCase();
+              if (k === appSettings.keySave) {
+                e.preventDefault();
+                forceManualSave();
+              }
+              if (k === appSettings.keyOpen) {
+                e.preventDefault();
+                openFolder();
+              }
+              if (k === appSettings.keyZoomIn) {
+                e.preventDefault();
+                zoomIn();
+              }
+              if (k === appSettings.keyZoomOut) {
+                e.preventDefault();
+                zoomOut();
+              }
+              if (k === appSettings.keyTerm) {
+                e.preventDefault();
+                toggleTerminal();
+              }
+              if (k === appSettings.keyFind && !e.shiftKey) {
+                e.preventDefault();
+                forceEditorFind();
+              }
+              if (k === appSettings.keyFind && e.shiftKey) {
+                e.preventDefault();
+                if (
+                  currentSidebarView !== "search" ||
+                  document
+                    .getElementById("sidebar")
+                    .classList.contains("hidden")
+                ) {
+                  toggleActivityBar("search");
+                } else {
+                  document.getElementById("search-input").focus();
                 }
-                if (e.altKey && e.key === 'p') { e.preventDefault(); launchPreview(); }
-            });
+              }
+            }
+            if (e.altKey && e.key.toLowerCase() === appSettings.keyPreview) {
+              e.preventDefault();
+              launchPreview();
+            }
+          });
         });
-    }
-</script>
-</body>
+      }
+    </script>
+  </body>
 </html>
