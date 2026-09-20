@@ -11,7 +11,7 @@
     <link rel="stylesheet" href="./xterm/xterm.css" />
     
     <style>
-        /* Classic Theme Variables Maintained */
+        /* Reverted Classic Theme Variables */
         :root {
             --ui-zoom: 1;
             --font-ui: calc(13px * var(--ui-zoom));
@@ -110,6 +110,8 @@
         .activity-spacer { flex: 1; }
 
         .svg-icon { display: inline-flex; align-items: center; justify-content: center; width: 26px; height: 26px; }
+        
+        /* Solid SVG Icons */
         .svg-icon-folder svg, .svg-icon-search svg, .svg-icon-scm svg, .svg-icon-plugins svg, .svg-icon-terminal svg, .svg-icon-settings svg { width: 24px; height: 24px; }
 
         /* Main Workspace Area */
@@ -168,17 +170,6 @@
             color: #fff; border-radius: 3px; outline: none; margin-bottom: 10px; font-family: inherit;
         }
         .sidebar-input:focus { border: 1px solid var(--focus-border); }
-
-        /* Pretty Empty Sidebar Buttons */
-        #explorer-empty { padding: 15px 20px; display: none; flex-direction: column; }
-        .empty-text { font-size: 13px; color: var(--text-main); margin-bottom: 12px; line-height: 1.5; }
-        .empty-btn { 
-            background: #007fd4; color: #ffffff; border: 1px solid transparent; 
-            padding: 8px 12px; border-radius: 4px; cursor: pointer; width: 100%; 
-            font-size: 13px; margin-bottom: 10px; font-family: inherit; 
-            text-align: center; font-weight: 500; transition: background 0.1s;
-        }
-        .empty-btn:hover { background: #026ec1; }
         
         /* Floating Editor Tabs */
         .editor-tabs { 
@@ -244,7 +235,7 @@
         }
         .status-left, .status-right { display: flex; align-items: center; gap: 15px; }
 
-        /* SCM & Extensions Sidebar */
+        /* SCM & Extensions Sidebar specific */
         .sidebar-btn {
             background: #3c3c3c; color: #fff; border: 1px solid var(--border-color); padding: 6px;
             border-radius: 3px; cursor: pointer; width: 100%; font-size: 12px; margin-top: 10px;
@@ -324,12 +315,6 @@
                 <div class="menu-btn" onclick="toggleDropdown('term-menu', event)">Terminal</div>
                 <div class="dropdown" id="term-menu">
                     <div class="dropdown-item" onclick="toggleTerminal()"><span>Toggle Terminal</span><span class="shortcut" id="menu-sc-term">Ctrl+`</span></div>
-                </div>
-            </div>
-            <div class="menu-item">
-                <div class="menu-btn" onclick="toggleDropdown('help-menu', event)">Help</div>
-                <div class="dropdown" id="help-menu">
-                    <div class="dropdown-item" onclick="openWelcome()"><span>Welcome</span></div>
                 </div>
             </div>
         </div>
@@ -532,8 +517,8 @@
     <div class="context-menu-item" onclick="cmdDelete()">Delete</div>
 </div>
 
-<script src="./monaco-editor/vs/loader.js"></script>
-<script src="./xterm/xterm.js"></script>
+<script src="./monaco-editor/vs/loader.js" defer></script>
+<script src="./xterm/xterm.js" defer></script>
 
 <script>
     if ('serviceWorker' in navigator) {
@@ -1658,6 +1643,7 @@
         } else {
             renderTabs();
         }
+        
         setTimeout(initMonaco, 50); 
     });
 
