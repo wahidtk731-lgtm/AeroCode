@@ -7,11 +7,10 @@
     
     <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='20' fill='%23007acc'/%3E%3Cpath d='M40 30 L20 50 L40 70 M60 30 L80 50 L60 70' stroke='white' stroke-width='8' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E">
     
-    <link rel="preload" href="./monaco-editor/vs/loader.js" as="script">
     <link rel="stylesheet" href="./xterm/xterm.css" />
     
     <style>
-        /* Reverted Classic Theme Variables */
+        /* Exact Theme Variables */
         :root {
             --ui-zoom: 1;
             --font-ui: calc(13px * var(--ui-zoom));
@@ -56,7 +55,6 @@
         .menu-btn { cursor: pointer; padding: 4px 8px; border-radius: 3px; transition: background 0.1s; }
         .menu-btn:hover, .menu-item.active .menu-btn { background-color: #505050; }
         
-        /* Search Bar */
         .workspace-search-bar {
             background-color: #2b2b2b; color: #ccc; border: 1px solid #3c3c3c;
             border-radius: 6px; padding: 4px 180px; font-size: 12px; cursor: pointer;
@@ -65,6 +63,8 @@
         .workspace-search-bar:hover { background-color: #333333; border-color: #555; }
 
         .top-right-actions { display: flex; align-items: center; gap: 8px;}
+        .tb-icon { color: var(--text-muted); cursor: pointer; display: flex; align-items: center; justify-content: center; width: 24px; height: 24px; border-radius: 4px;}
+        .tb-icon:hover { background-color: rgba(255,255,255,0.1); color: #fff;}
 
         /* Authentic VS Code Seti File Icons */
         .icon { display: inline-block; width: 16px; height: 16px; background-size: contain; background-repeat: no-repeat; vertical-align: middle; margin-right: 4px;}
@@ -110,8 +110,6 @@
         .activity-spacer { flex: 1; }
 
         .svg-icon { display: inline-flex; align-items: center; justify-content: center; width: 26px; height: 26px; }
-        
-        /* Solid SVG Icons */
         .svg-icon-folder svg, .svg-icon-search svg, .svg-icon-scm svg, .svg-icon-plugins svg, .svg-icon-terminal svg, .svg-icon-settings svg { width: 24px; height: 24px; }
 
         /* Main Workspace Area */
@@ -213,6 +211,14 @@
             display: flex; align-items: center; justify-content: center; flex-direction: column; 
             z-index: 5; user-select: none; 
         }
+
+        #loading-overlay { 
+            position: absolute; top: 35px; left: 0; right: 0; bottom: 0; background: var(--bg-base); 
+            display: flex; align-items: center; justify-content: center; z-index: 50; 
+            font-size: var(--font-ui); color: var(--focus-border); flex-direction: column; gap: 15px; transition: opacity 0.2s ease; 
+        }
+        .spinner { width: 35px; height: 35px; border: 3px solid var(--bg-activity); border-top-color: var(--focus-border); border-radius: 50%; animation: spin 1s linear infinite; }
+        @keyframes spin { to { transform: rotate(360deg); } }
 
         /* Terminal Panel with Resizer */
         .terminal-resizer {
@@ -317,6 +323,12 @@
                     <div class="dropdown-item" onclick="toggleTerminal()"><span>Toggle Terminal</span><span class="shortcut" id="menu-sc-term">Ctrl+`</span></div>
                 </div>
             </div>
+            <div class="menu-item">
+                <div class="menu-btn" onclick="toggleDropdown('help-menu', event)">Help</div>
+                <div class="dropdown" id="help-menu">
+                    <div class="dropdown-item" onclick="openWelcome()"><span>Welcome</span></div>
+                </div>
+            </div>
         </div>
         
         <div class="workspace-search-bar" onclick="launchPreview()" title="Launch Live Web Preview">
@@ -348,9 +360,6 @@
             
             <div class="activity-spacer"></div>
             
-            <div class="activity-icon" id="activity-terminal" onclick="toggleTerminal()" title="Terminal">
-                <span class="svg-icon svg-icon-terminal"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M20 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm-8.5 12H19v2h-7.5v-2zM5.5 14.83L4.09 13.41 8.5 9l-4.41-4.41L5.5 3.17 11.33 9l-5.83 5.83z"/></svg></span>
-            </div>
             <div class="activity-icon" onclick="openSettingsModal()" title="Settings">
                 <span class="svg-icon svg-icon-settings"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M19.14,12.94c0.04-0.3,0.06-0.61,0.06-0.94c0-0.32-0.02-0.64-0.06-0.94l2.03-1.58c0.18-0.14,0.23-0.41,0.12-0.61 l-1.92-3.32c-0.12-0.22-0.37-0.29-0.59-0.22l-2.39,0.96c-0.5-0.38-1.03-0.7-1.62-0.94L14.4,2.81c-0.04-0.24-0.24-0.41-0.48-0.41 h-3.84c-0.24,0-0.43,0.17-0.47,0.41L9.25,5.35C8.66,5.59,8.12,5.92,7.63,6.29L5.24,5.33c-0.22-0.08-0.47,0-0.59,0.22L2.73,8.87 C2.62,9.08,2.66,9.34,2.86,9.48l2.03,1.58C4.84,11.36,4.8,11.69,4.8,12s0.02,0.64,0.06,0.94l-2.03,1.58 c-0.18,0.14-0.23,0.41-0.12,0.61l1.92,3.32c0.12,0.22,0.37,0.29,0.59,0.22l2.39-0.96c0.5,0.38,1.03,0.7,1.62,0.94l0.36,2.54 c0.05,0.24,0.24,0.41,0.48,0.41h3.84c0.24,0,0.43-0.17,0.47-0.41l0.36-2.54c0.59-0.24,1.13-0.56,1.62-0.94l2.39,0.96 c0.22,0.08,0.47,0,0.59-0.22l1.92-3.32c0.12-0.22,0.07-0.49-0.12-0.61L19.14,12.94z M12,15.6c-1.98,0-3.6-1.62-3.6-3.6 s1.62-3.6,3.6-3.6s3.6,1.62,3.6,3.6S13.98,15.6,12,15.6z"/></svg></span>
             </div>
@@ -375,10 +384,16 @@
                     </div>
                 </div>
 
-                <div id="explorer-empty">
-                    <p class="empty-text">You have not yet opened a folder.</p>
-                    <button class="empty-btn" onclick="openFolder()">Open Folder</button>
-                    <button class="empty-btn" onclick="reopenLastFolder()">Open Recent</button>
+                <!-- Pretty Empty State -->
+                <div id="explorer-empty" style="padding: 20px; display: flex; flex-direction: column; align-items: center; text-align: center; margin-top: 20px;">
+                    <div style="background: var(--bg-activity); padding: 15px; border-radius: 50%; margin-bottom: 15px;">
+                        <svg viewBox="0 0 24 24" fill="currentColor" width="32" height="32" color="var(--focus-border)"><path d="M10 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2h-8l-2-2z"/></svg>
+                    </div>
+                    <p class="empty-text" style="font-size: 14px; font-weight: 500; margin-bottom: 5px;">No Folder Opened</p>
+                    <p class="empty-text" style="color: var(--text-muted); margin-bottom: 20px;">Open a local folder to start editing your project files.</p>
+                    
+                    <button class="empty-btn" onclick="openFolder()">Open Local Folder</button>
+                    <button class="empty-btn" style="background: transparent; border: 1px solid var(--border-color); color: var(--text-main);" onclick="reopenLastFolder()">Open Recent Workspace</button>
                 </div>
             </div>
 
@@ -451,6 +466,11 @@
                     </div>
                 </div>
 
+                <div id="loading-overlay" style="display: none;">
+                    <div class="spinner"></div>
+                    <span id="loading-text" style="margin-top: 10px;">Booting Editor Engine...</span>
+                </div>
+
                 <div id="editor"></div>
             </div>
             
@@ -517,13 +537,142 @@
     <div class="context-menu-item" onclick="cmdDelete()">Delete</div>
 </div>
 
-<script src="./monaco-editor/vs/loader.js" defer></script>
-<script src="./xterm/xterm.js" defer></script>
-
 <script>
     if ('serviceWorker' in navigator) {
         window.addEventListener('load', () => {
             navigator.serviceWorker.register('./sw.js').catch(err => console.error('SW Failed:', err));
+        });
+    }
+
+    // --- Core State Variables ---
+    let vfs = {}; 
+    let rootDirectoryHandle = null;
+    let openTabs = ['Welcome']; 
+    let currentFile = 'Welcome'; 
+    let editor = null;
+    let autoSaveTimer = null;
+    let previewTab = null;
+    let currentBlobUrl = null;
+    let termInstance = null;
+    let isMonacoReady = false;
+    let queuedFileToOpen = null;
+
+    const fileTreeRoot = document.getElementById('file-tree-root');
+    const tabsContainer = document.getElementById('editor-tabs');
+    const langStatus = document.getElementById('language-status');
+    const fileStatus = document.getElementById('file-status');
+    const editorDiv = document.getElementById('editor');
+    const welcomeScreen = document.getElementById('welcome-screen');
+    const emptyState = document.getElementById('empty-state');
+    const workspaceTitle = document.getElementById('workspace-title');
+    const workspaceChevron = document.getElementById('workspace-chevron');
+    const loadingOverlay = document.getElementById('loading-overlay');
+
+    // --- Asynchronous Engine Loader ---
+    window.onload = () => {
+        applySettingsToUI();
+        renderTabs();
+
+        // Dynamically inject heavy scripts AFTER the UI is visible
+        const xtermScript = document.createElement('script');
+        xtermScript.src = './xterm/xterm.js';
+        document.body.appendChild(xtermScript);
+
+        const monacoScript = document.createElement('script');
+        monacoScript.src = './monaco-editor/vs/loader.js';
+        monacoScript.onload = () => {
+            require.config({ paths: { 'vs': './monaco-editor/vs' }});
+            require(['vs/editor/editor.main'], function () {
+                initMonacoEnvironment();
+            });
+        };
+        document.body.appendChild(monacoScript);
+    };
+
+    function initMonacoEnvironment() {
+        monaco.languages.html.htmlDefaults.setOptions({
+            format: { tabSize: 4, insertSpaces: true }
+        });
+
+        editor = monaco.editor.create(document.getElementById('editor'), {
+            theme: 'vs-dark', automaticLayout: true, fontSize: baseFontSize, minimap: { enabled: true },
+            autoIndent: "full", formatOnType: true, formatOnPaste: true,
+            quickSuggestions: appSettings.autocomplete, suggestOnTriggerCharacters: appSettings.autocomplete,
+            wordWrap: appSettings.wordwrap ? 'on' : 'off', acceptSuggestionOnEnter: "on"
+        });
+
+        isMonacoReady = true;
+
+        // Process any file the user tried to open while loading
+        if (queuedFileToOpen) {
+            loadingOverlay.style.display = 'none';
+            switchFile(queuedFileToOpen);
+            queuedFileToOpen = null;
+        }
+
+        editor.onDidType((text) => {
+            if (!appSettings.autoClose || currentFile === 'Welcome' || currentFile === null || !vfs[currentFile] || vfs[currentFile].lang !== 'html') return;
+            
+            if (text === '>') {
+                const position = editor.getPosition();
+                const model = editor.getModel();
+                const textBeforeCursor = model.getLineContent(position.lineNumber).substring(0, position.column - 1);
+                const match = textBeforeCursor.match(/<([a-zA-Z0-9\-]+)[^>]*>$/);
+                
+                if (match) {
+                    const tagName = match[1].toLowerCase();
+                    const selfClosingTags = ['area', 'base', 'br', 'col', 'embed', 'hr', 'img', 'input', 'link', 'meta', 'param', 'source', 'track', 'wbr'];
+                    
+                    if (!selfClosingTags.includes(tagName) && !textBeforeCursor.endsWith('/>')) {
+                        editor.executeEdits("auto-close", [{
+                            range: new monaco.Range(position.lineNumber, position.column, position.lineNumber, position.column),
+                            text: `</${tagName}>`, forceMoveMarkers: true
+                        }]);
+                        editor.setPosition(position);
+                    }
+                }
+            }
+        });
+
+        editor.onDidChangeCursorPosition((e) => {
+            document.getElementById('cursor-position').innerText = `Ln ${e.position.lineNumber}, Col ${e.position.column}`;
+        });
+
+        editor.onDidChangeModelContent(() => {
+            if (currentFile === 'Welcome' || currentFile === null) return;
+            clearTimeout(autoSaveTimer);
+            fileStatus.innerText = "Typing...";
+            if (appSettings.autoSave) autoSaveTimer = setTimeout(silentAutoSave, 1000); 
+        });
+
+        // Global Keybindings Listener
+        document.addEventListener('keydown', e => { 
+            if (e.ctrlKey || e.metaKey) {
+                const k = e.key.toLowerCase();
+                if (k === appSettings.keySave) { e.preventDefault(); forceManualSave(); }
+                if (k === appSettings.keyOpen) { e.preventDefault(); openFolder(); }
+                if (k === appSettings.keyZoomIn) { e.preventDefault(); zoomIn(); }
+                if (k === appSettings.keyZoomOut) { e.preventDefault(); zoomOut(); }
+                if (k === appSettings.keyTerm) { e.preventDefault(); toggleTerminal(); }
+                
+                if (k === appSettings.keyFind && !e.shiftKey) { 
+                    e.preventDefault(); 
+                    if (editor && currentFile !== 'Welcome' && currentFile !== null) {
+                        editor.focus(); editor.getAction('actions.find').run();
+                    }
+                }
+                if (k === appSettings.keyFind && e.shiftKey) {
+                    e.preventDefault();
+                    if (currentSidebarView !== 'search' || document.getElementById('sidebar').classList.contains('hidden')) {
+                        toggleActivityBar('search');
+                    } else {
+                        document.getElementById('search-input').focus();
+                    }
+                }
+            }
+            if (e.altKey && e.key.toLowerCase() === appSettings.keyPreview) { 
+                e.preventDefault(); launchPreview(); 
+            }
         });
     }
 
@@ -539,13 +688,10 @@
         document.getElementById('menu-sc-find').innerText = `Ctrl+${appSettings.keyFind.toUpperCase()}`;
         document.getElementById('menu-sc-term').innerText = `Ctrl+${appSettings.keyTerm.toUpperCase()}`;
         document.getElementById('title-sc-preview').innerText = `Preview HTML (Alt+${appSettings.keyPreview.toUpperCase()})`;
-        
         document.getElementById('menu-autosave-text').innerText = `Auto Save: ${appSettings.autoSave ? 'ON' : 'OFF'}`;
 
         if (editor) {
-            editor.updateOptions({
-                wordWrap: appSettings.wordwrap ? 'on' : 'off'
-            });
+            editor.updateOptions({ wordWrap: appSettings.wordwrap ? 'on' : 'off' });
         }
     }
 
@@ -941,27 +1087,6 @@
         }
     }
 
-    // --- State & VFS ---
-    let vfs = {}; 
-    let rootDirectoryHandle = null;
-    let openTabs = ['Welcome']; 
-    let currentFile = 'Welcome'; 
-    let editor = null;
-    let autoSaveTimer = null;
-    let previewTab = null;
-    let currentBlobUrl = null;
-    let termInstance = null;
-
-    const fileTreeRoot = document.getElementById('file-tree-root');
-    const tabsContainer = document.getElementById('editor-tabs');
-    const langStatus = document.getElementById('language-status');
-    const fileStatus = document.getElementById('file-status');
-    const editorDiv = document.getElementById('editor');
-    const welcomeScreen = document.getElementById('welcome-screen');
-    const emptyState = document.getElementById('empty-state');
-    const workspaceTitle = document.getElementById('workspace-title');
-    const workspaceChevron = document.getElementById('workspace-chevron');
-
     // --- IndexedDB ---
     const DB_NAME = 'AeroCodeDB';
     let db;
@@ -1022,19 +1147,6 @@
         };
     }
 
-    // --- File System Helpers ---
-    function getLang(filename) {
-        const ext = filename.split('.').pop().toLowerCase();
-        const map = { 'js': 'javascript', 'html': 'html', 'css': 'css', 'json': 'json', 'c': 'c', 'cpp': 'cpp', 'cs': 'csharp', 'py': 'python', 'java': 'java' };
-        return map[ext] || 'plaintext';
-    }
-    
-    function getIconClass(filename) {
-        const ext = filename.split('.').pop().toLowerCase();
-        const map = { 'js': 'icon-js', 'html': 'icon-html', 'css': 'icon-css', 'json': 'icon-json', 'c': 'icon-c', 'cpp': 'icon-cpp', 'cs': 'icon-cs', 'py': 'icon-py', 'java': 'icon-java' };
-        return map[ext] || 'icon-default';
-    }
-
     async function openFolder() {
         try {
             rootDirectoryHandle = await window.showDirectoryPicker({ mode: 'readwrite' });
@@ -1055,7 +1167,6 @@
         fileStatus.innerText = "Workspace Loaded";
     }
 
-    // Core Tree Building Logic
     async function buildTreeUI(dirHandle, parentContainer, pathPrefix, depth) {
         let entries = [];
         for await (const entry of dirHandle.values()) entries.push(entry);
@@ -1150,7 +1261,6 @@
         }
     }
 
-    // --- Inline Rename Logic with Native FileSystem Fallback ---
     function attachInlineRename(wrap, label, entry) {
         wrap.addEventListener('dblclick', async (e) => {
             e.stopPropagation();
@@ -1186,10 +1296,9 @@
                         if (entry.move) {
                             await entry.move(newName);
                         } else {
-                            throw new Error("No native move API");
+                            throw new Error("No native move API in browser.");
                         }
                     } catch (err) {
-                        // Fallback: Copy and Delete for locked files
                         if (entry.kind === 'file') {
                             try {
                                 const file = await entry.getFile();
@@ -1200,18 +1309,19 @@
                                 await writable.close();
                                 await rootDirectoryHandle.removeEntry(oldName);
                             } catch(fallbackErr) {
-                                alert("Rename blocked. Make sure the file is completely closed.");
+                                alert("Rename blocked. Close the file tab before renaming.");
                                 input.remove(); textSpan.style.display = 'inline'; return;
                             }
                         } else {
-                            alert("Cannot rename directory due to browser lock.");
+                            alert("Cannot natively rename folder here.");
                             input.remove(); textSpan.style.display = 'inline'; return;
                         }
                     }
                     if (rootDirectoryHandle) await buildWorkspace(rootDirectoryHandle);
+                    
+                    input.remove(); textSpan.style.display = 'inline';
                 } else {
-                    input.remove();
-                    textSpan.style.display = 'inline';
+                    input.remove(); textSpan.style.display = 'inline';
                 }
             };
 
@@ -1225,18 +1335,6 @@
         });
     }
 
-    function toggleWorkspace() {
-        const root = document.getElementById('file-tree-root');
-        if (workspaceChevron.classList.contains('open')) {
-            workspaceChevron.classList.remove('open');
-            root.classList.remove('open');
-        } else {
-            workspaceChevron.classList.add('open');
-            root.classList.add('open');
-        }
-    }
-
-    // --- Tab & Editor Control ---
     async function openFileFromVFS(path, filename) {
         if (!vfs[path]) return;
         
@@ -1260,10 +1358,21 @@
         if (openTabs.includes('Welcome')) openTabs = openTabs.filter(t => t !== 'Welcome');
         if (!openTabs.includes(path)) openTabs.push(path);
         
+        // Check if user clicked a file before Monaco was ready
+        if (!isMonacoReady) {
+            queuedFileToOpen = path;
+            document.getElementById('welcome-screen').style.display = 'none';
+            document.getElementById('empty-state').style.display = 'none';
+            loadingOverlay.style.display = 'flex';
+            return;
+        }
+        
         switchFile(path);
     }
 
     function switchFile(path) {
+        if (!isMonacoReady) return;
+
         if (path === 'Welcome') {
             if (!openTabs.includes('Welcome')) openTabs.push('Welcome');
             currentFile = 'Welcome';
@@ -1286,6 +1395,7 @@
         welcomeScreen.style.display = 'none';
         document.getElementById('empty-state').style.display = 'none';
         editorDiv.style.display = 'block';
+        setTimeout(() => editorDiv.style.opacity = '1', 50);
         
         langStatus.innerText = vfs[path].lang.toUpperCase();
         fileStatus.innerText = "Ready";
@@ -1349,394 +1459,6 @@
         document.querySelectorAll('.file-node').forEach(node => {
             if (node.getAttribute('data-path') === currentFile) node.classList.add('active');
             else node.classList.remove('active');
-        });
-    }
-
-    // --- File Creation & Saving ---
-    async function createNewFile() {
-        const name = prompt("Enter new file name (e.g., script.js):", "newfile.html");
-        if (!name) return;
-        
-        const cleanName = name.replace(/\//g, '-');
-        let handle = null;
-        let path = cleanName;
-
-        if (rootDirectoryHandle) {
-            try {
-                handle = await rootDirectoryHandle.getFileHandle(cleanName, { create: true });
-            } catch (err) {
-                console.error(err);
-                return alert(`Failed to create file on disk. Ensure you have given write permission to the folder.`);
-            }
-        }
-        
-        if (vfs[path]) return alert("File already exists!");
-        
-        const lang = getLang(cleanName);
-        vfs[path] = { lang: lang, content: '', handle: handle, model: null };
-        if (editor) vfs[path].model = monaco.editor.createModel('', lang, monaco.Uri.file(path));
-        
-        if (rootDirectoryHandle) await buildWorkspace(rootDirectoryHandle);
-
-        if (!openTabs.includes(path)) openTabs.push(path);
-        switchFile(path);
-    }
-
-    async function forceManualSave() {
-        if (!editor || currentFile === 'Welcome' || currentFile === null || !vfs[currentFile]) return;
-        try {
-            forceFormatDocument();
-            
-            let handle = vfs[currentFile].handle;
-            if (!handle) {
-                handle = await window.showSaveFilePicker({ suggestedName: currentFile });
-                vfs[currentFile].handle = handle;
-            }
-            const writable = await handle.createWritable();
-            await writable.write(vfs[currentFile].model.getValue());
-            await writable.close();
-            fileStatus.innerText = `Saved successfully`;
-            updatePreviewTab();
-        } catch (err) {
-            fileStatus.innerText = "Save Failed or Cancelled";
-        }
-        setTimeout(() => fileStatus.innerText = "Ready", 3000);
-    }
-
-    async function silentAutoSave() {
-        if (!appSettings.autoSave) return;
-        if (!editor || currentFile === 'Welcome' || currentFile === null || !vfs[currentFile]) return;
-        
-        if (vfs[currentFile].handle) {
-            try {
-                const writable = await vfs[currentFile].handle.createWritable();
-                await writable.write(vfs[currentFile].model.getValue());
-                await writable.close();
-                fileStatus.innerHTML = `Auto-saved to disk <span class="auto-save-status">✔</span>`;
-            } catch (err) {}
-        }
-    }
-
-    function forceFormatDocument() {
-        if (editor && currentFile !== 'Welcome' && currentFile !== null) {
-            editor.getAction('editor.action.formatDocument').run();
-        }
-    }
-
-    // --- Asynchronous VFS Preview Compiler ---
-    async function buildLiveHTML() {
-        let htmlPath = null;
-        if (currentFile !== 'Welcome' && currentFile !== null && vfs[currentFile] && vfs[currentFile].lang === 'html') {
-            htmlPath = currentFile;
-        } else {
-            htmlPath = Object.keys(vfs).find(k => vfs[k].lang === 'html' && (vfs[k].model || vfs[k].handle));
-        }
-
-        if (!htmlPath) return "<h2>No HTML file opened or found in workspace.</h2>";
-
-        if (!vfs[htmlPath].model && vfs[htmlPath].handle) {
-             const fileData = await vfs[htmlPath].handle.getFile();
-             vfs[htmlPath].content = await fileData.text();
-        }
-
-        let html = vfs[htmlPath].model ? vfs[htmlPath].model.getValue() : vfs[htmlPath].content;
-        const pathSegments = htmlPath.split('/');
-        pathSegments.pop();
-        const basePath = pathSegments.length > 0 ? pathSegments.join('/') + '/' : '';
-
-        const linkRegex = /<link\s+.*?href=["'](.*?)["'].*?>/gi;
-        const links = [...html.matchAll(linkRegex)];
-        for (const match of links) {
-            const filename = match[1];
-            const fullPath = basePath + filename;
-            if (vfs[fullPath]) {
-                if (!vfs[fullPath].model && vfs[fullPath].handle) {
-                    const fd = await vfs[fullPath].handle.getFile();
-                    vfs[fullPath].content = await fd.text();
-                }
-                const css = vfs[fullPath].model ? vfs[fullPath].model.getValue() : vfs[fullPath].content;
-                html = html.replace(match[0], `<style>\n/* Injected: ${filename} */\n${css}\n</style>`);
-            }
-        }
-
-        const scriptRegex = /<script\s+.*?src=["'](.*?)["'].*?><\/script>/gi;
-        const scripts = [...html.matchAll(scriptRegex)];
-        for (const match of scripts) {
-            const filename = match[1];
-            const fullPath = basePath + filename;
-            if (vfs[fullPath]) {
-                if (!vfs[fullPath].model && vfs[fullPath].handle) {
-                    const fd = await vfs[fullPath].handle.getFile();
-                    vfs[fullPath].content = await fd.text();
-                }
-                const js = vfs[fullPath].model ? vfs[fullPath].model.getValue() : vfs[fullPath].content;
-                html = html.replace(match[0], `<script>\n/* Injected: ${filename} */\n${js}\n<\/script>`);
-            }
-        }
-
-        return html;
-    }
-
-    async function launchPreview() {
-        if (!editor && currentFile === 'Welcome') return;
-        const finalHTML = await buildLiveHTML();
-        const blob = new Blob([finalHTML], { type: 'text/html' });
-        
-        if (currentBlobUrl) URL.revokeObjectURL(currentBlobUrl);
-        currentBlobUrl = URL.createObjectURL(blob);
-
-        if (previewTab && !previewTab.closed) previewTab.location.replace(currentBlobUrl);
-        else previewTab = window.open(currentBlobUrl, 'WebIDEPreview');
-    }
-
-    async function updatePreviewTab() {
-        if (previewTab && !previewTab.closed) {
-            const finalHTML = await buildLiveHTML();
-            const blob = new Blob([finalHTML], { type: 'text/html' });
-            if (currentBlobUrl) URL.revokeObjectURL(currentBlobUrl);
-            currentBlobUrl = URL.createObjectURL(blob);
-            previewTab.location.replace(currentBlobUrl);
-        }
-    }
-
-    // --- Terminal Engine ---
-    const terminalArea = document.getElementById('terminal-area');
-    const termResizer = document.getElementById('terminal-resizer');
-    
-    function toggleTerminal() {
-        const termIcon = document.getElementById('activity-terminal');
-        if (terminalArea.style.display === 'none' || terminalArea.style.display === '') {
-            terminalArea.style.display = 'flex';
-            termResizer.style.display = 'block';
-            termIcon.classList.add('active');
-            
-            if (!termInstance) {
-                document.getElementById('terminal').innerHTML = '<div style="padding: 10px; color: var(--text-muted); font-family: monospace;">Loading terminal engine...</div>';
-                setTimeout(() => {
-                    document.getElementById('terminal').innerHTML = '';
-                    initTerminalEngine();
-                    if(editor) editor.layout();
-                }, 100);
-            } else {
-                if(editor) editor.layout(); 
-            }
-        } else {
-            terminalArea.style.display = 'none';
-            termResizer.style.display = 'none';
-            termIcon.classList.remove('active');
-            if(editor) editor.layout(); 
-        }
-    }
-
-    function initTerminalEngine() {
-        if (typeof Terminal === 'undefined') {
-            setTimeout(initTerminalEngine, 100);
-            return;
-        }
-
-        termInstance = new Terminal({
-            theme: { background: '#1e1e1e', foreground: '#cccccc', cursor: '#ffffff' },
-            fontFamily: 'monospace', 
-            fontSize: baseFontSize, 
-            cursorBlink: true, 
-            convertEol: true
-        });
-        
-        termInstance.open(document.getElementById('terminal'));
-
-        const originalLog = console.log;
-        const originalError = console.error;
-
-        console.log = function(...args) {
-            if(args[0] && typeof args[0] === 'string' && args[0].includes('SW Cache')) return originalLog.apply(console, args);
-            const msg = args.map(a => typeof a === 'object' ? JSON.stringify(a) : String(a)).join(' ');
-            if (termInstance) termInstance.writeln(msg);
-            originalLog.apply(console, args);
-        };
-
-        console.error = function(...args) {
-            if(args[0] && typeof args[0] === 'string' && args[0].includes('SW Failed')) return originalError.apply(console, args);
-            const msg = args.map(a => typeof a === 'object' ? JSON.stringify(a) : String(a)).join(' ');
-            if (termInstance) termInstance.writeln('\x1b[31m' + msg + '\x1b[0m');
-            originalError.apply(console, args);
-        };
-
-        const prompt = () => termInstance.write('\r\n$ ');
-        termInstance.writeln('AeroCode Terminal Engine Active.');
-        prompt();
-
-        let cmdBuffer = '';
-        termInstance.onKey(e => {
-            const ev = e.domEvent;
-            const printable = !ev.altKey && !ev.ctrlKey && !ev.metaKey;
-            
-            if (ev.keyCode === 13) {
-                termInstance.write('\r\n');
-                executeTerminalCommand(cmdBuffer.trim());
-                cmdBuffer = '';
-                prompt();
-            } else if (ev.keyCode === 8) {
-                if (cmdBuffer.length > 0) { 
-                    cmdBuffer = cmdBuffer.slice(0, -1); 
-                    termInstance.write('\b \b'); 
-                }
-            } else if (printable) {
-                cmdBuffer += e.key; 
-                termInstance.write(e.key);
-            }
-        });
-    }
-
-    async function executeTerminalCommand(input) {
-        if (!input) return;
-        const args = input.split(' ');
-        const base = args[0].toLowerCase();
-        const target = args[1];
-
-        switch(base) {
-            case 'ls': 
-                termInstance.writeln(Object.keys(vfs).map(p => p.split('/').pop()).join('  ')); 
-                break;
-            case 'clear': 
-                termInstance.clear(); 
-                break;
-            case 'node':
-                if (!target) return termInstance.writeln('Usage: node <filename>');
-                
-                const targetKey = Object.keys(vfs).find(k => k.endsWith(target));
-                if (!targetKey) return termInstance.writeln(`\x1b[31mError: Cannot find file '${target}'.\x1b[0m`);
-                if (vfs[targetKey].lang !== 'javascript') return termInstance.writeln(`\x1b[31mError: Can only execute JavaScript files.\x1b[0m`);
-                
-                try {
-                    let jsContent = '';
-                    if (vfs[targetKey].model) {
-                        jsContent = vfs[targetKey].model.getValue();
-                    } else if (vfs[targetKey].handle) {
-                        const fd = await vfs[targetKey].handle.getFile();
-                        jsContent = await fd.text();
-                    } else {
-                        jsContent = vfs[targetKey].content;
-                    }
-                    const executeJS = new Function(jsContent);
-                    executeJS(); 
-                } catch (err) {
-                    console.error(err.toString());
-                }
-                break;
-            default: 
-                termInstance.writeln(`bash: ${base}: command not found`);
-        }
-    }
-
-    function forceEditorFind() {
-        if (editor && currentFile !== 'Welcome' && currentFile !== null) {
-            editor.focus();
-            editor.getAction('actions.find').run();
-        }
-    }
-
-    // --- MONACO INITIALIZATION ---
-    window.addEventListener('load', () => {
-        applySettingsToUI();
-        if (openTabs.includes('Welcome')) {
-            switchFile('Welcome');
-        } else {
-            renderTabs();
-        }
-        
-        setTimeout(initMonaco, 50); 
-    });
-
-    function initMonaco() {
-        if(typeof require === 'undefined') {
-            setTimeout(initMonaco, 50);
-            return;
-        }
-        
-        require.config({ paths: { 'vs': './monaco-editor/vs' }});
-        require(['vs/editor/editor.main'], function () {
-            
-            monaco.languages.html.htmlDefaults.setOptions({
-                format: { tabSize: 4, insertSpaces: true }
-            });
-
-            editor = monaco.editor.create(document.getElementById('editor'), {
-                theme: 'vs-dark', automaticLayout: true, fontSize: baseFontSize, minimap: { enabled: true },
-                autoIndent: "full", formatOnType: true, formatOnPaste: true,
-                quickSuggestions: appSettings.autocomplete,
-                suggestOnTriggerCharacters: appSettings.autocomplete,
-                wordWrap: appSettings.wordwrap ? 'on' : 'off',
-                acceptSuggestionOnEnter: "on"
-            });
-
-            fileStatus.innerText = "Ready";
-
-            editor.onDidType((text) => {
-                if (!appSettings.autoClose || currentFile === 'Welcome' || currentFile === null || !vfs[currentFile] || vfs[currentFile].lang !== 'html') return;
-                
-                if (text === '>') {
-                    const position = editor.getPosition();
-                    const model = editor.getModel();
-                    const textBeforeCursor = model.getLineContent(position.lineNumber).substring(0, position.column - 1);
-                    const match = textBeforeCursor.match(/<([a-zA-Z0-9\-]+)[^>]*>$/);
-                    
-                    if (match) {
-                        const tagName = match[1].toLowerCase();
-                        const selfClosingTags = ['area', 'base', 'br', 'col', 'embed', 'hr', 'img', 'input', 'link', 'meta', 'param', 'source', 'track', 'wbr'];
-                        
-                        if (!selfClosingTags.includes(tagName) && !textBeforeCursor.endsWith('/>')) {
-                            editor.executeEdits("auto-close", [{
-                                range: new monaco.Range(position.lineNumber, position.column, position.lineNumber, position.column),
-                                text: `</${tagName}>`, forceMoveMarkers: true
-                            }]);
-                            editor.setPosition(position);
-                        }
-                    }
-                }
-            });
-
-            editor.onDidChangeCursorPosition((e) => {
-                document.getElementById('cursor-position').innerText = `Ln ${e.position.lineNumber}, Col ${e.position.column}`;
-            });
-
-            editor.onDidChangeModelContent(() => {
-                if (currentFile === 'Welcome' || currentFile === null) return;
-                clearTimeout(autoSaveTimer);
-                fileStatus.innerText = "Typing...";
-                if (appSettings.autoSave) {
-                    autoSaveTimer = setTimeout(silentAutoSave, 1000); 
-                }
-            });
-
-            // Global Keybindings Listener
-            document.addEventListener('keydown', e => { 
-                if (e.ctrlKey || e.metaKey) {
-                    const k = e.key.toLowerCase();
-                    if (k === appSettings.keySave) { e.preventDefault(); forceManualSave(); }
-                    if (k === appSettings.keyOpen) { e.preventDefault(); openFolder(); }
-                    if (k === appSettings.keyZoomIn) { e.preventDefault(); zoomIn(); }
-                    if (k === appSettings.keyZoomOut) { e.preventDefault(); zoomOut(); }
-                    if (k === appSettings.keyTerm) { e.preventDefault(); toggleTerminal(); }
-                    
-                    if (k === appSettings.keyFind && !e.shiftKey) { 
-                        e.preventDefault(); 
-                        if (editor && currentFile !== 'Welcome' && currentFile !== null) {
-                            editor.focus(); editor.getAction('actions.find').run();
-                        }
-                    }
-                    if (k === appSettings.keyFind && e.shiftKey) {
-                        e.preventDefault();
-                        if (currentSidebarView !== 'search' || document.getElementById('sidebar').classList.contains('hidden')) {
-                            toggleActivityBar('search');
-                        } else {
-                            document.getElementById('search-input').focus();
-                        }
-                    }
-                }
-                if (e.altKey && e.key.toLowerCase() === appSettings.keyPreview) { 
-                    e.preventDefault(); launchPreview(); 
-                }
-            });
         });
     }
 </script>
