@@ -11,7 +11,7 @@
     <link rel="stylesheet" href="./xterm/xterm.css" />
     
     <style>
-        /* Exact Theme Variables */
+        /* Classic Theme Variables Maintained */
         :root {
             --ui-zoom: 1;
             --font-ui: calc(13px * var(--ui-zoom));
@@ -81,7 +81,7 @@
         .icon-folder-open { background-image: url("data:image/svg+xml;utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='%23dcb67a' d='M19 20H4C2.89 20 2 19.1 2 18V6C2 4.89 2.89 4 4 4H10L12 6H19C20.1 6 21 6.89 21 8V18C21 19.1 20.1 20 19 20ZM4 8V18H19V8H4Z'/%3E%3C/svg%3E"); }
         .icon-default { background-image: url("data:image/svg+xml;utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='%23ccc' d='M6 2c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V8l-6-6H6zm7 7V3.5L18.5 9H13z'/%3E%3C/svg%3E"); }
 
-        /* Unified Dropdown & Context Menu Styles to Prevent Overrides */
+        /* Unified Dropdown & Context Menu Styles */
         .dropdown, .context-menu { 
             display: none; position: absolute; background-color: var(--bg-sidebar); 
             border: 1px solid var(--border-color); box-shadow: 0 4px 8px rgba(0,0,0,0.6); 
@@ -110,8 +110,6 @@
         .activity-spacer { flex: 1; }
 
         .svg-icon { display: inline-flex; align-items: center; justify-content: center; width: 26px; height: 26px; }
-        
-        /* Solid SVG Icons */
         .svg-icon-folder svg, .svg-icon-search svg, .svg-icon-scm svg, .svg-icon-plugins svg, .svg-icon-terminal svg, .svg-icon-settings svg { width: 24px; height: 24px; }
 
         /* Main Workspace Area */
@@ -170,6 +168,17 @@
             color: #fff; border-radius: 3px; outline: none; margin-bottom: 10px; font-family: inherit;
         }
         .sidebar-input:focus { border: 1px solid var(--focus-border); }
+
+        /* Pretty Empty Sidebar Buttons */
+        #explorer-empty { padding: 15px 20px; display: none; flex-direction: column; }
+        .empty-text { font-size: 13px; color: var(--text-main); margin-bottom: 12px; line-height: 1.5; }
+        .empty-btn { 
+            background: #007fd4; color: #ffffff; border: 1px solid transparent; 
+            padding: 8px 12px; border-radius: 4px; cursor: pointer; width: 100%; 
+            font-size: 13px; margin-bottom: 10px; font-family: inherit; 
+            text-align: center; font-weight: 500; transition: background 0.1s;
+        }
+        .empty-btn:hover { background: #026ec1; }
         
         /* Floating Editor Tabs */
         .editor-tabs { 
@@ -214,15 +223,6 @@
             z-index: 5; user-select: none; 
         }
 
-        /* Highly Optimized Loading Overlay (Instant Hide) */
-        #loading-overlay { 
-            position: absolute; top: 35px; left: 0; right: 0; bottom: 0; background: var(--bg-base); 
-            display: flex; align-items: center; justify-content: center; z-index: 50; 
-            font-size: var(--font-ui); color: var(--text-muted); flex-direction: column; gap: 10px; transition: opacity 0.2s ease; 
-        }
-        .spinner { width: 30px; height: 30px; border: 3px solid var(--bg-activity); border-top-color: var(--focus-border); border-radius: 50%; animation: spin 1s linear infinite; }
-        @keyframes spin { to { transform: rotate(360deg); } }
-
         /* Terminal Panel with Resizer */
         .terminal-resizer {
             height: 4px; background-color: transparent; cursor: row-resize; z-index: 10;
@@ -244,7 +244,7 @@
         }
         .status-left, .status-right { display: flex; align-items: center; gap: 15px; }
 
-        /* SCM & Extensions Sidebar specific */
+        /* SCM & Extensions Sidebar */
         .sidebar-btn {
             background: #3c3c3c; color: #fff; border: 1px solid var(--border-color); padding: 6px;
             border-radius: 3px; cursor: pointer; width: 100%; font-size: 12px; margin-top: 10px;
@@ -324,6 +324,12 @@
                 <div class="menu-btn" onclick="toggleDropdown('term-menu', event)">Terminal</div>
                 <div class="dropdown" id="term-menu">
                     <div class="dropdown-item" onclick="toggleTerminal()"><span>Toggle Terminal</span><span class="shortcut" id="menu-sc-term">Ctrl+`</span></div>
+                </div>
+            </div>
+            <div class="menu-item">
+                <div class="menu-btn" onclick="toggleDropdown('help-menu', event)">Help</div>
+                <div class="dropdown" id="help-menu">
+                    <div class="dropdown-item" onclick="openWelcome()"><span>Welcome</span></div>
                 </div>
             </div>
         </div>
@@ -460,12 +466,6 @@
                     </div>
                 </div>
 
-                <!-- Instant Loading Overlay -->
-                <div id="loading-overlay">
-                    <div class="spinner"></div>
-                    <span id="loading-text" style="margin-top: 10px;">Starting Engine...</span>
-                </div>
-
                 <div id="editor"></div>
             </div>
             
@@ -598,6 +598,11 @@
         applySettingsToUI(); closeSettingsModal();
     }
 
+    function openWelcome() {
+        if (!openTabs.includes('Welcome')) openTabs.push('Welcome');
+        switchFile('Welcome');
+    }
+
     // --- Global Zoom Settings ---
     let baseFontSize = 14;
     let uiZoom = 1;
@@ -703,7 +708,6 @@
 
         try {
             let sha = null;
-            // Get SHA
             const getRes = await fetch(`https://api.github.com/repos/${repo}/contents/${currentFile}`, {
                 headers: { 'Authorization': `token ${token}` }
             });
@@ -712,7 +716,6 @@
                 sha = data.sha;
             }
 
-            // Put File
             const body = { message: msg, content: b64 };
             if (sha) body.sha = sha;
 
@@ -873,7 +876,7 @@
             if (newHeight > window.innerHeight - 100) newHeight = window.innerHeight - 100;
             document.documentElement.style.setProperty('--terminal-height', newHeight + 'px');
             if (editor) editor.layout();
-            if (termInstance) termInstance.fit ? termInstance.fit() : null;
+            if (termInstance) termInstance.fit ? termInstance.fit() : null; 
         }
     });
 
@@ -1198,10 +1201,10 @@
                         if (entry.move) {
                             await entry.move(newName);
                         } else {
-                            throw new Error("No native move API in browser.");
+                            throw new Error("No native move API");
                         }
                     } catch (err) {
-                        // Native Fallback for file lock
+                        // Fallback: Copy and Delete for locked files
                         if (entry.kind === 'file') {
                             try {
                                 const file = await entry.getFile();
@@ -1212,19 +1215,18 @@
                                 await writable.close();
                                 await rootDirectoryHandle.removeEntry(oldName);
                             } catch(fallbackErr) {
-                                alert("Rename blocked. Close the file tab before renaming.");
+                                alert("Rename blocked. Make sure the file is completely closed.");
                                 input.remove(); textSpan.style.display = 'inline'; return;
                             }
                         } else {
-                            alert("Cannot natively rename folder here.");
+                            alert("Cannot rename directory due to browser lock.");
                             input.remove(); textSpan.style.display = 'inline'; return;
                         }
                     }
                     if (rootDirectoryHandle) await buildWorkspace(rootDirectoryHandle);
-                    
-                    input.remove(); textSpan.style.display = 'inline';
                 } else {
-                    input.remove(); textSpan.style.display = 'inline';
+                    input.remove();
+                    textSpan.style.display = 'inline';
                 }
             };
 
@@ -1240,12 +1242,11 @@
 
     function toggleWorkspace() {
         const root = document.getElementById('file-tree-root');
-        const chev = document.getElementById('workspace-chevron');
-        if (chev.classList.contains('open')) {
-            chev.classList.remove('open');
+        if (workspaceChevron.classList.contains('open')) {
+            workspaceChevron.classList.remove('open');
             root.classList.remove('open');
         } else {
-            chev.classList.add('open');
+            workspaceChevron.classList.add('open');
             root.classList.add('open');
         }
     }
@@ -1300,9 +1301,8 @@
         welcomeScreen.style.display = 'none';
         document.getElementById('empty-state').style.display = 'none';
         editorDiv.style.display = 'block';
-        setTimeout(() => editorDiv.style.opacity = '1', 50);
         
-        langStatus.innerText = `{ } ${vfs[path].lang.toUpperCase()}`;
+        langStatus.innerText = vfs[path].lang.toUpperCase();
         fileStatus.innerText = "Ready";
         
         renderTabs();
@@ -1336,7 +1336,6 @@
         
         if (openTabs.length === 0) {
             welcomeScreen.style.display = 'none';
-            editorDiv.style.opacity = '0';
             editorDiv.style.display = 'none';
             document.getElementById('empty-state').style.display = 'flex';
             langStatus.innerText = "No File";
@@ -1659,13 +1658,6 @@
         } else {
             renderTabs();
         }
-        
-        const loader = document.getElementById('loading-overlay');
-        if (loader) {
-            loader.style.opacity = '0';
-            setTimeout(() => { loader.style.display = 'none'; }, 200);
-        }
-        
         setTimeout(initMonaco, 50); 
     });
 
